@@ -1,0 +1,38 @@
+# Python
+__pycache__/
+*.py[cod]
+*$py.class
+*.egg-info/
+dist/
+build/
+
+# Virtual environment
+.venv/
+venv/
+ENV/
+
+# Environment & secrets
+.env
+config_secret.py
+
+# Database (runtime-generated)
+*.db
+*.sqlite3
+
+# Exports
+exports/*.csv
+exports/*.xlsx
+exports/*.pdf
+
+# IDE
+.vscode/
+.idea/
+*.swp
+*~
+
+# OS
+.DS_Store
+Thumbs.db
+
+# Logs
+*.log
