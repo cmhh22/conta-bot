@@ -15,7 +15,7 @@ logger = logging.getLogger(__name__)
 
 async def entrada_command(update: Update, context: ContextTypes.DEFAULT_TYPE) -> None:
     """
-    Registra la entrada de mercancia, actualiza stock/costo y genera la deuda con el proveedor.
+    Registra la merchandise intake, actualiza stock/costo y genera la deuda con el proveedor.
     Formato: /entrada [codigo] [cantidad] [costo_unitario] [moneda_costo] [caja] [proveedor] [descripcion]
     """
     user_id = update.effective_user.id
@@ -27,7 +27,7 @@ async def entrada_command(update: Update, context: ContextTypes.DEFAULT_TYPE) ->
     try:
         # Formato esperado: [codigo] [cantidad] [costo_unitario] [moneda_costo] [caja] [proveedor] [desc...]
         if len(context.args) < 7:
-            raise ValueError("Faltan argumentos. Uso: /entrada [codigo] [cantidad] [costo_unitario] [moneda] [caja] [proveedor] [desc]")
+            raise ValueError("Missing arguments. Usage: /entrada [codigo] [cantidad] [costo_unitario] [moneda] [caja] [proveedor] [desc]")
 
         codigo = context.args[0].upper()
         cantidad = int(context.args[1])
@@ -77,7 +77,7 @@ async def entrada_command(update: Update, context: ContextTypes.DEFAULT_TYPE) ->
             )
             
         # 2. REGISTRAR DEUDA (Tabla Deudas)
-        # La entrada de mercancia genera una deuda POR PAGAR al proveedor.
+        # La merchandise intake genera una deuda POR PAGAR al proveedor.
 
         # Intentar update una deuda existente (si existe, se suma el costo total)
         cursor.execute(
@@ -105,31 +105,31 @@ async def entrada_command(update: Update, context: ContextTypes.DEFAULT_TYPE) ->
         conn.commit()
 
         await update.message.reply_html(
-            f"📦 <b>Entrada de Mercancia Registrada!</b>\n\n"
+            f"📦 <b>Merchandise Intake Recorded!</b>\n\n"
             f"<b>Codigo:</b> {codigo}\n"
             f"<b>Cantidad:</b> +{cantidad} unidades\n"
             f"<b>Costo Unitario:</b> {costo_unitario:.2f} {moneda_costo.upper()}\n"
-            f"<b>Proveedor:</b> {proveedor}\n\n"
-            f"💰 <b>DEUDA GENERADA:</b> {costo_total:.2f} {moneda_costo.upper()} anadidos a la Cuenta por Pagar con {proveedor}."
+            f"<b>Supplier:</b> {proveedor}\n\n"
+            f"💰 <b>DEUDA GENERADA:</b> {costo_total:.2f} {moneda_costo.upper()} added to Accounts Payable with {proveedor}."
         )
-        logger.info(f"Entrada de {cantidad} de {codigo} registrada por {user_id}. Deuda generada con {proveedor}.")
+        logger.info(f"Entrada de {cantidad} de {codigo} recorded por {user_id}. Deuda generada con {proveedor}.")
 
     except ValueError as e:
         await update.message.reply_html(
             f"<b>Error: formato o validacion:</b> {e}\n"
-            "Uso correcto: <code>/entrada [codigo] [cantidad] [costo_unitario] [moneda] [caja] [proveedor] [desc...]</code>\n"
+            "Correct usage: <code>/entrada [codigo] [cantidad] [costo_unitario] [moneda] [caja] [proveedor] [desc...]</code>\n"
             "Ejemplo: <code>/entrada HUEVOS 100 0.5 usd cfg PEDRO Lote 45</code>"
         )
     except Exception as e:
         logger.error(f"Error inesperado en /entrada: {e}")
-        await update.message.reply_text("An error occurred inesperado al registrar la entrada.")
+        await update.message.reply_text("An unexpected error occurred al registrar la entrada.")
     finally:
         if conn:
             conn.close()
 
 # --- FASE 9.5 (MODIFICADA): FUNCION PARA /stock (Reporte de Inventario) ---
 async def stock_command(update: Update, context: ContextTypes.DEFAULT_TYPE) -> None:
-    """Manejador para el comando /stock: Muestra el inventario actual con la moneda de costo correcta."""
+    """Handledor para el comando /stock: Show el inventario actual con la moneda de costo correcta."""
     user_id = update.effective_user.id
     if user_id not in ADMIN_USER_IDS:
         await update.message.reply_text("⛔ No tienes permiso.")
@@ -188,7 +188,7 @@ async def stock_command(update: Update, context: ContextTypes.DEFAULT_TYPE) -> N
 
     except Exception as e:
         logger.error(f"Error inesperado en /stock: {e}")
-        await update.message.reply_text("An error occurred inesperado al generar el reporte de stock.")
+        await update.message.reply_text("An unexpected error occurred al generar el reporte de stock.")
 
 # --- FASE 10: FUNCION PARA /venta (Ingreso y Consumo de Stock) - CORREGIDO ---
 
@@ -205,7 +205,7 @@ async def venta_command(update: Update, context: ContextTypes.DEFAULT_TYPE) -> N
     conn = None
     try:
         if len(context.args) < 5:
-            raise ValueError("Faltan argumentos. Uso: /venta [codigo] [unidades] [monto_total] [moneda] [caja] [vendedor/nota...]")
+            raise ValueError("Missing arguments. Usage: /venta [codigo] [unidades] [monto_total] [moneda] [caja] [vendedor/nota...]")
 
         codigo = context.args[0].upper()
         unidades = float(context.args[1])
@@ -254,11 +254,11 @@ async def venta_command(update: Update, context: ContextTypes.DEFAULT_TYPE) -> N
             data_consignada = cursor.fetchone()
             
             if not data_consignada:
-                raise ValueError("Error while obtener datos de consignacion. Reintente.")
+                raise ValueError("Error while getting datos de consignment. Reintente.")
                 
             stock_consignado_actual = data_consignada[0]
             precio_unitario_consignado = data_consignada[1]
-            moneda_consignacion = data_consignada[2] # 🌟 NUEVA ASIGNACION
+            moneda_consignment = data_consignada[2] # 🌟 NUEVA ASIGNACION
             
             # Update stock consignado
             nueva_cantidad_consignada = stock_consignado_actual - unidades
@@ -277,25 +277,25 @@ async def venta_command(update: Update, context: ContextTypes.DEFAULT_TYPE) -> N
                     ELSE monto_pendiente - ? 
                 END
                 WHERE actor_id = ? AND moneda = ? AND tipo = 'POR_COBRAR'
-            """, (monto_a_liquidar, monto_a_liquidar, vendedor, moneda_consignacion)) 
+            """, (monto_a_liquidar, monto_a_liquidar, vendedor, moneda_consignment)) 
             
             # 🌟 CORRECCION: Usar la nueva variable en la description
             descripcion_mov = (
                 f"VENTA_CONSIGNADA: {unidades} x {codigo} | "
-                f"Vendedor: {vendedor} | "
+                f"Seller: {vendedor} | "
                 f"REVENUE: {monto_total:.2f} {moneda.upper()} | "
-                f"DEUDA_LIQUIDADA: {monto_a_liquidar:.2f} {moneda_consignacion.upper()} | "
+                f"DEUDA_LIQUIDADA: {monto_a_liquidar:.2f} {moneda_consignment.upper()} | "
                 f"CAJA: {caja} | "
                 f"NOTA: {nota}"
             )
 
             mensaje_confirmacion = (
                 f"✅ <b>Venta Consignada Liquidada!</b>\n\n"
-                f"<b>Vendedor:</b> {vendedor}\n"
+                f"<b>Seller:</b> {vendedor}\n"
                 f"<b>Producto:</b> {codigo} ({unidades} u.)\n"
                 f"<b>Caja de Ingreso:</b> {caja.upper()}\n"
                 f"<b>Ingreso Total:</b> {monto_total:.2f} {moneda.upper()}\n"
-                f"<b>Deuda Liquidada:</b> {monto_a_liquidar:.2f} {moneda_consignacion.upper()}" # 🌟 USAR NUEVA VARIABLE
+                f"<b>Deuda Liquidada:</b> {monto_a_liquidar:.2f} {moneda_consignment.upper()}" # 🌟 USAR NUEVA VARIABLE
             )
 
         else:
@@ -320,7 +320,7 @@ async def venta_command(update: Update, context: ContextTypes.DEFAULT_TYPE) -> N
             nueva_cantidad = stock_actual - unidades
             cursor.execute("UPDATE Productos SET stock = ? WHERE codigo = ?", (nueva_cantidad, codigo))
 
-            # Calcular el Costo de Mercancia Vendida (CMV)
+            # Calcular el Costo de Merchandise Vendida (CMV)
             costo_total = unidades * costo_unitario
             
             # Usar formato estricto para el parser de /ganancia
@@ -352,11 +352,11 @@ async def venta_command(update: Update, context: ContextTypes.DEFAULT_TYPE) -> N
     except ValueError as e:
         await update.message.reply_html(
             f"<b>Error: formato o validacion:</b> {e}\n"
-            "Uso correcto: <code>/venta [codigo] [unidades] [monto_total] [moneda] [caja] [vendedor/nota...]</code>"
+            "Correct usage: <code>/venta [codigo] [unidades] [monto_total] [moneda] [caja] [vendedor/nota...]</code>"
         )
     except Exception as e:
         logger.error(f"Error inesperado en /venta: {e}", exc_info=True)
-        await update.message.reply_text(f"An error occurred inesperado al registrar la venta: {str(e)}")
+        await update.message.reply_text(f"An unexpected error occurred al registrar la venta: {str(e)}")
         if conn:
             conn.rollback()
     finally:
@@ -367,7 +367,7 @@ async def venta_command(update: Update, context: ContextTypes.DEFAULT_TYPE) -> N
 
 async def ganancia_command(update: Update, context: ContextTypes.DEFAULT_TYPE) -> None:
     """
-    Calcula y muestra el margen de ganancia bruta de las ventas registradas 
+    Calcula y muestra el margen de ganancia bruta de las ventas recordeds 
     desde el inicio de las operaciones.
     """
     user_id = update.effective_user.id
@@ -390,7 +390,7 @@ async def ganancia_command(update: Update, context: ContextTypes.DEFAULT_TYPE) -
         conn.close()
 
         if not ventas:
-            await update.message.reply_text("No se encontraron ventas registradas para calcular la ganancia.")
+            await update.message.reply_text("No se encontraron ventas recordeds para calcular la ganancia.")
             return
 
         # 2. Inicializar acumuladores
@@ -413,7 +413,7 @@ async def ganancia_command(update: Update, context: ContextTypes.DEFAULT_TYPE) -
             # 🌟 CORRECCION: Usar el nuevo formato estricto: | CMV: X.XX MONEDA_COSTO |
             try:
                 # Las ventas consignadas no tienen CMV que afecte la ganancia bruta general, 
-                # ya que el costo (precio de consignacion) se resta de la deuda POR COBRAR.
+                # ya que el costo (precio de consignment) se resta de la deuda POR COBRAR.
                 if 'VENTA_CONSIGNADA' in descripcion:
                     continue 
 
@@ -458,9 +458,9 @@ async def ganancia_command(update: Update, context: ContextTypes.DEFAULT_TYPE) -
 
     except Exception as e:
         logger.error(f"Error inesperado en /ganancia: {e}")
-        await update.message.reply_text("An error occurred inesperado al calcular la ganancia.")
+        await update.message.reply_text("An unexpected error occurred al calcular la ganancia.")
         
-# --- FASE 13: FUNCION PARA /consignar ( Consignacion de INventario ) - CORREGIDO ---
+# --- FASE 13: FUNCION PARA /consignar ( Consignment de INventario ) - CORREGIDO ---
 
 async def consignar_command(update: Update, context: ContextTypes.DEFAULT_TYPE) -> None:
     """
@@ -474,16 +474,16 @@ async def consignar_command(update: Update, context: ContextTypes.DEFAULT_TYPE) 
 
     conn = None
     try:
-        logger.info("Iniciando proceso de consignacion...")
+        logger.info("Iniciando proceso de consignment...")
         if len(context.args) < 6:
-            raise ValueError("Faltan argumentos. Uso: /consignar [codigo] [cantidad] [vendedor] [precio_venta] [moneda] [nota...]")
+            raise ValueError("Missing arguments. Usage: /consignar [codigo] [cantidad] [vendedor] [precio_venta] [moneda] [nota...]")
 
         codigo = context.args[0].upper()
         cantidad_str = context.args[1]
         vendedor = context.args[2].upper()
         precio_str = context.args[3]
         moneda = context.args[4].lower()
-        nota_consignacion = " ".join(context.args[5:])
+        nota_consignment = " ".join(context.args[5:])
 
         cantidad = float(cantidad_str)
         precio_venta = float(precio_str)
@@ -514,28 +514,28 @@ async def consignar_command(update: Update, context: ContextTypes.DEFAULT_TYPE) 
         cursor.execute("UPDATE Productos SET stock = ? WHERE codigo = ?", (nueva_cantidad, codigo))
 
         # 2. 📝 Insertar/Update en la nueva tabla Consignaciones
-        logger.info(f"Registrando consignacion para vendedor {vendedor}...")
-        # Primero verificamos si ya existe una consignacion para este vendedor y producto
+        logger.info(f"Registrando consignment para vendedor {vendedor}...")
+        # Primero verificamos si ya existe una consignment para este vendedor y producto
         cursor.execute("""
             SELECT stock FROM Consignaciones 
             WHERE codigo = ? AND vendedor = ?
         """, (codigo, vendedor))
         
-        consignacion_existente = cursor.fetchone()
+        consignment_existente = cursor.fetchone()
         
-        if consignacion_existente:
+        if consignment_existente:
             # Si existe, actualizamos
-            nuevo_stock = consignacion_existente[0] + cantidad
+            nuevo_stock = consignment_existente[0] + cantidad
             cursor.execute("""
                 UPDATE Consignaciones 
-                SET stock = ?, fecha_consignacion = ?
+                SET stock = ?, fecha_consignment = ?
                 WHERE codigo = ? AND vendedor = ?
             """, (nuevo_stock, fecha_actual, codigo, vendedor))
         else:
             # Si no existe, insertamos
             cursor.execute("""
                 INSERT INTO Consignaciones 
-                (codigo, vendedor, stock, precio_unitario, moneda, fecha_consignacion)
+                (codigo, vendedor, stock, precio_unitario, moneda, fecha_consignment)
                 VALUES (?, ?, ?, ?, ?, ?)
             """, (codigo, vendedor, cantidad, precio_venta, moneda, fecha_actual))
 
@@ -568,8 +568,8 @@ async def consignar_command(update: Update, context: ContextTypes.DEFAULT_TYPE) 
         conn.commit()
 
         await update.message.reply_html(
-            f"✅ <b>Consignacion Registrada!</b>\n\n"
-            f"<b>Vendedor:</b> {vendedor}\n"
+            f"✅ <b>Consignment Recorded!</b>\n\n"
+            f"<b>Seller:</b> {vendedor}\n"
             f"<b>Producto:</b> {codigo} ({cantidad} u.)\n"
             f"<b>Deuda Por Cobrar:</b> +{monto_total_deuda:.2f} {moneda.upper()}"
         )
@@ -578,12 +578,12 @@ async def consignar_command(update: Update, context: ContextTypes.DEFAULT_TYPE) 
         # ... (manejo de errores) ...
         await update.message.reply_html(
             f"<b>Error: formato o validacion:</b> {e}\n"
-            "Uso correcto: <code>/consignar [codigo] [cantidad] [vendedor] [precio_venta] [moneda] [nota...]</code>"
+            "Correct usage: <code>/consignar [codigo] [cantidad] [vendedor] [precio_venta] [moneda] [nota...]</code>"
         )
     except Exception as e:
         logger.error(f"Error inesperado en /consignar: {str(e)}")
         logger.error(f"Detalles completos del error:", exc_info=True)
-        await update.message.reply_text(f"Error while registrar la consignacion: {str(e)}")
+        await update.message.reply_text(f"Error while recording la consignment: {str(e)}")
         if conn:
             conn.rollback()
     finally:
@@ -593,7 +593,7 @@ async def consignar_command(update: Update, context: ContextTypes.DEFAULT_TYPE) 
 # --- FASE 14: FUNCION PARA /stock_consignado ( Stock vendedor ) ---
 async def stock_consignado_command(update: Update, context: ContextTypes.DEFAULT_TYPE) -> None:
     """
-    Muestra el stock pendiente por vendedor consultando la tabla Consignaciones (RF6).
+    Show el stock pendiente por vendedor consultando la tabla Consignaciones (RF6).
     Uso: /stock_consignado [vendedor]
     """
     user_id = update.effective_user.id
@@ -625,7 +625,7 @@ async def stock_consignado_command(update: Update, context: ContextTypes.DEFAULT
         stock_items = cursor.fetchall()
         
         # 2. Construir el reporte final
-        reporte = f"📦 <b>STOCK CONSIGNADO PENDIENTE: {vendedor}</b> 📦\n\n"
+        reporte = f"📦 <b>CONSIGNED STOCK PENDIENTE: {vendedor}</b> 📦\n\n"
         stock_total_pendiente = 0
         
         if stock_items:
@@ -634,14 +634,14 @@ async def stock_consignado_command(update: Update, context: ContextTypes.DEFAULT
                 stock_total_pendiente += stock_cantidad
         
         if stock_total_pendiente == 0:
-            reporte += "  <i>El vendedor no tiene stock pendiente de liquidar.</i>"
+            reporte += "  <i>The seller has no pending stock to settle.</i>"
 
         await update.message.reply_html(reporte)
         logger.info(f"Reporte de stock consignado para {vendedor} generado por {user_id}")
 
     except Exception as e:
         logger.error(f"Error inesperado en /stock_consignado: {e}")
-        await update.message.reply_text("An error occurred inesperado al generar el reporte de consignacion.")
+        await update.message.reply_text("An unexpected error occurred al generar el reporte de consignment.")
     finally:
         if conn:
             conn.close()

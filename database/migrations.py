@@ -16,64 +16,64 @@ def migrate_database() -> None:
         with get_db_connection() as conn:
             cursor = conn.cursor()
             
-            # Verificar si la tabla Proveedores existe
+            # Verificar si la tabla Supplieres existe
             cursor.execute("""
                 SELECT name FROM sqlite_master 
-                WHERE type='table' AND name='Proveedores'
+                WHERE type='table' AND name='Supplieres'
             """)
             if not cursor.fetchone():
-                logger.info("Creando tabla Proveedores...")
+                logger.info("Creando tabla Supplieres...")
                 cursor.execute("""
-                    CREATE TABLE Proveedores (
+                    CREATE TABLE Supplieres (
                         id INTEGER PRIMARY KEY AUTOINCREMENT,
                         name TEXT UNIQUE NOT NULL,
                         fecha_creacion TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP
                     )
                 """)
-                logger.info("Tabla Proveedores created.")
+                logger.info("Tabla Supplieres created.")
             else:
-                logger.info("Tabla Proveedores ya existe.")
+                logger.info("Tabla Supplieres ya existe.")
             
-            # Verificar si la columna numero_contenedor existe en Contenedores
-            cursor.execute("PRAGMA table_info(Contenedores)")
+            # Verificar si la columna numero_container existe en Containeres
+            cursor.execute("PRAGMA table_info(Containeres)")
             columns = [row[1] for row in cursor.fetchall()]
             
-            if 'numero_contenedor' not in columns:
-                logger.info("Agregando columna numero_contenedor a Contenedores...")
+            if 'numero_container' not in columns:
+                logger.info("Agregando columna numero_container a Containeres...")
                 cursor.execute("""
-                    ALTER TABLE Contenedores 
-                    ADD COLUMN numero_contenedor TEXT
+                    ALTER TABLE Containeres 
+                    ADD COLUMN numero_container TEXT
                 """)
-                logger.info("Columna numero_contenedor agregada.")
+                logger.info("Columna numero_container agregada.")
             else:
-                logger.info("Columna numero_contenedor ya existe.")
+                logger.info("Columna numero_container ya existe.")
             
             if 'proveedor_id' not in columns:
-                logger.info("Agregando columna proveedor_id a Contenedores...")
+                logger.info("Agregando columna proveedor_id a Containeres...")
                 # SQLite no soporta ADD COLUMN con FOREIGN KEY directamente
                 # Necesitamos recreate la tabla
                 cursor.execute("""
-                    CREATE TABLE IF NOT EXISTS Contenedores_new (
+                    CREATE TABLE IF NOT EXISTS Containeres_new (
                         id INTEGER PRIMARY KEY AUTOINCREMENT,
                         nombre TEXT UNIQUE NOT NULL,
-                        numero_contenedor TEXT,
+                        numero_container TEXT,
                         proveedor_id INTEGER,
                         fecha_creacion TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
-                        FOREIGN KEY(proveedor_id) REFERENCES Proveedores(id) ON DELETE SET NULL
+                        FOREIGN KEY(proveedor_id) REFERENCES Supplieres(id) ON DELETE SET NULL
                     )
                 """)
                 
                 # Copiar datos existentes
                 cursor.execute("""
-                    INSERT INTO Contenedores_new (id, nombre, fecha_creacion)
-                    SELECT id, nombre, fecha_creacion FROM Contenedores
+                    INSERT INTO Containeres_new (id, nombre, fecha_creacion)
+                    SELECT id, nombre, fecha_creacion FROM Containeres
                 """)
                 
                 # Delete tabla antigua
-                cursor.execute("DROP TABLE Contenedores")
+                cursor.execute("DROP TABLE Containeres")
                 
                 # Renombrar tabla nueva
-                cursor.execute("ALTER TABLE Contenedores_new RENAME TO Contenedores")
+                cursor.execute("ALTER TABLE Containeres_new RENAME TO Containeres")
                 
                 logger.info("Columna proveedor_id agregada con relacion FOREIGN KEY.")
             else:
@@ -82,101 +82,101 @@ def migrate_database() -> None:
                 # SQLite no permite delete UNIQUE directamente, necesitamos recreate la tabla
                 cursor.execute("""
                     SELECT sql FROM sqlite_master 
-                    WHERE type='table' AND name='Contenedores'
+                    WHERE type='table' AND name='Containeres'
                 """)
                 table_sql = cursor.fetchone()
                 if table_sql and 'proveedor_id INTEGER UNIQUE' in table_sql[0]:
                     logger.info("Eliminando restriccion UNIQUE de proveedor_id para permitir relacion muchos-a-uno...")
                     # Recreate tabla sin UNIQUE
                     cursor.execute("""
-                        CREATE TABLE IF NOT EXISTS Contenedores_new (
+                        CREATE TABLE IF NOT EXISTS Containeres_new (
                             id INTEGER PRIMARY KEY AUTOINCREMENT,
                             nombre TEXT UNIQUE NOT NULL,
-                            numero_contenedor TEXT,
+                            numero_container TEXT,
                             proveedor_id INTEGER,
                             fecha_creacion TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
-                            FOREIGN KEY(proveedor_id) REFERENCES Proveedores(id) ON DELETE SET NULL
+                            FOREIGN KEY(proveedor_id) REFERENCES Supplieres(id) ON DELETE SET NULL
                         )
                     """)
                     
                     # Copiar todos los datos
                     cursor.execute("""
-                        INSERT INTO Contenedores_new (id, nombre, numero_contenedor, proveedor_id, fecha_creacion)
-                        SELECT id, nombre, numero_contenedor, proveedor_id, fecha_creacion FROM Contenedores
+                        INSERT INTO Containeres_new (id, nombre, numero_container, proveedor_id, fecha_creacion)
+                        SELECT id, nombre, numero_container, proveedor_id, fecha_creacion FROM Containeres
                     """)
                     
                     # Delete tabla antigua
-                    cursor.execute("DROP TABLE Contenedores")
+                    cursor.execute("DROP TABLE Containeres")
                     
                     # Renombrar tabla nueva
-                    cursor.execute("ALTER TABLE Contenedores_new RENAME TO Contenedores")
+                    cursor.execute("ALTER TABLE Containeres_new RENAME TO Containeres")
                     
-                    logger.info("Restriccion UNIQUE deleted. Ahora un proveedor puede tener multiples contenedores.")
+                    logger.info("Restriccion UNIQUE deleted. Ahora un proveedor puede tener multiples containeres.")
             
-            # Verificar si la tabla Almacenes existe
+            # Verificar si la tabla Warehousees existe
             cursor.execute("""
                 SELECT name FROM sqlite_master 
-                WHERE type='table' AND name='Almacenes'
+                WHERE type='table' AND name='Warehousees'
             """)
             if not cursor.fetchone():
-                logger.info("Creando tabla Almacenes...")
+                logger.info("Creando tabla Warehousees...")
                 cursor.execute("""
-                    CREATE TABLE Almacenes (
+                    CREATE TABLE Warehousees (
                         id INTEGER PRIMARY KEY AUTOINCREMENT,
                         nombre TEXT UNIQUE NOT NULL,
                         ubicacion TEXT,
                         fecha_creacion TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP
                     )
                 """)
-                logger.info("Tabla Almacenes created.")
+                logger.info("Tabla Warehousees created.")
             else:
-                logger.info("Tabla Almacenes ya existe.")
+                logger.info("Tabla Warehousees ya existe.")
             
-            # Verificar si la tabla Contenedor_Productos existe
+            # Verificar si la tabla Container_Productos existe
             cursor.execute("""
                 SELECT name FROM sqlite_master 
-                WHERE type='table' AND name='Contenedor_Productos'
+                WHERE type='table' AND name='Container_Productos'
             """)
             if not cursor.fetchone():
-                logger.info("Creando tabla Contenedor_Productos...")
+                logger.info("Creando tabla Container_Productos...")
                 cursor.execute("""
-                    CREATE TABLE Contenedor_Productos (
+                    CREATE TABLE Container_Productos (
                         id INTEGER PRIMARY KEY AUTOINCREMENT,
-                        contenedor_id INTEGER NOT NULL,
+                        container_id INTEGER NOT NULL,
                         producto_codigo TEXT NOT NULL,
                         cantidad REAL NOT NULL CHECK (cantidad >= 0),
                         fecha_ingreso TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
-                        FOREIGN KEY(contenedor_id) REFERENCES Contenedores(id) ON DELETE CASCADE,
+                        FOREIGN KEY(container_id) REFERENCES Containeres(id) ON DELETE CASCADE,
                         FOREIGN KEY(producto_codigo) REFERENCES Productos(codigo) ON DELETE RESTRICT,
-                        UNIQUE(contenedor_id, producto_codigo)
+                        UNIQUE(container_id, producto_codigo)
                     )
                 """)
-                logger.info("Tabla Contenedor_Productos created.")
+                logger.info("Tabla Container_Productos created.")
             else:
-                logger.info("Tabla Contenedor_Productos ya existe.")
+                logger.info("Tabla Container_Productos ya existe.")
             
-            # Verificar si la tabla Inventario_Almacen existe
+            # Verificar si la tabla Inventario_Warehouse existe
             cursor.execute("""
                 SELECT name FROM sqlite_master 
-                WHERE type='table' AND name='Inventario_Almacen'
+                WHERE type='table' AND name='Inventario_Warehouse'
             """)
             if not cursor.fetchone():
-                logger.info("Creando tabla Inventario_Almacen...")
+                logger.info("Creando tabla Inventario_Warehouse...")
                 cursor.execute("""
-                    CREATE TABLE Inventario_Almacen (
+                    CREATE TABLE Inventario_Warehouse (
                         id INTEGER PRIMARY KEY AUTOINCREMENT,
-                        almacen_id INTEGER NOT NULL,
+                        warehouse_id INTEGER NOT NULL,
                         producto_codigo TEXT NOT NULL,
                         cantidad REAL NOT NULL CHECK (cantidad >= 0),
                         fecha_actualizacion TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
-                        FOREIGN KEY(almacen_id) REFERENCES Almacenes(id) ON DELETE CASCADE,
+                        FOREIGN KEY(warehouse_id) REFERENCES Warehousees(id) ON DELETE CASCADE,
                         FOREIGN KEY(producto_codigo) REFERENCES Productos(codigo) ON DELETE RESTRICT,
-                        UNIQUE(almacen_id, producto_codigo)
+                        UNIQUE(warehouse_id, producto_codigo)
                     )
                 """)
-                logger.info("Tabla Inventario_Almacen created.")
+                logger.info("Tabla Inventario_Warehouse created.")
             else:
-                logger.info("Tabla Inventario_Almacen ya existe.")
+                logger.info("Tabla Inventario_Warehouse ya existe.")
             
             # Verificar si la tabla Movimientos_Inventario existe
             cursor.execute("""
@@ -189,11 +189,11 @@ def migrate_database() -> None:
                     CREATE TABLE Movimientos_Inventario (
                         id INTEGER PRIMARY KEY AUTOINCREMENT,
                         fecha TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
-                        tipo TEXT NOT NULL CHECK (tipo IN ('contenedor_a_almacen', 'almacen_a_almacen', 'ajuste', 'venta_almacen')),
-                        origen_tipo TEXT NOT NULL CHECK (origen_tipo IN ('contenedor', 'almacen')),
-                        origen_id INTEGER NOT NULL,
-                        destino_tipo TEXT CHECK (destino_tipo IN ('almacen', NULL)),
-                        destino_id INTEGER,
+                        tipo TEXT NOT NULL CHECK (tipo IN ('container_a_warehouse', 'warehouse_a_warehouse', 'ajuste', 'venta_warehouse')),
+                        source_tipo TEXT NOT NULL CHECK (source_tipo IN ('container', 'warehouse')),
+                        source_id INTEGER NOT NULL,
+                        destination_tipo TEXT CHECK (destination_tipo IN ('warehouse', NULL)),
+                        destination_id INTEGER,
                         producto_codigo TEXT NOT NULL,
                         cantidad REAL NOT NULL CHECK (cantidad > 0),
                         user_id INTEGER NOT NULL,
@@ -205,23 +205,23 @@ def migrate_database() -> None:
             else:
                 logger.info("Tabla Movimientos_Inventario ya existe.")
             
-            # Verificar si la tabla Vendedores existe
+            # Verificar si la tabla Selleres existe
             cursor.execute("""
                 SELECT name FROM sqlite_master 
-                WHERE type='table' AND name='Vendedores'
+                WHERE type='table' AND name='Selleres'
             """)
             if not cursor.fetchone():
-                logger.info("Creando tabla Vendedores...")
+                logger.info("Creando tabla Selleres...")
                 cursor.execute("""
-                    CREATE TABLE Vendedores (
+                    CREATE TABLE Selleres (
                         id INTEGER PRIMARY KEY AUTOINCREMENT,
                         name TEXT UNIQUE NOT NULL,
                         fecha_creacion TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP
                     )
                 """)
-                logger.info("Tabla Vendedores created.")
+                logger.info("Tabla Selleres created.")
             else:
-                logger.info("Tabla Vendedores ya existe.")
+                logger.info("Tabla Selleres ya existe.")
             
             # Verificar si la tabla Cajas existe
             cursor.execute("""
@@ -271,7 +271,7 @@ def migrate_database() -> None:
                     CREATE TABLE Movimientos_new (
                         id INTEGER PRIMARY KEY AUTOINCREMENT,
                         fecha TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
-                        tipo TEXT NOT NULL CHECK (tipo IN ('ingreso', 'gasto', 'traspaso', 'venta', 'consignacion_finalizada')),
+                        tipo TEXT NOT NULL CHECK (tipo IN ('ingreso', 'gasto', 'traspaso', 'venta', 'consignment_finalizada')),
                         monto REAL NOT NULL CHECK (monto >= 0),
                         moneda TEXT NOT NULL CHECK (moneda IN ('usd', 'cup', 'cup-t', 'eur')),
                         caja_id INTEGER NOT NULL,
@@ -314,19 +314,19 @@ def migrate_database() -> None:
             else:
                 logger.warning("Tabla Movimientos no tiene ni 'caja' ni 'caja_id'. Verificar estructura.")
             
-            # Corregir traspasos mal registrados (los de destino deben ser 'ingreso', no 'traspaso')
-            logger.info("Corrigiendo traspasos mal registrados...")
+            # Corregir traspasos mal recordeds (los de destination deben ser 'ingreso', no 'traspaso')
+            logger.info("Corrigiendo traspasos mal recordeds...")
             cursor.execute("""
                 SELECT id, descripcion, caja_id, monto, moneda
                 FROM Movimientos
                 WHERE tipo = 'traspaso' 
                 AND descripcion LIKE '%TRASPASO (Ingreso)%'
             """)
-            traspasos_destino = cursor.fetchall()
+            traspasos_destination = cursor.fetchall()
             
-            if traspasos_destino:
-                logger.info(f"Encontrados {len(traspasos_destino)} traspasos de destino a corregir.")
-                for mov in traspasos_destino:
+            if traspasos_destination:
+                logger.info(f"Encontrados {len(traspasos_destination)} traspasos de destination a corregir.")
+                for mov in traspasos_destination:
                     mov_id = mov[0]
                     cursor.execute("""
                         UPDATE Movimientos
@@ -334,9 +334,9 @@ def migrate_database() -> None:
                         WHERE id = ?
                     """, (mov_id,))
                     logger.info(f"Movimiento {mov_id} corregido: 'traspaso' -> 'ingreso' (Caja {mov[2]}, {mov[4].upper()} {mov[3]:.2f})")
-                logger.info("Traspasos de destino corregidos exitosamente.")
+                logger.info("Traspasos de destination corregidos exitosamente.")
             else:
-                logger.info("No se encontraron traspasos de destino a corregir.")
+                logger.info("No se encontraron traspasos de destination a corregir.")
             
             # Create tabla Deudas_Productos si no existe
             cursor.execute("""
@@ -402,7 +402,7 @@ def migrate_database() -> None:
                     CREATE TABLE Transferencias_Externas (
                         id INTEGER PRIMARY KEY AUTOINCREMENT,
                         fecha TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
-                        caja_origen_id INTEGER NOT NULL,
+                        caja_source_id INTEGER NOT NULL,
                         caja_externa_id INTEGER NOT NULL,
                         producto_codigo TEXT NOT NULL,
                         monto REAL NOT NULL CHECK (monto >= 0),
@@ -412,7 +412,7 @@ def migrate_database() -> None:
                         monto_recibido REAL NOT NULL CHECK (monto_recibido >= 0),
                         user_id INTEGER NOT NULL,
                         descripcion TEXT,
-                        FOREIGN KEY(caja_origen_id) REFERENCES Cajas(id) ON DELETE RESTRICT,
+                        FOREIGN KEY(caja_source_id) REFERENCES Cajas(id) ON DELETE RESTRICT,
                         FOREIGN KEY(caja_externa_id) REFERENCES Cajas_Externas(id) ON DELETE RESTRICT,
                         FOREIGN KEY(producto_codigo) REFERENCES Productos(codigo) ON DELETE RESTRICT
                     )

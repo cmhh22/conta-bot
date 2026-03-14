@@ -91,10 +91,10 @@ class FinancialAdvisor:
         mensaje += f"  Capital total: <b>{total_usd:,.2f} USD</b>\n"
         mensaje += f"  Ganancia acumulada: <b>{ganancias['margen_bruto_usd']:,.2f} USD</b>\n\n"
 
-        # Flujo de caja (7 dias)
+        # Flujo de caja (7 days)
         flujo_neto = ingresos_7d - gastos_7d
         emoji_flujo = "📈" if flujo_neto >= 0 else "📉"
-        mensaje += f"💰 <b>Flujo de Caja (7 dias)</b>\n"
+        mensaje += f"💰 <b>Flujo de Caja (7 days)</b>\n"
         mensaje += f"  🟢 Ingresos: +{ingresos_7d:,.2f} USD\n"
         mensaje += f"  🔴 Gastos: -{gastos_7d:,.2f} USD\n"
         mensaje += f"  {emoji_flujo} Neto: <b>{flujo_neto:+,.2f} USD</b>\n\n"
@@ -102,7 +102,7 @@ class FinancialAdvisor:
         # Flujo mensual
         flujo_mensual = ingresos_30d - gastos_30d
         emoji_mes = "📈" if flujo_mensual >= 0 else "📉"
-        mensaje += f"📅 <b>Flujo Mensual (30 dias)</b>\n"
+        mensaje += f"📅 <b>Flujo Mensual (30 days)</b>\n"
         mensaje += f"  {emoji_mes} Ingresos: {ingresos_30d:,.2f} USD\n"
         mensaje += f"  {emoji_mes} Gastos: {gastos_30d:,.2f} USD\n"
         mensaje += f"  {emoji_mes} Neto: <b>{flujo_mensual:+,.2f} USD</b>\n\n"
@@ -152,7 +152,7 @@ class FinancialAdvisor:
         if not gastos:
             return {
                 "success": True,
-                "message": "📊 No gastos registrados en los ultimos 30 dias.",
+                "message": "📊 No gastos recordeds en los ultimos 30 days.",
             }
 
         total_usd = sum(convert_to_usd(g["monto"], g["moneda"]) for g in gastos)
@@ -182,7 +182,7 @@ class FinancialAdvisor:
             if hace_14 <= _parse_fecha(g["fecha"]) < hace_7
         )
 
-        mensaje = "💸 <b>ANALISIS DE GASTOS (30 dias)</b>\n"
+        mensaje = "💸 <b>ANALISIS DE GASTOS (30 days)</b>\n"
         mensaje += "━" * 30 + "\n\n"
         mensaje += f"💰 Total gastado: <b>{total_usd:,.2f} USD</b>\n"
         mensaje += f"📊 Promedio diario: {promedio_diario:,.2f} USD\n"
@@ -217,14 +217,14 @@ class FinancialAdvisor:
         if not ingresos:
             return {
                 "success": True,
-                "message": "📊 No ingresos registrados en los ultimos 30 dias.",
+                "message": "📊 No ingresos recordeds en los ultimos 30 days.",
             }
 
         total_usd = sum(convert_to_usd(i["monto"], i["moneda"]) for i in ingresos)
         ventas = [i for i in ingresos if i["tipo"] == "venta"]
         otros = [i for i in ingresos if i["tipo"] == "ingreso"]
 
-        mensaje = "💰 <b>ANALISIS DE INGRESOS (30 dias)</b>\n"
+        mensaje = "💰 <b>ANALISIS DE INGRESOS (30 days)</b>\n"
         mensaje += "━" * 30 + "\n\n"
         mensaje += f"💵 Total ingresos: <b>{total_usd:,.2f} USD</b>\n"
         mensaje += f"🛒 Por ventas: {sum(convert_to_usd(v['monto'], v['moneda']) for v in ventas):,.2f} USD\n"
@@ -291,7 +291,7 @@ class FinancialAdvisor:
         por_cobrar = deudas.get("por_cobrar", [])
 
         if not por_pagar and not por_cobrar:
-            return {"success": True, "message": "✅ No deudas pendientes. Excelente!"}
+            return {"success": True, "message": "✅ No pending debts. Excelente!"}
 
         total_pagar = sum(convert_to_usd(d["monto"], d["moneda"]) for d in por_pagar)
         total_cobrar = sum(convert_to_usd(d["monto"], d["moneda"]) for d in por_cobrar)
@@ -406,7 +406,7 @@ class FinancialAdvisor:
         # Alerta: muchos gastos en poco tiempo
         gastos_recientes = [m for m in historial if m["tipo"] == "gasto"]
         if len(gastos_recientes) > 10:
-            alertas.append(f"📊 Alto volumen de gastos: {len(gastos_recientes)} en 7 dias")
+            alertas.append(f"📊 Alto volumen de gastos: {len(gastos_recientes)} en 7 days")
 
         # Alerta: productos con stock bajo
         try:

@@ -1,6 +1,6 @@
 """
-Sistema de memoria conversacional para el chatbot.
-Mantiene contexto de conversaciones por usuario con ventana deslizante.
+Sistema de memoria conversational para el chatbot.
+Mantiene contexto de conversationes por usuario con ventana deslizante.
 """
 import json
 import logging
@@ -25,7 +25,7 @@ class Message:
 
 
 class ConversationMemory:
-    """Memoria de conversacion por usuario con ventana deslizante."""
+    """Memoria de conversation por usuario con ventana deslizante."""
 
     _conversations: Dict[int, List[Message]] = defaultdict(list)
     _last_activity: Dict[int, float] = {}

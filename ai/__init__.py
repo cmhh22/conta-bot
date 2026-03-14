@@ -6,7 +6,7 @@ Componentes:
 - openai_service: Integracion con OpenAI Function Calling
 - action_executor: Ejecutor de actions detectadas
 - chatbot_handler: Handler de Telegram para mensajes de texto libre
-- conversation_memory: Memoria conversacional por usuario
+- conversation_memory: Memoria conversational por usuario
 - financial_advisor: Motor de analisis financiero con IA
 - function_schemas: Esquemas de funciones para OpenAI
 """

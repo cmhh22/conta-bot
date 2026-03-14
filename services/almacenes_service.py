@@ -4,7 +4,7 @@ Warehouses service - Business logic for warehouse management.
 import logging
 from typing import List, Dict, Any, Optional
 from database.connection import get_db_connection
-from database.repositories import AlmacenRepository
+from database.repositories import WarehouseRepository
 
 logger = logging.getLogger(__name__)
 
@@ -29,18 +29,18 @@ def create(nombre: str, ubicacion: Optional[str] = None) -> Dict[str, Any]:
     
     with get_db_connection() as conn:
         # Check if it already exists
-        existente = AlmacenRepository.obtener_por_nombre(conn, nombre)
+        existente = WarehouseRepository.obtener_por_nombre(conn, nombre)
         if existente:
             raise ValueError(f"A warehouse named '{nombre}' already exists")
         
-        almacen_id = AlmacenRepository.create(conn, nombre, ubicacion)
-        almacen = AlmacenRepository.obtener_por_id(conn, almacen_id)
+        warehouse_id = WarehouseRepository.create(conn, nombre, ubicacion)
+        warehouse = WarehouseRepository.obtener_por_id(conn, warehouse_id)
         
         return {
-            "id": almacen["id"],
-            "nombre": almacen["nombre"],
-            "ubicacion": almacen["ubicacion"],
-            "fecha_creacion": almacen["fecha_creacion"]
+            "id": warehouse["id"],
+            "nombre": warehouse["nombre"],
+            "ubicacion": warehouse["ubicacion"],
+            "fecha_creacion": warehouse["fecha_creacion"]
         }
 
 
@@ -52,38 +52,38 @@ def listar() -> List[Dict[str, Any]]:
         List of dictionaries with warehouse data
     """
     with get_db_connection() as conn:
-        almacenes = AlmacenRepository.obtener_todos(conn)
+        warehousees = WarehouseRepository.obtener_todos(conn)
         return [
             {
-                "id": almacen["id"],
-                "nombre": almacen["nombre"],
-                "ubicacion": almacen["ubicacion"],
-                "fecha_creacion": almacen["fecha_creacion"]
+                "id": warehouse["id"],
+                "nombre": warehouse["nombre"],
+                "ubicacion": warehouse["ubicacion"],
+                "fecha_creacion": warehouse["fecha_creacion"]
             }
-            for almacen in almacenes
+            for warehouse in warehousees
         ]
 
 
-def obtener_por_id(almacen_id: int) -> Optional[Dict[str, Any]]:
+def obtener_por_id(warehouse_id: int) -> Optional[Dict[str, Any]]:
     """
     Get a warehouse by ID.
     
     Args:
-        almacen_id: Warehouse ID
+        warehouse_id: Warehouse ID
     
     Returns:
         Dict with warehouse data or None if it does not exist
     """
     with get_db_connection() as conn:
-        almacen = AlmacenRepository.obtener_por_id(conn, almacen_id)
-        if not almacen:
+        warehouse = WarehouseRepository.obtener_por_id(conn, warehouse_id)
+        if not warehouse:
             return None
         
         return {
-            "id": almacen["id"],
-            "nombre": almacen["nombre"],
-            "ubicacion": almacen["ubicacion"],
-            "fecha_creacion": almacen["fecha_creacion"]
+            "id": warehouse["id"],
+            "nombre": warehouse["nombre"],
+            "ubicacion": warehouse["ubicacion"],
+            "fecha_creacion": warehouse["fecha_creacion"]
         }
 
 
@@ -98,25 +98,25 @@ def obtener_por_nombre(nombre: str) -> Optional[Dict[str, Any]]:
         Dict with warehouse data or None if it does not exist
     """
     with get_db_connection() as conn:
-        almacen = AlmacenRepository.obtener_por_nombre(conn, nombre)
-        if not almacen:
+        warehouse = WarehouseRepository.obtener_por_nombre(conn, nombre)
+        if not warehouse:
             return None
         
         return {
-            "id": almacen["id"],
-            "nombre": almacen["nombre"],
-            "ubicacion": almacen["ubicacion"],
-            "fecha_creacion": almacen["fecha_creacion"]
+            "id": warehouse["id"],
+            "nombre": warehouse["nombre"],
+            "ubicacion": warehouse["ubicacion"],
+            "fecha_creacion": warehouse["fecha_creacion"]
         }
 
 
-def update(almacen_id: int, nuevo_nombre: Optional[str] = None,
+def update(warehouse_id: int, nuevo_nombre: Optional[str] = None,
                nueva_ubicacion: Optional[str] = None) -> Dict[str, Any]:
     """
     Update a warehouse.
     
     Args:
-        almacen_id: ID of warehouse to update
+        warehouse_id: ID of warehouse to update
         nuevo_nombre: New name (optional)
         nueva_ubicacion: New location (optional)
     
@@ -127,9 +127,9 @@ def update(almacen_id: int, nuevo_nombre: Optional[str] = None,
         ValueError: If the warehouse does not exist or the new name is already in use
     """
     with get_db_connection() as conn:
-        almacen = AlmacenRepository.obtener_por_id(conn, almacen_id)
-        if not almacen:
-            raise ValueError(f"No warehouse exists with ID {almacen_id}")
+        warehouse = WarehouseRepository.obtener_por_id(conn, warehouse_id)
+        if not warehouse:
+            raise ValueError(f"No warehouse exists with ID {warehouse_id}")
         
         # Check if the new name already exists (if being changed)
         if nuevo_nombre:
@@ -137,27 +137,27 @@ def update(almacen_id: int, nuevo_nombre: Optional[str] = None,
             if not nuevo_nombre:
                 raise ValueError("Warehouse name cannot be empty")
             
-            existente = AlmacenRepository.obtener_por_nombre(conn, nuevo_nombre)
-            if existente and existente["id"] != almacen_id:
+            existente = WarehouseRepository.obtener_por_nombre(conn, nuevo_nombre)
+            if existente and existente["id"] != warehouse_id:
                 raise ValueError(f"A warehouse named '{nuevo_nombre}' already exists")
         
-        AlmacenRepository.update(conn, almacen_id, nuevo_nombre, nueva_ubicacion)
-        almacen_updated = AlmacenRepository.obtener_por_id(conn, almacen_id)
+        WarehouseRepository.update(conn, warehouse_id, nuevo_nombre, nueva_ubicacion)
+        warehouse_updated = WarehouseRepository.obtener_por_id(conn, warehouse_id)
         
         return {
-            "id": almacen_updated["id"],
-            "nombre": almacen_updated["nombre"],
-            "ubicacion": almacen_updated["ubicacion"],
-            "fecha_creacion": almacen_updated["fecha_creacion"]
+            "id": warehouse_updated["id"],
+            "nombre": warehouse_updated["nombre"],
+            "ubicacion": warehouse_updated["ubicacion"],
+            "fecha_creacion": warehouse_updated["fecha_creacion"]
         }
 
 
-def delete(almacen_id: int) -> bool:
+def delete(warehouse_id: int) -> bool:
     """
     Delete a warehouse.
     
     Args:
-        almacen_id: ID of warehouse to delete
+        warehouse_id: ID of warehouse to delete
     
     Returns:
         True if deletion was successful
@@ -166,10 +166,10 @@ def delete(almacen_id: int) -> bool:
         ValueError: If the warehouse does not exist
     """
     with get_db_connection() as conn:
-        almacen = AlmacenRepository.obtener_por_id(conn, almacen_id)
-        if not almacen:
-            raise ValueError(f"No warehouse exists with ID {almacen_id}")
+        warehouse = WarehouseRepository.obtener_por_id(conn, warehouse_id)
+        if not warehouse:
+            raise ValueError(f"No warehouse exists with ID {warehouse_id}")
         
-        AlmacenRepository.delete(conn, almacen_id)
+        WarehouseRepository.delete(conn, warehouse_id)
         return True
 

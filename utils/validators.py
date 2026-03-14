@@ -55,15 +55,15 @@ def validate_cantidad(cantidad_str: str) -> float:
         raise ValidationError(f"'{cantidad_str}' is not a valid number.")
 
 
-def validate_dias(dias_str: Optional[str], default: int = 7) -> int:
+def validate_days(days_str: Optional[str], default: int = 7) -> int:
     """Validate and convert days to integer."""
-    if dias_str is None:
+    if days_str is None:
         return default
     try:
-        dias = int(dias_str)
-        if dias <= 0:
+        days = int(days_str)
+        if days <= 0:
             raise ValidationError("Number of days must be a positive integer.")
-        return dias
+        return days
     except ValueError:
-        raise ValidationError(f"'{dias_str}' is not a valid number of days.")
+        raise ValidationError(f"'{days_str}' is not a valid number of days.")
 

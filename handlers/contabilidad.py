@@ -277,10 +277,10 @@ async def cambio_command(update: Update, context: ContextTypes.DEFAULT_TYPE) -> 
             raise ValueError("Missing arguments. Usage: /cambio [amount] [origin_currency] [origin_cash_box] [destination_currency] [destination_cash_box] [reason...]")
 
         monto_str = context.args[0]
-        moneda_origen = context.args[1].lower()
-        caja_origen = context.args[2].lower()
-        moneda_destino = context.args[3].lower()
-        caja_destino = context.args[4].lower()
+        moneda_source = context.args[1].lower()
+        caja_source = context.args[2].lower()
+        moneda_destination = context.args[3].lower()
+        caja_destination = context.args[4].lower()
         motivo = " ".join(context.args[5:])
 
         # Variable validations
@@ -291,23 +291,23 @@ async def cambio_command(update: Update, context: ContextTypes.DEFAULT_TYPE) -> 
             await update.message.reply_text("Error: The amount must be a positive number.")
             return
 
-        if moneda_origen not in VALID_MONEDAS:
-            await update.message.reply_text(f"Error: Invalid origin currency ({moneda_origen}).")
+        if moneda_source not in VALID_MONEDAS:
+            await update.message.reply_text(f"Error: Invalid origin currency ({moneda_source}).")
             return
         
-        if caja_origen not in VALID_CAJAS:
-            await update.message.reply_text(f"Error: Invalid origin cash box ({caja_origen}).")
+        if caja_source not in VALID_CAJAS:
+            await update.message.reply_text(f"Error: Invalid origin cash box ({caja_source}).")
             return
 
-        if moneda_destino not in VALID_MONEDAS:
-            await update.message.reply_text(f"Error: Invalid destination currency ({moneda_destino}).")
+        if moneda_destination not in VALID_MONEDAS:
+            await update.message.reply_text(f"Error: Invalid destination currency ({moneda_destination}).")
             return
 
-        if caja_destino not in VALID_CAJAS:
-            await update.message.reply_text(f"Error: Invalid destination cash box ({caja_destino}).")
+        if caja_destination not in VALID_CAJAS:
+            await update.message.reply_text(f"Error: Invalid destination cash box ({caja_destination}).")
             return
         
-        if caja_origen == caja_destino and moneda_origen == moneda_destino:
+        if caja_source == caja_destination and moneda_source == moneda_destination:
             await update.message.reply_html("⛔ Error: Origin and destination cash box/currency cannot be the same for a transfer.")
             return
 
@@ -315,48 +315,48 @@ async def cambio_command(update: Update, context: ContextTypes.DEFAULT_TYPE) -> 
         with get_db_connection() as conn:
             
             # 🌟 KEY FIX: Negative balance check 🌟
-            saldo_actual = MovimientoManager.get_saldo_caja(conn, caja_origen, moneda_origen)
+            saldo_actual = MovimientoManager.get_saldo_caja(conn, caja_source, moneda_source)
             
             if saldo_actual < monto:
                 await update.message.reply_html(
-                    f"⛔ <b>Insufficient balance</b> in origin cash box {caja_origen.upper()} ({moneda_origen.upper()}). "
-                    f"Available: {saldo_actual:.2f} {moneda_origen.upper()}. Transfer could not be completed."
+                    f"⛔ <b>Insufficient balance</b> in origin cash box {caja_source.upper()} ({moneda_source.upper()}). "
+                    f"Available: {saldo_actual:.2f} {moneda_source.upper()}. Transfer could not be completed."
                 )
                 return
 
             # 3. Record expense movement (type='traspaso', origin expense)
             MovimientoManager.registrar_movimiento(
-                conn, 'traspaso', monto, moneda_origen, caja_origen, user_id, 
-                f"TRANSFER (Expense): To {caja_destino.upper()}/{moneda_destino.upper()} - Reason: {motivo}"
+                conn, 'traspaso', monto, moneda_source, caja_source, user_id, 
+                f"TRANSFER (Expense): To {caja_destination.upper()}/{moneda_destination.upper()} - Reason: {motivo}"
             )
 
             # 4. Calculate amount in destination currency
-            if moneda_origen == moneda_destino:
-                monto_destino = monto
+            if moneda_source == moneda_destination:
+                monto_destination = monto
             else:
                 tasa = cfg.TASA_USD_CUP # Centralized rate in config_vars.py
 
-                if moneda_origen == 'usd' and moneda_destino in ['cup', 'cup-t']:
-                    monto_destino = monto * tasa
-                elif moneda_destino == 'usd' and moneda_origen in ['cup', 'cup-t']:
-                    monto_destino = monto / tasa
+                if moneda_source == 'usd' and moneda_destination in ['cup', 'cup-t']:
+                    monto_destination = monto * tasa
+                elif moneda_destination == 'usd' and moneda_source in ['cup', 'cup-t']:
+                    monto_destination = monto / tasa
                 else: # Conversion between CUP and CUP-T is 1:1, but register if cash box changes
-                    monto_destino = monto
+                    monto_destination = monto
 
             # 5. Record income movement (type='traspaso', destination income)
             MovimientoManager.registrar_movimiento(
-                conn, 'traspaso', monto_destino, moneda_destino, caja_destino, user_id, 
-                f"TRANSFER (Income): From {caja_origen.upper()}/{moneda_origen.upper()} - Reason: {motivo}"
+                conn, 'traspaso', monto_destination, moneda_destination, caja_destination, user_id, 
+                f"TRANSFER (Income): From {caja_source.upper()}/{moneda_source.upper()} - Reason: {motivo}"
             )
         
         # 6. Confirmation message
         await update.message.reply_html(
             f"✅ <b>Transfer Recorded!</b>\n\n"
-            f"<b>Origin:</b> -{monto:.2f} {moneda_origen.upper()} from {caja_origen.upper()}\n"
-            f"<b>Destination:</b> +{monto_destino:.2f} {moneda_destino.upper()} to {caja_destino.upper()}\n"
+            f"<b>Origin:</b> -{monto:.2f} {moneda_source.upper()} from {caja_source.upper()}\n"
+            f"<b>Destination:</b> +{monto_destination:.2f} {moneda_destination.upper()} to {caja_destination.upper()}\n"
             f"<b>Reason:</b> {motivo}"
         )
-        logger.info(f"Transfer from {monto} {moneda_origen} to {monto_destino} {moneda_destino} recorded by {user_id}")
+        logger.info(f"Transfer from {monto} {moneda_source} to {monto_destination} {moneda_destination} recorded by {user_id}")
 
     except ValueError as e:
         await update.message.reply_html(
@@ -625,20 +625,20 @@ async def historial_command(update: Update, context: ContextTypes.DEFAULT_TYPE) 
         return
 
     conn = None
-    dias = 7  # Default value: last 7 days
+    days = 7  # Default value: last 7 days
     
     try:
         # 1. Parse number of days
         if context.args:
             try:
-                dias = int(context.args[0])
-                if dias <= 0: raise ValueError
+                days = int(context.args[0])
+                if days <= 0: raise ValueError
             except ValueError:
                 await update.message.reply_text("The number of days must be a positive integer.")
                 return
 
         # 2. Calculate start date
-        fecha_limite = datetime.now() - timedelta(days=dias)
+        fecha_limite = datetime.now() - timedelta(days=days)
         
         conn = sqlite3.connect("contabilidad.db")
         cursor = conn.cursor()
@@ -654,11 +654,11 @@ async def historial_command(update: Update, context: ContextTypes.DEFAULT_TYPE) 
         movimientos = cursor.fetchall()
         
         if not movimientos:
-            await update.message.reply_text(f"✅ No recorded movements were found in the last {dias} days.")
+            await update.message.reply_text(f"✅ No recorded movements were found in the last {days} days.")
             return
 
         # 4. Build report
-        reporte = f"⏳ <b>MOVEMENT HISTORY ({dias} days)</b> 📜\n\n"
+        reporte = f"⏳ <b>MOVEMENT HISTORY ({days} days)</b> 📜\n\n"
         
         for fecha_str, tipo, monto, moneda, caja, descripcion in movimientos:
             
@@ -687,7 +687,7 @@ async def historial_command(update: Update, context: ContextTypes.DEFAULT_TYPE) 
             )
 
         await update.message.reply_html(reporte)
-        logger.info(f"Historical report for {dias} days generated by {user_id}")
+        logger.info(f"Historical report for {days} days generated by {user_id}")
 
     except Exception as e:
         logger.error(f"Unexpected error in /historial: {e}")

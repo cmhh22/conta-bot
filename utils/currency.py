@@ -31,45 +31,45 @@ def convert_to_usd(monto: float, moneda: str) -> float:
         raise ValueError(f"Unsupported currency: {moneda}")
 
 
-def convert_from_usd(monto_usd: float, moneda_destino: str) -> float:
+def convert_from_usd(monto_usd: float, moneda_destination: str) -> float:
     """
     Convert an amount from USD to another currency.
     
     Args:
         monto_usd: Amount in USD
-        moneda_destino: Destination currency ('usd', 'cup', 'cup-t', 'eur')
+        moneda_destination: Destination currency ('usd', 'cup', 'cup-t', 'eur')
     
     Returns:
         Amount in the destination currency
     """
-    if moneda_destino == 'usd':
+    if moneda_destination == 'usd':
         return monto_usd
-    elif moneda_destino in ('cup', 'cup-t'):
+    elif moneda_destination in ('cup', 'cup-t'):
         return monto_usd * get_tasa()
-    elif moneda_destino == 'eur':
+    elif moneda_destination == 'eur':
         # 1 USD = TASA_USD_EUR EUR
         return monto_usd * config.TASA_USD_EUR
     else:
-        raise ValueError(f"Unsupported currency: {moneda_destino}")
+        raise ValueError(f"Unsupported currency: {moneda_destination}")
 
 
-def convert_currency(monto: float, moneda_origen: str, moneda_destino: str) -> float:
+def convert_currency(monto: float, moneda_source: str, moneda_destination: str) -> float:
     """
     Convert an amount between two currencies.
     
     Args:
         monto: Amount to convert
-        moneda_origen: Source currency
-        moneda_destino: Destination currency
+        moneda_source: Source currency
+        moneda_destination: Destination currency
     
     Returns:
         Converted amount
     """
-    if moneda_origen == moneda_destino:
+    if moneda_source == moneda_destination:
         return monto
     
     # Convert to USD first
-    monto_usd = convert_to_usd(monto, moneda_origen)
+    monto_usd = convert_to_usd(monto, moneda_source)
     # Convert from USD to destination
-    return convert_from_usd(monto_usd, moneda_destino)
+    return convert_from_usd(monto_usd, moneda_destination)
 

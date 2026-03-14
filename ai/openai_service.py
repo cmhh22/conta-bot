@@ -1,7 +1,7 @@
 """
 Servicio de OpenAI para procesamiento de lenguaje natural avanzado.
 Utiliza Function Calling para deteccion precisa de intenciones y
-memoria conversacional para dialogos multi-turno.
+memoria conversational para dialogos multi-turno.
 """
 import json
 import logging
@@ -67,7 +67,7 @@ class OpenAIService:
         from ai.function_schemas import AVAILABLE_FUNCTIONS, FUNCTION_TO_INTENT, SYSTEM_PROMPT
 
         try:
-            # Construir mensajes con contexto conversacional
+            # Construir mensajes con contexto conversational
             messages: List[Dict] = [{"role": "system", "content": SYSTEM_PROMPT}]
 
             if context_summary:
@@ -76,7 +76,7 @@ class OpenAIService:
                     "content": f"Contexto del usuario:\n{context_summary}",
                 })
 
-            # Anadir historial de conversacion (ultimos mensajes)
+            # Anadir historial de conversation (ultimos mensajes)
             if conversation_history:
                 messages.extend(conversation_history[-8:])
 
@@ -101,16 +101,16 @@ class OpenAIService:
 
                 intent = FUNCTION_TO_INTENT.get(function_name, "unknown")
 
-                # Mapear argumentos de contenedor a sub-intenciones
-                if function_name == "gestionar_contenedor":
+                # Mapear argumentos de container a sub-intenciones
+                if function_name == "gestionar_container":
                     accion = arguments.pop("accion", "listar")
                     accion_map = {
-                        "create": "contenedor_create",
-                        "listar": "contenedor_listar",
-                        "editar": "contenedor_editar",
-                        "delete": "contenedor_delete",
+                        "create": "container_create",
+                        "listar": "container_listar",
+                        "editar": "container_editar",
+                        "delete": "container_delete",
                     }
-                    intent = accion_map.get(accion, "contenedores")
+                    intent = accion_map.get(accion, "containeres")
 
                 logger.info(f"OpenAI Function Call: {function_name} → intent={intent}, args={arguments}")
 

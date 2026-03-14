@@ -24,11 +24,11 @@ class IntentType(Enum):
     CONSIGNAR = "consignar"
     STOCK_CONSIGNADO = "stock_consignado"
     EXPORTAR = "exportar"
-    CONTENEDORES = "contenedores"
-    CONTENEDOR_CREAR = "contenedor_create"
-    CONTENEDOR_LISTAR = "contenedor_listar"
-    CONTENEDOR_EDITAR = "contenedor_editar"
-    CONTENEDOR_ELIMINAR = "contenedor_delete"
+    CONTENEDORES = "containeres"
+    CONTENEDOR_CREAR = "container_create"
+    CONTENEDOR_LISTAR = "container_listar"
+    CONTENEDOR_EDITAR = "container_editar"
+    CONTENEDOR_ELIMINAR = "container_delete"
     ANALISIS_FINANCIERO = "analisis_financiero"
     CLARIFICATION = "clarification"
     UNKNOWN = "unknown"
@@ -46,7 +46,7 @@ class IntentParser:
             r"dinero disponible", r"estado de cajas", r"ver balance"
         ],
         IntentType.INGRESO: [
-            r"ingreso", r"ingresar", r"entrada de dinero", r"recib[ii]", r"depositar",
+            r"ingreso", r"ingresar", r"cash intake", r"recib[ii]", r"depositar",
             r"agregar dinero", r"sumar", r"anadir dinero"
         ],
         IntentType.GASTO: [
@@ -90,23 +90,23 @@ class IntentParser:
             r"exportar", r"descargar", r"backup", r"respaldo", r"csv", r"excel"
         ],
         IntentType.CONTENEDORES: [
-            r"contenedor", r"contenedores", r"gestionar contenedores"
+            r"container", r"containeres", r"gestionar containeres"
         ],
         IntentType.CONTENEDOR_CREAR: [
-            r"create contenedor", r"nuevo contenedor", r"agregar contenedor",
-            r"anadir contenedor", r"registrar contenedor"
+            r"create container", r"nuevo container", r"agregar container",
+            r"anadir container", r"registrar container"
         ],
         IntentType.CONTENEDOR_LISTAR: [
-            r"listar contenedores", r"ver contenedores", r"mostrar contenedores",
-            r"contenedores disponibles", r"todos los contenedores"
+            r"listar containeres", r"ver containeres", r"mostrar containeres",
+            r"containeres disponibles", r"todos los containeres"
         ],
         IntentType.CONTENEDOR_EDITAR: [
-            r"editar contenedor", r"renombrar contenedor", r"cambiar nombre contenedor",
-            r"modificar contenedor", r"update contenedor"
+            r"editar container", r"renombrar container", r"cambiar nombre container",
+            r"modificar container", r"update container"
         ],
         IntentType.CONTENEDOR_ELIMINAR: [
-            r"delete contenedor", r"borrar contenedor", r"quitar contenedor",
-            r"delete.*contenedor", r"borrar.*contenedor"
+            r"delete container", r"borrar container", r"quitar container",
+            r"delete.*container", r"borrar.*container"
         ],
         IntentType.GREETING: [
             r"hola", r"buenos d[ii]as", r"buenas tardes", r"buenas noches",
@@ -173,11 +173,11 @@ class IntentParser:
                     if re.search(pattern, text, re.IGNORECASE):
                         return intent_type
         
-        # Si no se encontro intencion especifica de contenedores, buscar otras
+        # If no specific container intent is found, evaluate other intents
         scores = {}
         
         for intent_type, patterns in cls.INTENT_PATTERNS.items():
-            # Saltar las intenciones de contenedores ya que las procesamos arriba
+            # Skip container intents since they were already processed above
             if intent_type in priority_order:
                 continue
                 
@@ -205,7 +205,7 @@ class IntentParser:
             (r'(\d+\.?\d*)\s*(?:usd|d[oo]lar|d[oo]lares|\$)', 'monto_usd'),
             (r'(\d+\.?\d*)\s*(?:cup|peso|pesos)', 'monto_cup'),
             (r'(\d+\.?\d*)\s*(?:unidades?|u\.?|cantidad)', 'cantidad'),
-            (r'(\d+\.?\d*)\s*(?:d[ii]a|d[ii]as)', 'dias'),
+            (r'(\d+\.?\d*)\s*(?:d[ii]a|d[ii]as)', 'days'),
             (r'\b(\d+\.?\d*)\b', 'numero_generico'),  # Cualquier numero
         ]
         
@@ -230,8 +230,8 @@ class IntentParser:
         
         if 'cantidad' in numbers_found:
             params['cantidad'] = numbers_found['cantidad']
-        elif 'dias' in numbers_found:
-            params['dias'] = int(numbers_found['dias'])
+        elif 'days' in numbers_found:
+            params['days'] = int(numbers_found['days'])
         
         # Extraer moneda
         for moneda, patterns in cls.MONEDA_PATTERNS.items():
@@ -254,25 +254,25 @@ class IntentParser:
                 params['caja'] = match.group(1).lower()
                 break
         
-        # Si hay traspaso, buscar caja destino
+        # Si hay traspaso, buscar caja destination
         if intent == IntentType.TRASPASO:
             # Buscar patrones como "de X a Y" o "desde X hacia Y"
             traspaso_match = re.search(r'(?:de|desde)\s+(\w+)\s+(?:a|hacia|para)\s+(\w+)', text, re.IGNORECASE)
             if traspaso_match:
-                params['caja_origen'] = traspaso_match.group(1).lower()
-                params['caja_destino'] = traspaso_match.group(2).lower()
+                params['caja_source'] = traspaso_match.group(1).lower()
+                params['caja_destination'] = traspaso_match.group(2).lower()
         
         # Extraer codigos de producto (mayusculas seguidas de numeros)
         codigo_match = re.search(r'\b[A-Z]+\d+\b', text.upper())
         if codigo_match:
             params['codigo'] = codigo_match.group()
         
-        # Extraer nombres propios (vendedores, proveedores, nombres de contenedores)
+        # Extraer nombres propios (vendedores, proveedores, nombres de containeres)
         # Buscar nombres entre comillas o despues de ciertas palabras clave
         nombre_patterns = [
             r'(?:nombre|llamado|llamada|de nombre)\s+["\']?([^"\']+?)(?:\s|$|,|\.)',
-            r'(?:contenedor|nombre)\s+["\']?([A-Za-z][a-zA-Z0-9\s]+?)(?:\s|$|,|\.)',
-            r'(?:create|nuevo|agregar|anadir)\s+(?:contenedor\s+)?(?:llamado\s+)?["\']?([A-Za-z][a-zA-Z0-9\s]+?)(?:\s|$|,|\.)',
+            r'(?:container|nombre)\s+["\']?([A-Za-z][a-zA-Z0-9\s]+?)(?:\s|$|,|\.)',
+            r'(?:create|nuevo|agregar|anadir)\s+(?:container\s+)?(?:llamado\s+)?["\']?([A-Za-z][a-zA-Z0-9\s]+?)(?:\s|$|,|\.)',
         ]
         
         for pattern in nombre_patterns:
@@ -281,25 +281,25 @@ class IntentParser:
                 nombre = match.group(1).strip()
                 # Limpiar el nombre de espacios extra y caracteres no deseados
                 nombre = re.sub(r'\s+', ' ', nombre).strip()
-                if len(nombre) > 0 and nombre.lower() not in ['contenedor', 'contenedores', 'de', 'nombre']:
+                if len(nombre) > 0 and nombre.lower() not in ['container', 'containeres', 'de', 'nombre']:
                     params['nombre'] = nombre
                     params['actor'] = nombre  # Tambien como actor para compatibilidad
                     break
         
-        # Si no se encontro nombre, buscar la ultima palabra despues de "nombre" o "llamado"
+        # If no name was found, search for the last word after "nombre" or "llamado"
         if 'nombre' not in params:
-            # Buscar patrones como "nombre X" o "llamado X"
+            # Look for patterns like "nombre X" or "llamado X"
             last_word_match = re.search(r'(?:nombre|llamado|llamada)\s+([a-zA-Z0-9]+)', text, re.IGNORECASE)
             if last_word_match:
                 nombre = last_word_match.group(1).strip()
-                if nombre.lower() not in ['contenedor', 'contenedores', 'de']:
+                if nombre.lower() not in ['container', 'containeres', 'de']:
                     params['nombre'] = nombre
                     params['actor'] = nombre
         
-        # Si still no se encontro, buscar palabras en mayusculas o cualquier palabra despues de ciertos verbos
+        # If still not found, search uppercase words or any word after certain verbs
         if 'nombre' not in params:
-            # Para create contenedor, buscar la palabra despues de "create contenedor"
-            create_match = re.search(r'create\s+contenedor\s+(?:de\s+nombre\s+)?([a-zA-Z0-9]+)', text, re.IGNORECASE)
+            # For create container, find the word after "create container"
+            create_match = re.search(r'create\s+container\s+(?:de\s+nombre\s+)?([a-zA-Z0-9]+)', text, re.IGNORECASE)
             if create_match:
                 nombre = create_match.group(1).strip()
                 params['nombre'] = nombre
@@ -316,13 +316,13 @@ class IntentParser:
                 params['descripcion'] = match.group(1).strip()
                 break
         
-        # Para historial, extraer dias
+        # Para historial, extraer days
         if intent == IntentType.HISTORIAL:
-            dias_match = re.search(r'(\d+)\s*(?:d[ii]a|d[ii]as)', text)
-            if dias_match:
-                params['dias'] = int(dias_match.group(1))
+            days_match = re.search(r'(\d+)\s*(?:d[ii]a|d[ii]as)', text)
+            if days_match:
+                params['days'] = int(days_match.group(1))
         
-        # Para contenedores, extraer IDs y nombres
+        # Para containeres, extraer IDs y nombres
         if intent in (IntentType.CONTENEDOR_EDITAR, IntentType.CONTENEDOR_ELIMINAR):
             # Buscar ID numerico
             id_match = re.search(r'\b(\d+)\b', text)
@@ -332,17 +332,17 @@ class IntentParser:
         
         # Para editar, extraer "a" o "a" seguido de nuevo nombre
         if intent == IntentType.CONTENEDOR_EDITAR:
-            # Buscar patrones como "contenedor X a Y" o "renombrar X como Y"
+            # Buscar patrones como "container X a Y" o "renombrar X como Y"
             edit_patterns = [
-                r'(?:contenedor|id)\s+(\d+)\s+(?:a|como|por)\s+([A-Z][a-zA-Z0-9\s]+)',
-                r'(?:contenedor|nombre)\s+([A-Z][a-zA-Z0-9\s]+)\s+(?:a|como|por)\s+([A-Z][a-zA-Z0-9\s]+)',
+                r'(?:container|id)\s+(\d+)\s+(?:a|como|por)\s+([A-Z][a-zA-Z0-9\s]+)',
+                r'(?:container|nombre)\s+([A-Z][a-zA-Z0-9\s]+)\s+(?:a|como|por)\s+([A-Z][a-zA-Z0-9\s]+)',
                 r'(?:renombrar|cambiar|editar).*?(?:a|como|por)\s+([A-Z][a-zA-Z0-9\s]+)',
             ]
             for pattern in edit_patterns:
                 match = re.search(pattern, text, re.IGNORECASE)
                 if match:
                     if len(match.groups()) == 2:
-                        # Dos grupos: origen y destino
+                        # Dos grupos: source y destination
                         if match.group(1).isdigit():
                             params['id'] = int(match.group(1))
                             params['cont_id'] = int(match.group(1))

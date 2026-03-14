@@ -5,7 +5,7 @@ import logging
 from typing import Dict, Any, List, Optional
 from database.connection import get_db_connection
 from database.repositories import (
-    ProductoRepository, ConsignacionRepository, MovimientoRepository, DeudaRepository
+    ProductoRepository, ConsignmentRepository, MovimientoRepository, DeudaRepository
 )
 from utils.currency import convert_to_usd
 
@@ -133,28 +133,28 @@ class InventarioService:
                                    user_id: int, nota: str) -> Dict[str, Any]:
         """Record a consigned sale."""
         with get_db_connection() as conn:
-            consignacion = ConsignacionRepository.obtener_por_vendedor_codigo(conn, vendedor, codigo)
+            consignment = ConsignmentRepository.obtener_por_vendedor_codigo(conn, vendedor, codigo)
             
-            if not consignacion or consignacion['stock'] < unidades:
-                stock_disponible = consignacion['stock'] if consignacion else 0
+            if not consignment or consignment['stock'] < unidades:
+                stock_disponible = consignment['stock'] if consignment else 0
                 raise ValueError(
                     f"Insufficient consigned stock for {vendedor}. "
                     f"Available: {stock_disponible}, Requested: {unidades}"
                 )
             
-            precio_unitario = consignacion['precio_unitario']
-            moneda_consignacion = consignacion['moneda']
+            precio_unitario = consignment['precio_unitario']
+            moneda_consignment = consignment['moneda']
             
             # Update consigned stock
-            nuevo_stock = consignacion['stock'] - unidades
-            ConsignacionRepository.update_stock(conn, codigo, vendedor, nuevo_stock)
+            nuevo_stock = consignment['stock'] - unidades
+            ConsignmentRepository.update_stock(conn, codigo, vendedor, nuevo_stock)
             
             # Settle debt
             monto_a_liquidar = unidades * precio_unitario
-            deuda = DeudaRepository.obtener_por_actor(conn, vendedor, moneda_consignacion, 'POR_COBRAR')
+            deuda = DeudaRepository.obtener_por_actor(conn, vendedor, moneda_consignment, 'POR_COBRAR')
             if deuda:
                 nuevo_monto = max(0, deuda['monto_pendiente'] - monto_a_liquidar)
-                DeudaRepository.update_monto(conn, vendedor, moneda_consignacion, 'POR_COBRAR', nuevo_monto)
+                DeudaRepository.update_monto(conn, vendedor, moneda_consignment, 'POR_COBRAR', nuevo_monto)
             
             # Get box name for description
             from services.cajas_service import CajaService
@@ -164,9 +164,9 @@ class InventarioService:
             # Record movement
             descripcion = (
                 f"VENTA_CONSIGNADA: {unidades} x {codigo} | "
-                f"Vendedor: {vendedor} | "
+                f"Seller: {vendedor} | "
                 f"REVENUE: {monto_total:.2f} {moneda.upper()} | "
-                f"DEUDA_LIQUIDADA: {monto_a_liquidar:.2f} {moneda_consignacion.upper()} | "
+                f"DEUDA_LIQUIDADA: {monto_a_liquidar:.2f} {moneda_consignment.upper()} | "
                 f"CAJA: {caja_nombre} | NOTA: {nota}"
             )
             
@@ -180,7 +180,7 @@ class InventarioService:
             "monto_total": monto_total,
             "vendedor": vendedor,
             "monto_liquidado": monto_a_liquidar,
-            "moneda_liquidacion": moneda_consignacion
+            "moneda_liquidacion": moneda_consignment
         }
     
     @staticmethod
@@ -241,12 +241,12 @@ class InventarioService:
             ProductoRepository.update_stock(conn, codigo, nuevo_stock)
             
             # Create or update consignment
-            consignacion = ConsignacionRepository.obtener_por_vendedor_codigo(conn, vendedor, codigo)
-            if consignacion:
-                nuevo_stock_consignado = consignacion['stock'] + cantidad
-                ConsignacionRepository.update_stock(conn, codigo, vendedor, nuevo_stock_consignado)
+            consignment = ConsignmentRepository.obtener_por_vendedor_codigo(conn, vendedor, codigo)
+            if consignment:
+                nuevo_stock_consignado = consignment['stock'] + cantidad
+                ConsignmentRepository.update_stock(conn, codigo, vendedor, nuevo_stock_consignado)
             else:
-                ConsignacionRepository.create(conn, codigo, vendedor, cantidad, precio_venta, moneda)
+                ConsignmentRepository.create(conn, codigo, vendedor, cantidad, precio_venta, moneda)
             
             # Generate POR_COBRAR debt
             monto_total_deuda = cantidad * precio_venta
@@ -269,7 +269,7 @@ class InventarioService:
     def obtener_stock_consignado(vendedor: str) -> List[Dict[str, Any]]:
         """Get consigned stock for a seller."""
         with get_db_connection() as conn:
-            consignaciones = ConsignacionRepository.obtener_por_vendedor(conn, vendedor)
+            consignaciones = ConsignmentRepository.obtener_por_vendedor(conn, vendedor)
         
         return [
             {

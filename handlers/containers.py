@@ -14,7 +14,7 @@ from .db_utils import get_db_connection, ContainerManager
 
 logger = logging.getLogger(__name__)
 
-# Estados de la conversacion
+# Estados de la conversation
 MENU, CREAR_NOMBRE, EDIT_NOMBRE, CONFIRM_DELETE = range(4)
 
 # Helpers UI
@@ -46,7 +46,7 @@ async def _render_list(update: Update, context: ContextTypes.DEFAULT_TYPE) -> No
     with get_db_connection() as conn:
         rows = ContainerManager.listar(conn)
     if not rows:
-        text = "📦 <b>Contenedores</b>\n\nStill no hay contenedores registrados."
+        text = "📦 <b>Containeres</b>\n\nStill no hay containeres recordeds."
         kb = InlineKeyboardMarkup([[InlineKeyboardButton("➕ Create", callback_data="cont:create")],
                                    [InlineKeyboardButton("⬅️ Back", callback_data="cont:back")]])
         if update.callback_query:
@@ -55,7 +55,7 @@ async def _render_list(update: Update, context: ContextTypes.DEFAULT_TYPE) -> No
             await update.message.reply_html(text, reply_markup=kb)
         return
 
-    text = "📦 <b>Contenedores</b>\n\nSelect una action para cada item:"
+    text = "📦 <b>Containeres</b>\n\nSelect aa action para cada item:"
     keyboard: List[List[InlineKeyboardButton]] = []
     for r in rows:
         cont_id = r["id"]
@@ -72,12 +72,12 @@ async def _render_list(update: Update, context: ContextTypes.DEFAULT_TYPE) -> No
         await update.message.reply_html(text, reply_markup=kb)
 
 # Entry point
-async def contenedores_entry(update: Update, context: ContextTypes.DEFAULT_TYPE) -> int:
+async def containeres_entry(update: Update, context: ContextTypes.DEFAULT_TYPE) -> int:
     if not await _ensure_admin(update):
         return ConversationHandler.END
     msg = (
-        "🧰 <b>Management de Contenedores</b>\n\n"
-        "Administra tus contenedores. Usa el menu de abajo."
+        "🧰 <b>Management de Containeres</b>\n\n"
+        "Administra tus containeres. Usa el menu de abajo."
     )
     if update.message:
         await update.message.reply_html(msg, reply_markup=_main_menu_kb())
@@ -95,7 +95,7 @@ async def menu_callback(update: Update, context: ContextTypes.DEFAULT_TYPE) -> i
 
     if data == "cont:create":
         await q.edit_message_text(
-            "🆕 <b>Nuevo Contenedor</b>\n\nSend el <b>nombre</b> para el contenedor:", parse_mode="HTML"
+            "🆕 <b>Nuevo Container</b>\n\nSend el <b>nombre</b> para el container:", parse_mode="HTML"
         )
         return CREAR_NOMBRE
 
@@ -104,7 +104,7 @@ async def menu_callback(update: Update, context: ContextTypes.DEFAULT_TYPE) -> i
         return MENU
 
     if data == "cont:back":
-        return await contenedores_entry(update, context)
+        return await containeres_entry(update, context)
 
     if data == "cont:close":
         await q.edit_message_text("✅ Closed.")
@@ -117,10 +117,10 @@ async def menu_callback(update: Update, context: ContextTypes.DEFAULT_TYPE) -> i
         with get_db_connection() as conn:
             row = ContainerManager.get_by_id(conn, cont_id)
         if not row:
-            await q.edit_message_text("❌ Contenedor not found.")
+            await q.edit_message_text("❌ Container not found.")
             return MENU
         await q.edit_message_text(
-            f"✏️ <b>Renombrar Contenedor</b>\n\nActual: <code>{row['nombre']}</code>\nSend el <b>nuevo nombre</b>:",
+            f"✏️ <b>Renombrar Container</b>\n\nActual: <code>{row['nombre']}</code>\nSend el <b>nuevo nombre</b>:",
             parse_mode="HTML",
         )
         return EDIT_NOMBRE
@@ -131,7 +131,7 @@ async def menu_callback(update: Update, context: ContextTypes.DEFAULT_TYPE) -> i
         with get_db_connection() as conn:
             row = ContainerManager.get_by_id(conn, cont_id)
         if not row:
-            await q.edit_message_text("❌ Contenedor not found.")
+            await q.edit_message_text("❌ Container not found.")
             return MENU
         kb = InlineKeyboardMarkup([
             [InlineKeyboardButton("✅ Yes, borrar", callback_data="cont:delok"),
@@ -152,10 +152,10 @@ async def menu_callback(update: Update, context: ContextTypes.DEFAULT_TYPE) -> i
         try:
             with get_db_connection() as conn:
                 ContainerManager.delete(conn, int(cont_id))
-            await q.edit_message_text("🗑️ Contenedor deleted correctamente.")
+            await q.edit_message_text("🗑️ Container deleted correctamente.")
         except Exception as e:
-            logger.error("Error eliminando contenedor: %s", e)
-            await q.edit_message_text("❌ No se pudo delete. Intenta de nuevo.")
+            logger.error("Error eliminando container: %s", e)
+            await q.edit_message_text("❌ Could not delete. Intenta de nuevo.")
         return MENU
 
     if data == "cont:cancel":
@@ -177,7 +177,7 @@ async def create_nombre_receive(update: Update, context: ContextTypes.DEFAULT_TY
         with get_db_connection() as conn:
             _new_id = ContainerManager.create(conn, nombre)
         await update.message.reply_html(
-            f"✅ <b>Creado</b>\n\nContenedor: <code>{nombre}</code>")
+            f"✅ <b>Creado</b>\n\nContainer: <code>{nombre}</code>")
         # Back al menu
         await update.message.reply_html(
             "What would you like to do now?", reply_markup=_main_menu_kb()
@@ -186,9 +186,9 @@ async def create_nombre_receive(update: Update, context: ContextTypes.DEFAULT_TY
     except Exception as e:
         msg = str(e)
         if "UNIQUE constraint failed" in msg or "UNIQUE" in msg:
-            await update.message.reply_text("⚠️ Ya existe un contenedor con ese nombre. Usa otro nombre.")
+            await update.message.reply_text("⚠️ Ya existe un container con ese nombre. Usa otro nombre.")
             return CREAR_NOMBRE
-        logger.error("Error creando contenedor: %s", e)
+        logger.error("Error creando container: %s", e)
         await update.message.reply_text("❌ An error occurred al create. Try again.")
         return CREAR_NOMBRE
 
@@ -198,7 +198,7 @@ async def edit_nombre_receive(update: Update, context: ContextTypes.DEFAULT_TYPE
         return ConversationHandler.END
     cont_id = context.user_data.get("cont_edit_id")
     if cont_id is None:
-        await update.message.reply_text("❌ No contenedor en edicion.")
+        await update.message.reply_text("❌ No container en edicion.")
         return MENU
     nuevo_nombre = (update.message.text or "").strip()
     if not nuevo_nombre:
@@ -217,21 +217,21 @@ async def edit_nombre_receive(update: Update, context: ContextTypes.DEFAULT_TYPE
     except Exception as e:
         msg = str(e)
         if "UNIQUE constraint failed" in msg or "UNIQUE" in msg:
-            await update.message.reply_text("⚠️ Ya existe un contenedor con ese nombre. Usa otro nombre.")
+            await update.message.reply_text("⚠️ Ya existe un container con ese nombre. Usa otro nombre.")
             return EDIT_NOMBRE
-        logger.error("Error actualizando contenedor: %s", e)
+        logger.error("Error actualizando container: %s", e)
         await update.message.reply_text("❌ An error occurred al update. Try again.")
         return EDIT_NOMBRE
 
 # Cancelacion por mensaje (si el usuario escribe /cancel por ejemplo)
 async def cancel_command(update: Update, context: ContextTypes.DEFAULT_TYPE) -> int:
     if update.message:
-        await update.message.reply_text("✅ Operation cancelada.")
+        await update.message.reply_text("✅ Operation canceled.")
     return ConversationHandler.END
 
 # ConversationHandler exportable
-contenedores_conv_handler = ConversationHandler(
-    entry_points=[CommandHandler("contenedores", contenedores_entry)],
+containeres_conv_handler = ConversationHandler(
+    entry_points=[CommandHandler("containeres", containeres_entry)],
     states={
         MENU: [
             CallbackQueryHandler(menu_callback, pattern=r"^cont:.*"),
@@ -249,6 +249,6 @@ contenedores_conv_handler = ConversationHandler(
         ],
     },
     fallbacks=[CommandHandler("cancel", cancel_command)],
-    name="contenedores_conversation",
+    name="containeres_conversation",
     persistent=False,
 )

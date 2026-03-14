@@ -5,13 +5,13 @@ import logging
 from typing import List, Dict, Any, Optional
 from database.connection import get_db_connection
 from database.repositories import (
-    ContenedorProductoRepository,
-    InventarioAlmacenRepository,
+    ContainerProductoRepository,
+    InventarioWarehouseRepository,
     MovimientoInventarioRepository,
     ProductoRepository,
-    ContenedorRepository,
-    AlmacenRepository,
-    ConsignacionRepository,
+    ContainerRepository,
+    WarehouseRepository,
+    ConsignmentRepository,
     DeudaRepository,
     MovimientoRepository
 )
@@ -22,12 +22,12 @@ from core.config import TASA_USD_CUP
 logger = logging.getLogger(__name__)
 
 
-def agregar_producto_a_contenedor(contenedor_id: int, producto_codigo: str, cantidad: float) -> Dict[str, Any]:
+def agregar_producto_a_container(container_id: int, producto_codigo: str, cantidad: float) -> Dict[str, Any]:
     """
     Add a product to a container.
     
     Args:
-        contenedor_id: Container ID
+        container_id: Container ID
         producto_codigo: Product code
         cantidad: Quantity to add
     
@@ -42,44 +42,44 @@ def agregar_producto_a_contenedor(contenedor_id: int, producto_codigo: str, cant
     
     with get_db_connection() as conn:
         # Check that container exists
-        contenedor = ContenedorRepository.obtener_por_id(conn, contenedor_id)
-        if not contenedor:
-            raise ValueError(f"No container exists with ID {contenedor_id}")
+        container = ContainerRepository.obtener_por_id(conn, container_id)
+        if not container:
+            raise ValueError(f"No container exists with ID {container_id}")
         
         # Check that product exists
         producto = ProductoRepository.obtener_por_codigo(conn, producto_codigo)
         if not producto:
             raise ValueError(f"No product exists with code '{producto_codigo}'")
         
-        ContenedorProductoRepository.agregar_producto(conn, contenedor_id, producto_codigo, cantidad)
-        producto_en_contenedor = ContenedorProductoRepository.obtener_producto_en_contenedor(
-            conn, contenedor_id, producto_codigo
+        ContainerProductoRepository.agregar_producto(conn, container_id, producto_codigo, cantidad)
+        producto_en_container = ContainerProductoRepository.obtener_producto_en_container(
+            conn, container_id, producto_codigo
         )
         
         return {
-            "contenedor_id": producto_en_contenedor["contenedor_id"],
-            "producto_codigo": producto_en_contenedor["producto_codigo"],
-            "cantidad": producto_en_contenedor["cantidad"],
-            "fecha_ingreso": producto_en_contenedor["fecha_ingreso"]
+            "container_id": producto_en_container["container_id"],
+            "producto_codigo": producto_en_container["producto_codigo"],
+            "cantidad": producto_en_container["cantidad"],
+            "fecha_ingreso": producto_en_container["fecha_ingreso"]
         }
 
 
-def obtener_productos_de_contenedor(contenedor_id: int) -> List[Dict[str, Any]]:
+def obtener_productos_de_container(container_id: int) -> List[Dict[str, Any]]:
     """
     Get all products from a container.
     
     Args:
-        contenedor_id: Container ID
+        container_id: Container ID
     
     Returns:
         List of dictionaries with container products
     """
     with get_db_connection() as conn:
-        productos = ContenedorProductoRepository.obtener_productos_por_contenedor(conn, contenedor_id)
+        productos = ContainerProductoRepository.obtener_productos_por_container(conn, container_id)
         return [
             {
                 "id": prod["id"],
-                "contenedor_id": prod["contenedor_id"],
+                "container_id": prod["container_id"],
                 "producto_codigo": prod["producto_codigo"],
                 "producto_nombre": prod["producto_nombre"],
                 "cantidad": prod["cantidad"],
@@ -89,14 +89,14 @@ def obtener_productos_de_contenedor(contenedor_id: int) -> List[Dict[str, Any]]:
         ]
 
 
-def mover_producto_contenedor_a_almacen(contenedor_id: int, almacen_id: int, producto_codigo: str,
+def mover_producto_container_a_warehouse(container_id: int, warehouse_id: int, producto_codigo: str,
                                        cantidad: float, user_id: int, descripcion: Optional[str] = None) -> Dict[str, Any]:
     """
     Move a product from a container to a warehouse.
     
     Args:
-        contenedor_id: Source container ID
-        almacen_id: Destination warehouse ID
+        container_id: Source container ID
+        warehouse_id: Destination warehouse ID
         producto_codigo: Product code to move
         cantidad: Quantity to move
         user_id: ID of the user performing the movement
@@ -113,14 +113,14 @@ def mover_producto_contenedor_a_almacen(contenedor_id: int, almacen_id: int, pro
     
     with get_db_connection() as conn:
         # Check that container exists
-        contenedor = ContenedorRepository.obtener_por_id(conn, contenedor_id)
-        if not contenedor:
-            raise ValueError(f"No container exists with ID {contenedor_id}")
+        container = ContainerRepository.obtener_por_id(conn, container_id)
+        if not container:
+            raise ValueError(f"No container exists with ID {container_id}")
         
         # Check that warehouse exists
-        almacen = AlmacenRepository.obtener_por_id(conn, almacen_id)
-        if not almacen:
-            raise ValueError(f"No warehouse exists with ID {almacen_id}")
+        warehouse = WarehouseRepository.obtener_por_id(conn, warehouse_id)
+        if not warehouse:
+            raise ValueError(f"No warehouse exists with ID {warehouse_id}")
         
         # Check that product exists
         producto = ProductoRepository.obtener_por_codigo(conn, producto_codigo)
@@ -128,13 +128,13 @@ def mover_producto_contenedor_a_almacen(contenedor_id: int, almacen_id: int, pro
             raise ValueError(f"No product exists with code '{producto_codigo}'")
         
         # Check available stock in container
-        producto_en_contenedor = ContenedorProductoRepository.obtener_producto_en_contenedor(
-            conn, contenedor_id, producto_codigo
+        producto_en_container = ContainerProductoRepository.obtener_producto_en_container(
+            conn, container_id, producto_codigo
         )
-        if not producto_en_contenedor:
-            raise ValueError(f"Product '{producto_codigo}' is not in container {contenedor_id}")
+        if not producto_en_container:
+            raise ValueError(f"Product '{producto_codigo}' is not in container {container_id}")
         
-        stock_disponible = producto_en_contenedor["cantidad"]
+        stock_disponible = producto_en_container["cantidad"]
         if stock_disponible < cantidad:
             raise ValueError(
                 f"Insufficient stock. Available: {stock_disponible}, Requested: {cantidad}"
@@ -142,19 +142,19 @@ def mover_producto_contenedor_a_almacen(contenedor_id: int, almacen_id: int, pro
         
         # Perform movement
         # 1. Reduce quantity in container
-        ContenedorProductoRepository.reducir_cantidad(conn, contenedor_id, producto_codigo, cantidad)
+        ContainerProductoRepository.reducir_cantidad(conn, container_id, producto_codigo, cantidad)
         
         # 2. Add quantity in warehouse
-        InventarioAlmacenRepository.agregar_producto(conn, almacen_id, producto_codigo, cantidad)
+        InventarioWarehouseRepository.agregar_producto(conn, warehouse_id, producto_codigo, cantidad)
         
         # 3. Record movement
         movimiento_id = MovimientoInventarioRepository.create(
             conn,
-            tipo="contenedor_a_almacen",
-            origen_tipo="contenedor",
-            origen_id=contenedor_id,
-            destino_tipo="almacen",
-            destino_id=almacen_id,
+            tipo="container_a_warehouse",
+            source_tipo="container",
+            source_id=container_id,
+            destination_tipo="warehouse",
+            destination_id=warehouse_id,
             producto_codigo=producto_codigo,
             cantidad=cantidad,
             user_id=user_id,
@@ -163,31 +163,31 @@ def mover_producto_contenedor_a_almacen(contenedor_id: int, almacen_id: int, pro
         
         return {
             "movimiento_id": movimiento_id,
-            "tipo": "contenedor_a_almacen",
-            "contenedor_id": contenedor_id,
-            "almacen_id": almacen_id,
+            "tipo": "container_a_warehouse",
+            "container_id": container_id,
+            "warehouse_id": warehouse_id,
             "producto_codigo": producto_codigo,
             "cantidad": cantidad,
             "descripcion": descripcion
         }
 
 
-def obtener_inventario_almacen(almacen_id: int) -> List[Dict[str, Any]]:
+def obtener_inventario_warehouse(warehouse_id: int) -> List[Dict[str, Any]]:
     """
     Get full inventory for a warehouse.
     
     Args:
-        almacen_id: Warehouse ID
+        warehouse_id: Warehouse ID
     
     Returns:
         List of dictionaries with warehouse inventory
     """
     with get_db_connection() as conn:
-        inventario = InventarioAlmacenRepository.obtener_inventario_por_almacen(conn, almacen_id)
+        inventario = InventarioWarehouseRepository.obtener_inventario_por_warehouse(conn, warehouse_id)
         return [
             {
                 "id": item["id"],
-                "almacen_id": item["almacen_id"],
+                "warehouse_id": item["warehouse_id"],
                 "producto_codigo": item["producto_codigo"],
                 "producto_nombre": item["producto_nombre"],
                 "cantidad": item["cantidad"],
@@ -197,28 +197,28 @@ def obtener_inventario_almacen(almacen_id: int) -> List[Dict[str, Any]]:
         ]
 
 
-def obtener_movimientos_almacen(almacen_id: int, limite: int = 50) -> List[Dict[str, Any]]:
+def obtener_movimientos_warehouse(warehouse_id: int, limite: int = 50) -> List[Dict[str, Any]]:
     """
     Get movement history for a warehouse.
     
     Args:
-        almacen_id: Warehouse ID
+        warehouse_id: Warehouse ID
         limite: Maximum number of movements to return
     
     Returns:
         List of dictionaries with movements
     """
     with get_db_connection() as conn:
-        movimientos = MovimientoInventarioRepository.obtener_por_almacen(conn, almacen_id, limite)
+        movimientos = MovimientoInventarioRepository.obtener_por_warehouse(conn, warehouse_id, limite)
         return [
             {
                 "id": mov["id"],
                 "fecha": mov["fecha"],
                 "tipo": mov["tipo"],
-                "origen_tipo": mov["origen_tipo"],
-                "origen_id": mov["origen_id"],
-                "destino_tipo": mov["destino_tipo"],
-                "destino_id": mov["destino_id"],
+                "source_tipo": mov["source_tipo"],
+                "source_id": mov["source_id"],
+                "destination_tipo": mov["destination_tipo"],
+                "destination_id": mov["destination_id"],
                 "producto_codigo": mov["producto_codigo"],
                 "producto_nombre": mov["producto_nombre"],
                 "cantidad": mov["cantidad"],
@@ -229,28 +229,28 @@ def obtener_movimientos_almacen(almacen_id: int, limite: int = 50) -> List[Dict[
         ]
 
 
-def obtener_movimientos_contenedor(contenedor_id: int, limite: int = 50) -> List[Dict[str, Any]]:
+def obtener_movimientos_container(container_id: int, limite: int = 50) -> List[Dict[str, Any]]:
     """
     Get movement history for a container.
     
     Args:
-        contenedor_id: Container ID
+        container_id: Container ID
         limite: Maximum number of movements to return
     
     Returns:
         List of dictionaries with movements
     """
     with get_db_connection() as conn:
-        movimientos = MovimientoInventarioRepository.obtener_por_contenedor(conn, contenedor_id, limite)
+        movimientos = MovimientoInventarioRepository.obtener_por_container(conn, container_id, limite)
         return [
             {
                 "id": mov["id"],
                 "fecha": mov["fecha"],
                 "tipo": mov["tipo"],
-                "origen_tipo": mov["origen_tipo"],
-                "origen_id": mov["origen_id"],
-                "destino_tipo": mov["destino_tipo"],
-                "destino_id": mov["destino_id"],
+                "source_tipo": mov["source_tipo"],
+                "source_id": mov["source_id"],
+                "destination_tipo": mov["destination_tipo"],
+                "destination_id": mov["destination_id"],
                 "producto_codigo": mov["producto_codigo"],
                 "producto_nombre": mov["producto_nombre"],
                 "cantidad": mov["cantidad"],
@@ -261,15 +261,15 @@ def obtener_movimientos_contenedor(contenedor_id: int, limite: int = 50) -> List
         ]
 
 
-def mover_producto_almacen_a_almacen(almacen_origen_id: int, almacen_destino_id: int,
+def mover_producto_warehouse_a_warehouse(warehouse_source_id: int, warehouse_destination_id: int,
                                      producto_codigo: str, cantidad: float, user_id: int,
                                      descripcion: Optional[str] = None) -> Dict[str, Any]:
     """
     Move a product from one warehouse to another.
     
     Args:
-        almacen_origen_id: Source warehouse ID
-        almacen_destino_id: Destination warehouse ID
+        warehouse_source_id: Source warehouse ID
+        warehouse_destination_id: Destination warehouse ID
         producto_codigo: Product code to move
         cantidad: Quantity to move
         user_id: ID of the user performing the movement
@@ -286,13 +286,13 @@ def mover_producto_almacen_a_almacen(almacen_origen_id: int, almacen_destino_id:
     
     with get_db_connection() as conn:
         # Check that warehouses exist
-        almacen_origen = AlmacenRepository.obtener_por_id(conn, almacen_origen_id)
-        if not almacen_origen:
-            raise ValueError(f"No warehouse exists with ID {almacen_origen_id}")
+        warehouse_source = WarehouseRepository.obtener_por_id(conn, warehouse_source_id)
+        if not warehouse_source:
+            raise ValueError(f"No warehouse exists with ID {warehouse_source_id}")
         
-        almacen_destino = AlmacenRepository.obtener_por_id(conn, almacen_destino_id)
-        if not almacen_destino:
-            raise ValueError(f"No warehouse exists with ID {almacen_destino_id}")
+        warehouse_destination = WarehouseRepository.obtener_por_id(conn, warehouse_destination_id)
+        if not warehouse_destination:
+            raise ValueError(f"No warehouse exists with ID {warehouse_destination_id}")
         
         # Check that product exists
         producto = ProductoRepository.obtener_por_codigo(conn, producto_codigo)
@@ -300,13 +300,13 @@ def mover_producto_almacen_a_almacen(almacen_origen_id: int, almacen_destino_id:
             raise ValueError(f"No product exists with code '{producto_codigo}'")
         
         # Check available stock in source warehouse
-        producto_en_almacen = InventarioAlmacenRepository.obtener_producto_en_almacen(
-            conn, almacen_origen_id, producto_codigo
+        producto_en_warehouse = InventarioWarehouseRepository.obtener_producto_en_warehouse(
+            conn, warehouse_source_id, producto_codigo
         )
-        if not producto_en_almacen:
-            raise ValueError(f"Product '{producto_codigo}' is not in warehouse {almacen_origen_id}")
+        if not producto_en_warehouse:
+            raise ValueError(f"Product '{producto_codigo}' is not in warehouse {warehouse_source_id}")
         
-        stock_disponible = producto_en_almacen["cantidad"]
+        stock_disponible = producto_en_warehouse["cantidad"]
         if stock_disponible < cantidad:
             raise ValueError(
                 f"Insufficient stock. Available: {stock_disponible}, Requested: {cantidad}"
@@ -314,19 +314,19 @@ def mover_producto_almacen_a_almacen(almacen_origen_id: int, almacen_destino_id:
         
         # Perform movement
         # 1. Reduce quantity in source warehouse
-        InventarioAlmacenRepository.reducir_cantidad(conn, almacen_origen_id, producto_codigo, cantidad)
+        InventarioWarehouseRepository.reducir_cantidad(conn, warehouse_source_id, producto_codigo, cantidad)
         
         # 2. Add quantity in destination warehouse
-        InventarioAlmacenRepository.agregar_producto(conn, almacen_destino_id, producto_codigo, cantidad)
+        InventarioWarehouseRepository.agregar_producto(conn, warehouse_destination_id, producto_codigo, cantidad)
         
         # 3. Record movement
         movimiento_id = MovimientoInventarioRepository.create(
             conn,
-            tipo="almacen_a_almacen",
-            origen_tipo="almacen",
-            origen_id=almacen_origen_id,
-            destino_tipo="almacen",
-            destino_id=almacen_destino_id,
+            tipo="warehouse_a_warehouse",
+            source_tipo="warehouse",
+            source_id=warehouse_source_id,
+            destination_tipo="warehouse",
+            destination_id=warehouse_destination_id,
             producto_codigo=producto_codigo,
             cantidad=cantidad,
             user_id=user_id,
@@ -335,22 +335,22 @@ def mover_producto_almacen_a_almacen(almacen_origen_id: int, almacen_destino_id:
         
         return {
             "movimiento_id": movimiento_id,
-            "tipo": "almacen_a_almacen",
-            "almacen_origen_id": almacen_origen_id,
-            "almacen_destino_id": almacen_destino_id,
+            "tipo": "warehouse_a_warehouse",
+            "warehouse_source_id": warehouse_source_id,
+            "warehouse_destination_id": warehouse_destination_id,
             "producto_codigo": producto_codigo,
             "cantidad": cantidad,
             "descripcion": descripcion
         }
 
 
-def ajustar_inventario_almacen(almacen_id: int, producto_codigo: str, nueva_cantidad: float,
+def ajustar_inventario_warehouse(warehouse_id: int, producto_codigo: str, nueva_cantidad: float,
                                user_id: int, descripcion: Optional[str] = None) -> Dict[str, Any]:
     """
     Adjust warehouse inventory (inventory correction).
     
     Args:
-        almacen_id: Warehouse ID
+        warehouse_id: Warehouse ID
         producto_codigo: Product code
         nueva_cantidad: New quantity (must be >= 0)
         user_id: ID of user performing adjustment
@@ -367,9 +367,9 @@ def ajustar_inventario_almacen(almacen_id: int, producto_codigo: str, nueva_cant
     
     with get_db_connection() as conn:
         # Check that warehouse exists
-        almacen = AlmacenRepository.obtener_por_id(conn, almacen_id)
-        if not almacen:
-            raise ValueError(f"No warehouse exists with ID {almacen_id}")
+        warehouse = WarehouseRepository.obtener_por_id(conn, warehouse_id)
+        if not warehouse:
+            raise ValueError(f"No warehouse exists with ID {warehouse_id}")
         
         # Check that product exists
         producto = ProductoRepository.obtener_por_codigo(conn, producto_codigo)
@@ -377,33 +377,33 @@ def ajustar_inventario_almacen(almacen_id: int, producto_codigo: str, nueva_cant
             raise ValueError(f"No product exists with code '{producto_codigo}'")
         
         # Get current quantity
-        producto_en_almacen = InventarioAlmacenRepository.obtener_producto_en_almacen(
-            conn, almacen_id, producto_codigo
+        producto_en_warehouse = InventarioWarehouseRepository.obtener_producto_en_warehouse(
+            conn, warehouse_id, producto_codigo
         )
-        cantidad_anterior = producto_en_almacen["cantidad"] if producto_en_almacen else 0
+        cantidad_anterior = producto_en_warehouse["cantidad"] if producto_en_warehouse else 0
         
         # Calculate difference
         diferencia = nueva_cantidad - cantidad_anterior
         
         # Update inventory
-        if producto_en_almacen:
+        if producto_en_warehouse:
             if nueva_cantidad == 0:
-                InventarioAlmacenRepository.delete_producto(conn, almacen_id, producto_codigo)
+                InventarioWarehouseRepository.delete_producto(conn, warehouse_id, producto_codigo)
             else:
-                InventarioAlmacenRepository.update_cantidad(conn, almacen_id, producto_codigo, nueva_cantidad)
+                InventarioWarehouseRepository.update_cantidad(conn, warehouse_id, producto_codigo, nueva_cantidad)
         else:
             if nueva_cantidad > 0:
-                InventarioAlmacenRepository.agregar_producto(conn, almacen_id, producto_codigo, nueva_cantidad)
+                InventarioWarehouseRepository.agregar_producto(conn, warehouse_id, producto_codigo, nueva_cantidad)
         
         # Record adjustment
         if diferencia != 0:
             MovimientoInventarioRepository.create(
                 conn,
                 tipo="ajuste",
-                origen_tipo="almacen",
-                origen_id=almacen_id,
-                destino_tipo=None,
-                destino_id=None,
+                source_tipo="warehouse",
+                source_id=warehouse_id,
+                destination_tipo=None,
+                destination_id=None,
                 producto_codigo=producto_codigo,
                 cantidad=abs(diferencia),
                 user_id=user_id,
@@ -411,7 +411,7 @@ def ajustar_inventario_almacen(almacen_id: int, producto_codigo: str, nueva_cant
             )
         
         return {
-            "almacen_id": almacen_id,
+            "warehouse_id": warehouse_id,
             "producto_codigo": producto_codigo,
             "cantidad_anterior": cantidad_anterior,
             "nueva_cantidad": nueva_cantidad,
@@ -420,7 +420,7 @@ def ajustar_inventario_almacen(almacen_id: int, producto_codigo: str, nueva_cant
         }
 
 
-def obtener_resumen_logistica() -> Dict[str, Any]:
+def obtener_resumen_logistics() -> Dict[str, Any]:
     """
     Get a high-level logistics summary.
     
@@ -429,41 +429,41 @@ def obtener_resumen_logistica() -> Dict[str, Any]:
     """
     with get_db_connection() as conn:
         # Count containers
-        contenedores = ContenedorRepository.obtener_todos(conn)
-        total_contenedores = len(contenedores)
+        containeres = ContainerRepository.obtener_todos(conn)
+        total_containeres = len(containeres)
         
         # Count products in containers
-        total_productos_contenedores = 0
-        for cont in contenedores:
-            productos = ContenedorProductoRepository.obtener_productos_por_contenedor(conn, cont["id"])
-            total_productos_contenedores += len(productos)
+        total_productos_containeres = 0
+        for cont in containeres:
+            productos = ContainerProductoRepository.obtener_productos_por_container(conn, cont["id"])
+            total_productos_containeres += len(productos)
         
         # Count warehouses
-        almacenes = AlmacenRepository.obtener_todos(conn)
-        total_almacenes = len(almacenes)
+        warehousees = WarehouseRepository.obtener_todos(conn)
+        total_warehousees = len(warehousees)
         
         # Count products in warehouses
-        total_productos_almacenes = 0
-        for alm in almacenes:
-            inventario = InventarioAlmacenRepository.obtener_inventario_por_almacen(conn, alm["id"])
-            total_productos_almacenes += len(inventario)
+        total_productos_warehousees = 0
+        for alm in warehousees:
+            inventario = InventarioWarehouseRepository.obtener_inventario_por_warehouse(conn, alm["id"])
+            total_productos_warehousees += len(inventario)
         
         return {
-            "total_contenedores": total_contenedores,
-            "total_productos_contenedores": total_productos_contenedores,
-            "total_almacenes": total_almacenes,
-            "total_productos_almacenes": total_productos_almacenes
+            "total_containeres": total_containeres,
+            "total_productos_containeres": total_productos_containeres,
+            "total_warehousees": total_warehousees,
+            "total_productos_warehousees": total_productos_warehousees
         }
 
 
-def consignar_desde_almacen(almacen_id: int, producto_codigo: str, cantidad: float,
+def consignar_desde_warehouse(warehouse_id: int, producto_codigo: str, cantidad: float,
                             vendedor_id: int, precio_venta: float, moneda: str,
                             user_id: int) -> Dict[str, Any]:
     """
     Consign a product from a warehouse to a seller.
     
     Args:
-        almacen_id: Source warehouse ID
+        warehouse_id: Source warehouse ID
         producto_codigo: Product code to consign
         cantidad: Quantity to consign
         vendedor_id: Seller ID
@@ -487,9 +487,9 @@ def consignar_desde_almacen(almacen_id: int, producto_codigo: str, cantidad: flo
     
     with get_db_connection() as conn:
         # Check that warehouse exists
-        almacen = AlmacenRepository.obtener_por_id(conn, almacen_id)
-        if not almacen:
-            raise ValueError(f"No warehouse exists with ID {almacen_id}")
+        warehouse = WarehouseRepository.obtener_por_id(conn, warehouse_id)
+        if not warehouse:
+            raise ValueError(f"No warehouse exists with ID {warehouse_id}")
         
         # Check that seller exists
         vendedor = VendedorService.obtener_por_id(vendedor_id)
@@ -504,13 +504,13 @@ def consignar_desde_almacen(almacen_id: int, producto_codigo: str, cantidad: flo
             raise ValueError(f"No product exists with code '{producto_codigo}'")
         
         # Check available stock in warehouse
-        producto_en_almacen = InventarioAlmacenRepository.obtener_producto_en_almacen(
-            conn, almacen_id, producto_codigo
+        producto_en_warehouse = InventarioWarehouseRepository.obtener_producto_en_warehouse(
+            conn, warehouse_id, producto_codigo
         )
-        if not producto_en_almacen:
-            raise ValueError(f"Product '{producto_codigo}' is not in warehouse {almacen_id}")
+        if not producto_en_warehouse:
+            raise ValueError(f"Product '{producto_codigo}' is not in warehouse {warehouse_id}")
         
-        stock_disponible = producto_en_almacen["cantidad"]
+        stock_disponible = producto_en_warehouse["cantidad"]
         if stock_disponible < cantidad:
             raise ValueError(
                 f"Insufficient stock in warehouse. Available: {stock_disponible}, Requested: {cantidad}"
@@ -518,17 +518,17 @@ def consignar_desde_almacen(almacen_id: int, producto_codigo: str, cantidad: flo
         
         # Reduce warehouse inventory
         nueva_cantidad = stock_disponible - cantidad
-        InventarioAlmacenRepository.update_cantidad(
-            conn, almacen_id, producto_codigo, nueva_cantidad
+        InventarioWarehouseRepository.update_cantidad(
+            conn, warehouse_id, producto_codigo, nueva_cantidad
         )
         
         # Create or update consignment
-        consignacion = ConsignacionRepository.obtener_por_vendedor_codigo(conn, vendedor_name, producto_codigo)
-        if consignacion:
-            nuevo_stock_consignado = consignacion['stock'] + cantidad
-            ConsignacionRepository.update_stock(conn, producto_codigo, vendedor_name, nuevo_stock_consignado)
+        consignment = ConsignmentRepository.obtener_por_vendedor_codigo(conn, vendedor_name, producto_codigo)
+        if consignment:
+            nuevo_stock_consignado = consignment['stock'] + cantidad
+            ConsignmentRepository.update_stock(conn, producto_codigo, vendedor_name, nuevo_stock_consignado)
         else:
-            ConsignacionRepository.create(conn, producto_codigo, vendedor_name, cantidad, precio_venta, moneda)
+            ConsignmentRepository.create(conn, producto_codigo, vendedor_name, cantidad, precio_venta, moneda)
         
         # Generate POR_COBRAR debt
         monto_total_deuda = cantidad * precio_venta
@@ -542,11 +542,11 @@ def consignar_desde_almacen(almacen_id: int, producto_codigo: str, cantidad: flo
         # Record inventory movement
         MovimientoInventarioRepository.create(
             conn,
-            tipo='venta_almacen',
-            origen_tipo='almacen',
-            origen_id=almacen_id,
-            destino_tipo=None,
-            destino_id=None,
+            tipo='venta_warehouse',
+            source_tipo='warehouse',
+            source_id=warehouse_id,
+            destination_tipo=None,
+            destination_id=None,
             producto_codigo=producto_codigo,
             cantidad=cantidad,
             user_id=user_id,
@@ -554,7 +554,7 @@ def consignar_desde_almacen(almacen_id: int, producto_codigo: str, cantidad: flo
         )
     
     return {
-        "almacen_id": almacen_id,
+        "warehouse_id": warehouse_id,
         "producto_codigo": producto_codigo,
         "cantidad": cantidad,
         "vendedor_id": vendedor_id,
@@ -565,15 +565,15 @@ def consignar_desde_almacen(almacen_id: int, producto_codigo: str, cantidad: flo
     }
 
 
-def mover_consignacion_vendedor(vendedor_origen_id: int, vendedor_destino_id: int,
+def mover_consignment_vendedor(vendedor_source_id: int, vendedor_destination_id: int,
                                 producto_codigo: str, cantidad: float,
                                 user_id: int) -> Dict[str, Any]:
     """
     Move a consignment from one seller to another.
     
     Args:
-        vendedor_origen_id: Source seller ID
-        vendedor_destino_id: Destination seller ID
+        vendedor_source_id: Source seller ID
+        vendedor_destination_id: Destination seller ID
         producto_codigo: Product code to move
         cantidad: Quantity to move
         user_id: ID of user performing the move
@@ -589,16 +589,16 @@ def mover_consignacion_vendedor(vendedor_origen_id: int, vendedor_destino_id: in
     
     with get_db_connection() as conn:
         # Check that sellers exist
-        vendedor_origen = VendedorService.obtener_por_id(vendedor_origen_id)
-        if not vendedor_origen:
-            raise ValueError(f"No seller exists with ID {vendedor_origen_id}")
+        vendedor_source = VendedorService.obtener_por_id(vendedor_source_id)
+        if not vendedor_source:
+            raise ValueError(f"No seller exists with ID {vendedor_source_id}")
         
-        vendedor_destino = VendedorService.obtener_por_id(vendedor_destino_id)
-        if not vendedor_destino:
-            raise ValueError(f"No seller exists with ID {vendedor_destino_id}")
+        vendedor_destination = VendedorService.obtener_por_id(vendedor_destination_id)
+        if not vendedor_destination:
+            raise ValueError(f"No seller exists with ID {vendedor_destination_id}")
         
-        vendedor_origen_name = vendedor_origen['name']
-        vendedor_destino_name = vendedor_destino['name']
+        vendedor_source_name = vendedor_source['name']
+        vendedor_destination_name = vendedor_destination['name']
         
         # Check that product exists
         producto = ProductoRepository.obtener_por_codigo(conn, producto_codigo)
@@ -606,81 +606,81 @@ def mover_consignacion_vendedor(vendedor_origen_id: int, vendedor_destino_id: in
             raise ValueError(f"No product exists with code '{producto_codigo}'")
         
         # Check source seller consignment
-        consignacion_origen = ConsignacionRepository.obtener_por_vendedor_codigo(
-            conn, vendedor_origen_name, producto_codigo
+        consignment_source = ConsignmentRepository.obtener_por_vendedor_codigo(
+            conn, vendedor_source_name, producto_codigo
         )
-        if not consignacion_origen:
+        if not consignment_source:
             raise ValueError(
-                f"Seller {vendedor_origen_name} has no consignment for product '{producto_codigo}'"
+                f"Seller {vendedor_source_name} has no consignment for product '{producto_codigo}'"
             )
         
-        stock_disponible = consignacion_origen["stock"]
+        stock_disponible = consignment_source["stock"]
         if stock_disponible < cantidad:
             raise ValueError(
                 f"Insufficient consigned stock. Available: {stock_disponible}, Requested: {cantidad}"
             )
         
-        precio_unitario = consignacion_origen["precio_unitario"]
-        moneda = consignacion_origen["moneda"]
+        precio_unitario = consignment_source["precio_unitario"]
+        moneda = consignment_source["moneda"]
         
         # Reduce source seller consignment
-        nuevo_stock_origen = stock_disponible - cantidad
-        if nuevo_stock_origen > 0:
-            ConsignacionRepository.update_stock(
-                conn, producto_codigo, vendedor_origen_name, nuevo_stock_origen
+        nuevo_stock_source = stock_disponible - cantidad
+        if nuevo_stock_source > 0:
+            ConsignmentRepository.update_stock(
+                conn, producto_codigo, vendedor_source_name, nuevo_stock_source
             )
         else:
             # If it reaches 0, delete the consignment
             cursor = conn.cursor()
             cursor.execute(
                 "DELETE FROM Consignaciones WHERE codigo = ? AND vendedor = ?",
-                (producto_codigo, vendedor_origen_name)
+                (producto_codigo, vendedor_source_name)
             )
         
         # Create or update destination seller consignment
-        consignacion_destino = ConsignacionRepository.obtener_por_vendedor_codigo(
-            conn, vendedor_destino_name, producto_codigo
+        consignment_destination = ConsignmentRepository.obtener_por_vendedor_codigo(
+            conn, vendedor_destination_name, producto_codigo
         )
-        if consignacion_destino:
-            nuevo_stock_destino = consignacion_destino["stock"] + cantidad
-            ConsignacionRepository.update_stock(
-                conn, producto_codigo, vendedor_destino_name, nuevo_stock_destino
+        if consignment_destination:
+            nuevo_stock_destination = consignment_destination["stock"] + cantidad
+            ConsignmentRepository.update_stock(
+                conn, producto_codigo, vendedor_destination_name, nuevo_stock_destination
             )
         else:
-            ConsignacionRepository.create(
-                conn, producto_codigo, vendedor_destino_name, cantidad, precio_unitario, moneda
+            ConsignmentRepository.create(
+                conn, producto_codigo, vendedor_destination_name, cantidad, precio_unitario, moneda
             )
         
         # Update debts
         monto_movimiento = cantidad * precio_unitario
         
         # Reduce source seller debt
-        deuda_origen = DeudaRepository.obtener_por_actor(conn, vendedor_origen_name, moneda, 'POR_COBRAR')
-        if deuda_origen:
-            nuevo_monto_origen = max(0, deuda_origen['monto_pendiente'] - monto_movimiento)
-            if nuevo_monto_origen > 0:
-                DeudaRepository.update_monto(conn, vendedor_origen_name, moneda, 'POR_COBRAR', nuevo_monto_origen)
+        deuda_source = DeudaRepository.obtener_por_actor(conn, vendedor_source_name, moneda, 'POR_COBRAR')
+        if deuda_source:
+            nuevo_monto_source = max(0, deuda_source['monto_pendiente'] - monto_movimiento)
+            if nuevo_monto_source > 0:
+                DeudaRepository.update_monto(conn, vendedor_source_name, moneda, 'POR_COBRAR', nuevo_monto_source)
             else:
                 # If debt reaches 0, remove it
                 cursor = conn.cursor()
                 cursor.execute(
                     "DELETE FROM Deudas WHERE actor_id = ? AND moneda = ? AND tipo = 'POR_COBRAR'",
-                    (vendedor_origen_name, moneda)
+                    (vendedor_source_name, moneda)
                 )
         
         # Increase destination seller debt
-        deuda_destino = DeudaRepository.obtener_por_actor(conn, vendedor_destino_name, moneda, 'POR_COBRAR')
-        if deuda_destino:
-            nuevo_monto_destino = deuda_destino['monto_pendiente'] + monto_movimiento
-            DeudaRepository.update_monto(conn, vendedor_destino_name, moneda, 'POR_COBRAR', nuevo_monto_destino)
+        deuda_destination = DeudaRepository.obtener_por_actor(conn, vendedor_destination_name, moneda, 'POR_COBRAR')
+        if deuda_destination:
+            nuevo_monto_destination = deuda_destination['monto_pendiente'] + monto_movimiento
+            DeudaRepository.update_monto(conn, vendedor_destination_name, moneda, 'POR_COBRAR', nuevo_monto_destination)
         else:
-            DeudaRepository.create(conn, vendedor_destino_name, monto_movimiento, moneda, 'POR_COBRAR')
+            DeudaRepository.create(conn, vendedor_destination_name, monto_movimiento, moneda, 'POR_COBRAR')
     
     return {
-        "vendedor_origen_id": vendedor_origen_id,
-        "vendedor_origen_name": vendedor_origen_name,
-        "vendedor_destino_id": vendedor_destino_id,
-        "vendedor_destino_name": vendedor_destino_name,
+        "vendedor_source_id": vendedor_source_id,
+        "vendedor_source_name": vendedor_source_name,
+        "vendedor_destination_id": vendedor_destination_id,
+        "vendedor_destination_name": vendedor_destination_name,
         "producto_codigo": producto_codigo,
         "cantidad": cantidad,
         "precio_unitario": precio_unitario,
@@ -689,7 +689,7 @@ def mover_consignacion_vendedor(vendedor_origen_id: int, vendedor_destino_id: in
     }
 
 
-def pagar_consignacion(vendedor_id: int, moneda_deuda: str, monto_pago: float,
+def pagar_consignment(vendedor_id: int, moneda_deuda: str, monto_pago: float,
                        moneda_pago: str, caja_id: int, user_id: int,
                        nota: Optional[str] = None) -> Dict[str, Any]:
     """

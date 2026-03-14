@@ -39,7 +39,7 @@ def setup_database(conn: sqlite3.Connection) -> None:
         CREATE TABLE IF NOT EXISTS Movimientos (
             id INTEGER PRIMARY KEY AUTOINCREMENT,
             fecha TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
-            tipo TEXT NOT NULL CHECK (tipo IN ('ingreso', 'gasto', 'traspaso', 'venta', 'consignacion_finalizada')),
+            tipo TEXT NOT NULL CHECK (tipo IN ('ingreso', 'gasto', 'traspaso', 'venta', 'consignment_finalizada')),
             monto REAL NOT NULL CHECK (monto >= 0),
             moneda TEXT NOT NULL CHECK (moneda IN ('usd', 'cup', 'cup-t', 'eur')),
             caja_id INTEGER NOT NULL,
@@ -99,45 +99,45 @@ def setup_database(conn: sqlite3.Connection) -> None:
             stock REAL NOT NULL CHECK (stock >= 0),
             precio_unitario REAL NOT NULL CHECK (precio_unitario > 0),
             moneda TEXT NOT NULL CHECK (moneda IN ('usd', 'cup', 'cup-t', 'eur')),
-            fecha_consignacion TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
+            fecha_consignment TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
             FOREIGN KEY(codigo) REFERENCES Productos(codigo) ON DELETE RESTRICT,
             UNIQUE(codigo, vendedor)
         )
     """)
     
-    # Tabla Proveedores
+    # Tabla Supplieres
     cursor.execute("""
-        CREATE TABLE IF NOT EXISTS Proveedores (
+        CREATE TABLE IF NOT EXISTS Supplieres (
             id INTEGER PRIMARY KEY AUTOINCREMENT,
             name TEXT UNIQUE NOT NULL,
             fecha_creacion TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP
         )
     """)
     
-    # Tabla Vendedores
+    # Tabla Selleres
     cursor.execute("""
-        CREATE TABLE IF NOT EXISTS Vendedores (
+        CREATE TABLE IF NOT EXISTS Selleres (
             id INTEGER PRIMARY KEY AUTOINCREMENT,
             name TEXT UNIQUE NOT NULL,
             fecha_creacion TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP
         )
     """)
     
-    # Tabla Contenedores
+    # Tabla Containeres
     cursor.execute("""
-        CREATE TABLE IF NOT EXISTS Contenedores (
+        CREATE TABLE IF NOT EXISTS Containeres (
             id INTEGER PRIMARY KEY AUTOINCREMENT,
             nombre TEXT UNIQUE NOT NULL,
-            numero_contenedor TEXT,
+            numero_container TEXT,
             proveedor_id INTEGER,
             fecha_creacion TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
-            FOREIGN KEY(proveedor_id) REFERENCES Proveedores(id) ON DELETE SET NULL
+            FOREIGN KEY(proveedor_id) REFERENCES Supplieres(id) ON DELETE SET NULL
         )
     """)
     
-    # Tabla Almacenes
+    # Tabla Warehousees
     cursor.execute("""
-        CREATE TABLE IF NOT EXISTS Almacenes (
+        CREATE TABLE IF NOT EXISTS Warehousees (
             id INTEGER PRIMARY KEY AUTOINCREMENT,
             nombre TEXT UNIQUE NOT NULL,
             ubicacion TEXT,
@@ -145,44 +145,44 @@ def setup_database(conn: sqlite3.Connection) -> None:
         )
     """)
     
-    # Tabla Contenedor_Productos (relacion muchos a muchos)
+    # Tabla Container_Productos (relacion muchos a muchos)
     cursor.execute("""
-        CREATE TABLE IF NOT EXISTS Contenedor_Productos (
+        CREATE TABLE IF NOT EXISTS Container_Productos (
             id INTEGER PRIMARY KEY AUTOINCREMENT,
-            contenedor_id INTEGER NOT NULL,
+            container_id INTEGER NOT NULL,
             producto_codigo TEXT NOT NULL,
             cantidad REAL NOT NULL CHECK (cantidad >= 0),
             fecha_ingreso TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
-            FOREIGN KEY(contenedor_id) REFERENCES Contenedores(id) ON DELETE CASCADE,
+            FOREIGN KEY(container_id) REFERENCES Containeres(id) ON DELETE CASCADE,
             FOREIGN KEY(producto_codigo) REFERENCES Productos(codigo) ON DELETE RESTRICT,
-            UNIQUE(contenedor_id, producto_codigo)
+            UNIQUE(container_id, producto_codigo)
         )
     """)
     
-    # Tabla Inventario_Almacen (inventario por almacen)
+    # Tabla Inventario_Warehouse (inventario por warehouse)
     cursor.execute("""
-        CREATE TABLE IF NOT EXISTS Inventario_Almacen (
+        CREATE TABLE IF NOT EXISTS Inventario_Warehouse (
             id INTEGER PRIMARY KEY AUTOINCREMENT,
-            almacen_id INTEGER NOT NULL,
+            warehouse_id INTEGER NOT NULL,
             producto_codigo TEXT NOT NULL,
             cantidad REAL NOT NULL CHECK (cantidad >= 0),
             fecha_actualizacion TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
-            FOREIGN KEY(almacen_id) REFERENCES Almacenes(id) ON DELETE CASCADE,
+            FOREIGN KEY(warehouse_id) REFERENCES Warehousees(id) ON DELETE CASCADE,
             FOREIGN KEY(producto_codigo) REFERENCES Productos(codigo) ON DELETE RESTRICT,
-            UNIQUE(almacen_id, producto_codigo)
+            UNIQUE(warehouse_id, producto_codigo)
         )
     """)
     
-    # Tabla Movimientos_Inventario (historial de movimientos)
+    # Tabla Movimientos_Inventario (transaction history)
     cursor.execute("""
         CREATE TABLE IF NOT EXISTS Movimientos_Inventario (
             id INTEGER PRIMARY KEY AUTOINCREMENT,
             fecha TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
-            tipo TEXT NOT NULL CHECK (tipo IN ('contenedor_a_almacen', 'almacen_a_almacen', 'ajuste', 'venta_almacen')),
-            origen_tipo TEXT NOT NULL CHECK (origen_tipo IN ('contenedor', 'almacen')),
-            origen_id INTEGER NOT NULL,
-            destino_tipo TEXT CHECK (destino_tipo IN ('almacen', NULL)),
-            destino_id INTEGER,
+            tipo TEXT NOT NULL CHECK (tipo IN ('container_a_warehouse', 'warehouse_a_warehouse', 'ajuste', 'venta_warehouse')),
+            source_tipo TEXT NOT NULL CHECK (source_tipo IN ('container', 'warehouse')),
+            source_id INTEGER NOT NULL,
+            destination_tipo TEXT CHECK (destination_tipo IN ('warehouse', NULL)),
+            destination_id INTEGER,
             producto_codigo TEXT NOT NULL,
             cantidad REAL NOT NULL CHECK (cantidad > 0),
             user_id INTEGER NOT NULL,
@@ -196,7 +196,7 @@ def setup_database(conn: sqlite3.Connection) -> None:
         CREATE TABLE IF NOT EXISTS Transferencias_Externas (
             id INTEGER PRIMARY KEY AUTOINCREMENT,
             fecha TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
-            caja_origen_id INTEGER NOT NULL,
+            caja_source_id INTEGER NOT NULL,
             caja_externa_id INTEGER NOT NULL,
             producto_codigo TEXT NOT NULL,
             monto REAL NOT NULL CHECK (monto >= 0),
@@ -206,7 +206,7 @@ def setup_database(conn: sqlite3.Connection) -> None:
             monto_recibido REAL NOT NULL CHECK (monto_recibido >= 0),
             user_id INTEGER NOT NULL,
             descripcion TEXT,
-            FOREIGN KEY(caja_origen_id) REFERENCES Cajas(id) ON DELETE RESTRICT,
+            FOREIGN KEY(caja_source_id) REFERENCES Cajas(id) ON DELETE RESTRICT,
             FOREIGN KEY(caja_externa_id) REFERENCES Cajas_Externas(id) ON DELETE RESTRICT,
             FOREIGN KEY(producto_codigo) REFERENCES Productos(codigo) ON DELETE RESTRICT
         )

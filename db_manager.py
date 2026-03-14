@@ -14,7 +14,7 @@ def setup_database():
     CREATE TABLE IF NOT EXISTS Movimientos (
         id INTEGER PRIMARY KEY AUTOINCREMENT,
         fecha TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
-        tipo TEXT NOT NULL CHECK (tipo IN ('ingreso', 'gasto', 'traspaso', 'venta', 'consignacion_finalizada')),
+        tipo TEXT NOT NULL CHECK (tipo IN ('ingreso', 'gasto', 'traspaso', 'venta', 'consignment_finalizada')),
         monto REAL NOT NULL CHECK (monto >= 0),
         moneda TEXT NOT NULL CHECK (moneda IN ('usd', 'cup', 'cup-t', 'eur')),
         caja TEXT NOT NULL CHECK (caja IN ('cfg', 'sc', 'trd')), 
@@ -58,16 +58,16 @@ def setup_database():
             stock REAL NOT NULL CHECK (stock >= 0),
             precio_unitario REAL NOT NULL CHECK (precio_unitario > 0),
             moneda TEXT NOT NULL,
-            fecha_consignacion TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
+            fecha_consignment TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
             FOREIGN KEY(codigo) REFERENCES Productos(codigo) ON DELETE RESTRICT,
             UNIQUE(codigo, vendedor)
         )
     """)
     
-    # 🌟 NEW TABLE: Contenedores (unique name only)
+    # 🌟 NEW TABLE: Containeres (unique name only)
     cursor.execute(
         """
-        CREATE TABLE IF NOT EXISTS Contenedores (
+        CREATE TABLE IF NOT EXISTS Containeres (
             id INTEGER PRIMARY KEY AUTOINCREMENT,
             nombre TEXT UNIQUE NOT NULL,
             fecha_creacion TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP

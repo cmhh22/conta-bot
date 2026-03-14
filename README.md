@@ -153,7 +153,7 @@ python bot.py
 | `/stock` | View inventory |
 | `/deudas` | View debts |
 | `/historial 30` | Last 30 days of transactions |
-| `/contenedores` | Container management |
+| `/containeres` | Container management |
 | `/exportar` | Export to CSV |
 
 ---
@@ -219,7 +219,7 @@ conta-bot/
 ├── services/                       # Business logic
 │   ├── contabilidad_service.py     # Accounting operations
 │   ├── inventario_service.py       # Inventory management
-│   ├── contenedores_service.py     # Container operations
+│   ├── containeres_service.py     # Container operations
 │   └── ...                         # 9 service modules
 ├── handlers/                       # Telegram interface
 │   ├── menu_handlers.py            # Interactive button menus

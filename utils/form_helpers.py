@@ -90,7 +90,7 @@ def create_main_menu_keyboard() -> InlineKeyboardMarkup:
             InlineKeyboardButton("⚖️ Debts", callback_data="menu:deudas")
         ],
         [
-            InlineKeyboardButton("🧰 Containers", callback_data="menu:contenedores"),
+            InlineKeyboardButton("🧰 Containers", callback_data="menu:containeres"),
             InlineKeyboardButton("⚙️ Settings", callback_data="menu:config")
         ]
     ]

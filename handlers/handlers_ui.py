@@ -4,7 +4,7 @@
 
 
 # async def menu_command(update: Update, context: ContextTypes.DEFAULT_TYPE) -> None:
-#     """Muestra el menu principal con botones para los modulos."""
+#     """Show el main menu con botones para los modulos."""
     
 #     # 1. Definir la estructura del teclado
 #     keyboard = [
@@ -25,7 +25,7 @@
 
 #     await update.message.reply_text(
 #         "👋 **Bienvenido al Sistema de Management Contable!**\n\n"
-#         "Select una opcion para acceder a los comandos:",
+#         "Select aa opcion para acceder a los comandos:",
 #         reply_markup=reply_markup,
 #         parse_mode='Markdown'
 #     )

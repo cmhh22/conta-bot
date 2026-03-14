@@ -75,63 +75,63 @@ class ContabilidadService:
             return MovimientoRepository.get_saldo_caja(conn, caja_id, moneda)
     
     @staticmethod
-    def registrar_traspaso(monto: float, moneda_origen: str, caja_origen_id: int,
-                          moneda_destino: str, caja_destino_id: int, user_id: int,
+    def registrar_traspaso(monto: float, moneda_source: str, caja_source_id: int,
+                          moneda_destination: str, caja_destination_id: int, user_id: int,
                           motivo: str) -> Dict[str, Any]:
         """Record a transfer between boxes with currency conversion."""
-        if caja_origen_id == caja_destino_id and moneda_origen == moneda_destino:
+        if caja_source_id == caja_destination_id and moneda_source == moneda_destination:
             raise ValueError("Source and destination boxes/currencies cannot be the same.")
         
         with get_db_connection() as conn:
             # Validate sufficient balance
-            saldo_actual = MovimientoRepository.get_saldo_caja(conn, caja_origen_id, moneda_origen)
+            saldo_actual = MovimientoRepository.get_saldo_caja(conn, caja_source_id, moneda_source)
             if saldo_actual < monto:
                 from services.cajas_service import CajaService
-                caja_origen = CajaService.obtener_por_id(caja_origen_id)
-                caja_nombre = caja_origen['nombre'] if caja_origen else str(caja_origen_id)
+                caja_source = CajaService.obtener_por_id(caja_source_id)
+                caja_nombre = caja_source['nombre'] if caja_source else str(caja_source_id)
                 raise ValueError(
                     f"Insufficient balance in source box {caja_nombre.upper()} "
-                    f"({moneda_origen.upper()}). Available: {saldo_actual:.2f} {moneda_origen.upper()}."
+                    f"({moneda_source.upper()}). Available: {saldo_actual:.2f} {moneda_source.upper()}."
                 )
             
             # Calculate destination amount
-            if moneda_origen == moneda_destino:
-                monto_destino = monto
+            if moneda_source == moneda_destination:
+                monto_destination = monto
             else:
-                monto_destino = convert_currency(monto, moneda_origen, moneda_destino)
+                monto_destination = convert_currency(monto, moneda_source, moneda_destination)
             
             # Get box names for description
             from services.cajas_service import CajaService
-            caja_origen_obj = CajaService.obtener_por_id(caja_origen_id)
-            caja_destino_obj = CajaService.obtener_por_id(caja_destino_id)
-            caja_origen_nombre = caja_origen_obj['nombre'] if caja_origen_obj else str(caja_origen_id)
-            caja_destino_nombre = caja_destino_obj['nombre'] if caja_destino_obj else str(caja_destino_id)
+            caja_source_obj = CajaService.obtener_por_id(caja_source_id)
+            caja_destination_obj = CajaService.obtener_por_id(caja_destination_id)
+            caja_source_nombre = caja_source_obj['nombre'] if caja_source_obj else str(caja_source_id)
+            caja_destination_nombre = caja_destination_obj['nombre'] if caja_destination_obj else str(caja_destination_id)
             
             # Record outgoing movement in source box (type 'traspaso' is subtracted)
             MovimientoRepository.create(
-                conn, 'traspaso', monto, moneda_origen, caja_origen_id, user_id,
-                f"TRANSFER (Outgoing): To {caja_destino_nombre.upper()}/{moneda_destino.upper()} - Reason: {motivo}"
+                conn, 'traspaso', monto, moneda_source, caja_source_id, user_id,
+                f"TRANSFER (Outgoing): To {caja_destination_nombre.upper()}/{moneda_destination.upper()} - Reason: {motivo}"
             )
             
             # Record income in destination box (type 'ingreso' is added)
             MovimientoRepository.create(
-                conn, 'ingreso', monto_destino, moneda_destino, caja_destino_id, user_id,
-                f"TRANSFER (Incoming): From {caja_origen_nombre.upper()}/{moneda_origen.upper()} - Reason: {motivo}"
+                conn, 'ingreso', monto_destination, moneda_destination, caja_destination_id, user_id,
+                f"TRANSFER (Incoming): From {caja_source_nombre.upper()}/{moneda_source.upper()} - Reason: {motivo}"
             )
         
         return {
-            "monto_origen": monto,
-            "moneda_origen": moneda_origen,
-            "caja_origen_id": caja_origen_id,
-            "monto_destino": monto_destino,
-            "moneda_destino": moneda_destino,
-            "caja_destino_id": caja_destino_id
+            "monto_source": monto,
+            "moneda_source": moneda_source,
+            "caja_source_id": caja_source_id,
+            "monto_destination": monto_destination,
+            "moneda_destination": moneda_destination,
+            "caja_destination_id": caja_destination_id
         }
     
     @staticmethod
-    def obtener_historial(dias: int = 7) -> List[Dict[str, Any]]:
+    def obtener_historial(days: int = 7) -> List[Dict[str, Any]]:
         """Get transaction history from the last N days."""
-        fecha_desde = datetime.now() - timedelta(days=dias)
+        fecha_desde = datetime.now() - timedelta(days=days)
         
         with get_db_connection() as conn:
             movimientos = MovimientoRepository.obtener_por_fecha(conn, fecha_desde)

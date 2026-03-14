@@ -27,7 +27,7 @@ AVAILABLE_FUNCTIONS = [
         "type": "function",
         "function": {
             "name": "consultar_balance",
-            "description": "Consulta los saldos de todas las cajas del negocio",
+            "description": "Consulta los all cash box balances del negocio",
             "parameters": {"type": "object", "properties": {}, "required": []},
         },
     },
@@ -35,7 +35,7 @@ AVAILABLE_FUNCTIONS = [
         "type": "function",
         "function": {
             "name": "registrar_ingreso",
-            "description": "Registra una entrada de dinero en una caja",
+            "description": "Registra una cash intake en una caja",
             "parameters": {
                 "type": "object",
                 "properties": {
@@ -47,7 +47,7 @@ AVAILABLE_FUNCTIONS = [
                     },
                     "caja": {
                         "type": "string",
-                        "description": "Nombre o ID de la caja destino (ej: cfg, sc, trd)",
+                        "description": "Nombre o ID de la caja destination (ej: cfg, sc, trd)",
                     },
                     "descripcion": {"type": "string", "description": "Description del ingreso"},
                 },
@@ -59,7 +59,7 @@ AVAILABLE_FUNCTIONS = [
         "type": "function",
         "function": {
             "name": "registrar_gasto",
-            "description": "Registra una salida de dinero de una caja",
+            "description": "Registra una cash outflow de una caja",
             "parameters": {
                 "type": "object",
                 "properties": {
@@ -71,9 +71,9 @@ AVAILABLE_FUNCTIONS = [
                     },
                     "caja": {
                         "type": "string",
-                        "description": "Nombre o ID de la caja origen",
+                        "description": "Nombre o ID de la caja source",
                     },
-                    "descripcion": {"type": "string", "description": "Motivo del gasto"},
+                    "descripcion": {"type": "string", "description": "Reason del gasto"},
                 },
                 "required": ["monto", "moneda", "caja"],
             },
@@ -88,19 +88,19 @@ AVAILABLE_FUNCTIONS = [
                 "type": "object",
                 "properties": {
                     "monto": {"type": "number", "description": "Monto a transferir"},
-                    "moneda_origen": {
+                    "moneda_source": {
                         "type": "string",
                         "enum": ["usd", "cup", "cup-t", "eur"],
                     },
-                    "caja_origen": {"type": "string", "description": "Caja de origen"},
-                    "moneda_destino": {
+                    "caja_source": {"type": "string", "description": "Caja de source"},
+                    "moneda_destination": {
                         "type": "string",
                         "enum": ["usd", "cup", "cup-t", "eur"],
                     },
-                    "caja_destino": {"type": "string", "description": "Caja de destino"},
-                    "descripcion": {"type": "string", "description": "Motivo del traspaso"},
+                    "caja_destination": {"type": "string", "description": "Caja de destination"},
+                    "descripcion": {"type": "string", "description": "Reason del traspaso"},
                 },
-                "required": ["monto", "moneda_origen", "caja_origen", "caja_destino"],
+                "required": ["monto", "moneda_source", "caja_source", "caja_destination"],
             },
         },
     },
@@ -108,7 +108,7 @@ AVAILABLE_FUNCTIONS = [
         "type": "function",
         "function": {
             "name": "consultar_deudas",
-            "description": "Consulta todas las deudas pendientes: cuentas por pagar y por cobrar",
+            "description": "Consulta todas las pending debts: cuentas por pagar y por cobrar",
             "parameters": {"type": "object", "properties": {}, "required": []},
         },
     },
@@ -116,13 +116,13 @@ AVAILABLE_FUNCTIONS = [
         "type": "function",
         "function": {
             "name": "consultar_historial",
-            "description": "Consulta el historial de movimientos financieros recientes",
+            "description": "Consulta el transaction history financieros recientes",
             "parameters": {
                 "type": "object",
                 "properties": {
-                    "dias": {
+                    "days": {
                         "type": "integer",
-                        "description": "Numero de dias hacia atras para consultar (default: 7)",
+                        "description": "Numero de days hacia atras para consultar (default: 7)",
                         "default": 7,
                     }
                 },
@@ -153,7 +153,7 @@ AVAILABLE_FUNCTIONS = [
                     "caja": {"type": "string", "description": "Caja donde se deposita el pago"},
                     "vendedor": {
                         "type": "string",
-                        "description": "Vendedor (si es venta consignada)",
+                        "description": "Seller (si es venta consignada)",
                     },
                 },
                 "required": ["codigo", "cantidad", "monto", "moneda", "caja"],
@@ -164,7 +164,7 @@ AVAILABLE_FUNCTIONS = [
         "type": "function",
         "function": {
             "name": "registrar_entrada",
-            "description": "Registra la entrada/compra de mercancia",
+            "description": "Registra la entrada/compra de merchandise",
             "parameters": {
                 "type": "object",
                 "properties": {
@@ -203,8 +203,8 @@ AVAILABLE_FUNCTIONS = [
     {
         "type": "function",
         "function": {
-            "name": "gestionar_contenedor",
-            "description": "Gestiona contenedores: create, listar, editar o delete",
+            "name": "gestionar_container",
+            "description": "Gestiona containeres: create, listar, editar o delete",
             "parameters": {
                 "type": "object",
                 "properties": {
@@ -213,12 +213,12 @@ AVAILABLE_FUNCTIONS = [
                         "enum": ["create", "listar", "editar", "delete"],
                         "description": "Action a realizar",
                     },
-                    "nombre": {"type": "string", "description": "Nombre del contenedor"},
+                    "nombre": {"type": "string", "description": "Nombre del container"},
                     "nuevo_nombre": {
                         "type": "string",
                         "description": "Nuevo nombre (solo para editar)",
                     },
-                    "id": {"type": "integer", "description": "ID del contenedor"},
+                    "id": {"type": "integer", "description": "ID del container"},
                 },
                 "required": ["accion"],
             },
@@ -300,7 +300,7 @@ FUNCTION_TO_INTENT = {
     "registrar_entrada": "entrada",
     "consultar_ganancias": "ganancia",
     "consultar_stock_consignado": "stock_consignado",
-    "gestionar_contenedor": "contenedores",
+    "gestionar_container": "containeres",
     "solicitar_analisis_financiero": "analisis_financiero",
     "exportar_datos": "exportar",
     "responder_saludo": "greeting",

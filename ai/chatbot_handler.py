@@ -1,6 +1,6 @@
 """
 Handler del chatbot - Procesa mensajes de texto libre y los convierte en actions.
-Soporta dialogos multi-turno con memoria conversacional y enriquecimiento IA.
+Soporta dialogos multi-turno con memoria conversational y enriquecimiento IA.
 """
 import logging
 from telegram import Update
@@ -17,7 +17,7 @@ logger = logging.getLogger(__name__)
 
 @admin_only
 async def chatbot_message_handler(update: Update, context: ContextTypes.DEFAULT_TYPE) -> None:
-    """Procesa mensajes de texto libre con IA, memoria conversacional y dialogos multi-turno."""
+    """Procesa mensajes de texto libre con IA, memoria conversational y dialogos multi-turno."""
     if not update.message or not update.message.text:
         return
 
@@ -38,7 +38,7 @@ async def chatbot_message_handler(update: Update, context: ContextTypes.DEFAULT_
         ai_message = None
 
         if USE_OPENAI and OpenAIService.is_available():
-            # Obtener contexto conversacional
+            # Obtener contexto conversational
             history = ConversationMemory.get_history(user_id, limit=8)
             context_summary = ConversationMemory.get_context_summary(user_id)
 
@@ -63,7 +63,7 @@ async def chatbot_message_handler(update: Update, context: ContextTypes.DEFAULT_
             intent, params = IntentParser.parse_intent(text)
             logger.info(f"Parser reglas: intent={intent.value}, params={params}")
 
-        # Manejar clarificacion (multi-turno)
+        # Handler clarificacion (multi-turno)
         if intent == IntentType.CLARIFICATION:
             pregunta = params.get("pregunta", ai_message or "Podrias darme mas detalles?")
             await processing_msg.delete()
@@ -71,7 +71,7 @@ async def chatbot_message_handler(update: Update, context: ContextTypes.DEFAULT_
             ConversationMemory.add_assistant_message(user_id, pregunta, intent="clarification")
             return
 
-        # Manejar saludo con respuesta IA personalizada
+        # Handler saludo con respuesta IA personalizada
         if intent == IntentType.GREETING and ai_message:
             await processing_msg.delete()
             await update.message.reply_html(ai_message)

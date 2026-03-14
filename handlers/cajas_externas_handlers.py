@@ -138,7 +138,7 @@ async def menu_callback(update: Update, context: ContextTypes.DEFAULT_TYPE) -> i
                 monto_envio = transf['monto_envio']
                 monto_recibido = transf['monto_recibido']
                 fecha = transf['fecha']
-                caja_origen = transf['caja_origen_nombre']
+                caja_source = transf['caja_source_nombre']
                 
                 # Accumulate totals by currency
                 if moneda not in totales_por_moneda:
@@ -168,7 +168,7 @@ async def menu_callback(update: Update, context: ContextTypes.DEFAULT_TYPE) -> i
                 text += f"   💰 Monto: {monto:.2f} {moneda.upper()}\n"
                 text += f"   💸 Shipping: {monto_envio:.2f} {moneda.upper()}\n"
                 text += f"   💵 Received: {monto_recibido:.2f} {moneda.upper()}\n"
-                text += f"   📦 From: {caja_origen}\n"
+                text += f"   📦 From: {caja_source}\n"
                 text += f"   📅 Date: {fecha_str}\n\n"
             
             # Show summary by currency

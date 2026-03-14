@@ -449,7 +449,7 @@ def export_deudas_pdf(deudas: Dict[str, List[Dict[str, Any]]], filename: Optiona
     story.append(Spacer(1, 0.3*inch))
     
     # Cuentas por pagar
-    story.append(Paragraph("<b>CUENTAS POR PAGAR (Proveedores)</b>", styles['Heading2']))
+    story.append(Paragraph("<b>CUENTAS POR PAGAR (Supplieres)</b>", styles['Heading2']))
     story.append(Spacer(1, 0.1*inch))
     
     if deudas.get('por_pagar'):
@@ -477,7 +477,7 @@ def export_deudas_pdf(deudas: Dict[str, List[Dict[str, Any]]], filename: Optiona
     story.append(Spacer(1, 0.3*inch))
     
     # Cuentas por cobrar
-    story.append(Paragraph("<b>CUENTAS POR COBRAR (Vendedores)</b>", styles['Heading2']))
+    story.append(Paragraph("<b>CUENTAS POR COBRAR (Selleres)</b>", styles['Heading2']))
     story.append(Spacer(1, 0.1*inch))
     
     if deudas.get('por_cobrar'):
@@ -660,7 +660,7 @@ def export_cajas_externas_pdf(transferencias: List[Dict[str, Any]], caja_externa
                 transf.get('moneda', 'N/A').upper(),
                 f"{transf.get('monto_envio', 0):,.2f}",
                 f"{transf.get('monto_recibido', 0):,.2f}",
-                transf.get('caja_origen_nombre', 'N/A')
+                transf.get('caja_source_nombre', 'N/A')
             ])
         
         table = Table(data, colWidths=[0.9*inch, 1.8*inch, 0.9*inch, 0.7*inch, 0.9*inch, 0.9*inch, 1.2*inch])
@@ -709,7 +709,7 @@ def export_cajas_externas_pdf(transferencias: List[Dict[str, Any]], caja_externa
         ]))
         story.append(resumen_table)
     else:
-        story.append(Paragraph("<i>No transferencias registradas.</i>", styles['Normal']))
+        story.append(Paragraph("<i>No transferencias recordeds.</i>", styles['Normal']))
     
     doc.build(story)
     logger.info(f"External cash box PDF generated: {filepath}")
@@ -780,7 +780,7 @@ def export_cajas_externas_excel(transferencias: List[Dict[str, Any]], caja_exter
             transf.get('moneda', '').upper(),
             transf.get('monto_envio', 0),
             transf.get('monto_recibido', 0),
-            transf.get('caja_origen_nombre', '')
+            transf.get('caja_source_nombre', '')
         ]
         ws.append(row)
         

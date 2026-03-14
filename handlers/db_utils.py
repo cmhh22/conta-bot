@@ -105,7 +105,7 @@ class DeudaManager:
 
         if cursor.rowcount == 0:
             logger.warning(
-                f"No se pudo liquidar la deuda POR_COBRAR. "
+                f"Could not liquidar la deuda POR_COBRAR. "
                 f"Actor: {actor_id}, Monto liquidado: {monto_liquidado_usd} USD"
             )
 
@@ -120,22 +120,22 @@ class DeudaManager:
     ) -> float:
         """
         Liquida la deuda POR COBRAR del vendedor por la cantidad vendida.
-        Usa el precio unitario de consignacion para calcular el monto a descontar.
+        Usa el precio unitario de consignment para calcular el monto a descontar.
         """
         cursor = conn.cursor()
         
-        # 1. Obtener los detalles de la consignacion (incluye el precio de consignacion)
+        # 1. Obtener los detalles de la consignment (incluye el precio de consignment)
         cursor.execute("""
             SELECT precio_unitario, moneda FROM Consignaciones
             WHERE vendedor = ? AND codigo = ?
         """, (vendedor, codigo))
-        consignacion_data = cursor.fetchone()
+        consignment_data = cursor.fetchone()
 
-        if not consignacion_data:
-            raise ValueError(f"Error: No se encontro el precio de consignacion para {codigo} de {vendedor}.")
+        if not consignment_data:
+            raise ValueError(f"Error: Not found el precio de consignment para {codigo} de {vendedor}.")
         
-        precio_unitario = consignacion_data['precio_unitario']
-        moneda_deuda = consignacion_data['moneda'] # La moneda de la deuda original
+        precio_unitario = consignment_data['precio_unitario']
+        moneda_deuda = consignment_data['moneda'] # La moneda de la deuda original
         
         # 2. Calcular el monto a descontar de la deuda
         monto_a_liquidar = cantidad_vendida * precio_unitario
@@ -149,7 +149,7 @@ class DeudaManager:
 
         # 4. Verificar que se haya updated alguna fila
         if cursor.rowcount == 0:
-            logger.warning(f"No se pudo liquidar la deuda por venta. Vendedor: {vendedor}, Monto: {monto_a_liquidar} {moneda_deuda}")
+            logger.warning(f"Could not liquidar la debt by venta. Seller: {vendedor}, Monto: {monto_a_liquidar} {moneda_deuda}")
             return 0.0
 
         return monto_a_liquidar # Retorna el monto original de la deuda liquidada
@@ -215,13 +215,13 @@ class MovimientoManager:
     def get_saldo_caja(conn: sqlite3.Connection, caja: str, moneda: str) -> float:
         """Calcula el saldo actual de una caja en una moneda especifica."""
         cursor = conn.cursor()
-        # Nota: 'venta' y 'consignacion_finalizada' son tipos de 'ingreso' de efectivo en caja.
+        # Nota: 'venta' y 'consignment_finalizada' son tipos de 'ingreso' de efectivo en caja.
         # 'gasto', 'traspaso' (salida) y 'pago_proveedor' (que usa gasto) son salidas.
         # Asumimos que los tipos en Movimientos reflejan correctamente el flujo (Ingreso=+, Gasto/-=).
         cursor.execute("""
             SELECT SUM(
                 CASE 
-                    WHEN tipo IN ('ingreso', 'venta', 'consignacion_finalizada') THEN monto 
+                    WHEN tipo IN ('ingreso', 'venta', 'consignment_finalizada') THEN monto 
                     WHEN tipo IN ('gasto', 'traspaso') THEN -monto 
                     ELSE 0 
                 END
@@ -257,9 +257,9 @@ class MovimientoManager:
         
         return cursor.lastrowid
 
-class ConsignacionManager:
+class ConsignmentManager:
     @staticmethod
-    def update_consignacion(
+    def update_consignment(
         conn: sqlite3.Connection,
         codigo: str,
         vendedor: str,
@@ -269,21 +269,21 @@ class ConsignacionManager:
         es_incremento: bool = True
     ) -> Dict[str, Any]:
         """
-        Actualiza o crea una consignacion.
+        Actualiza o crea una consignment.
         """
         cursor = conn.cursor()
         
-        # Verificar consignacion existente
+        # Verificar consignment existente
         cursor.execute("""
             SELECT stock, precio_unitario, moneda
             FROM Consignaciones 
             WHERE codigo = ? AND vendedor = ?
         """, (codigo, vendedor))
         
-        consignacion = cursor.fetchone()
+        consignment = cursor.fetchone()
         
-        if consignacion:
-            stock_actual = consignacion['stock']
+        if consignment:
+            stock_actual = consignment['stock']
             if not es_incremento and stock_actual < cantidad:
                 raise ValueError(
                     f"Stock consignado insuficiente para {vendedor}. "
@@ -295,25 +295,25 @@ class ConsignacionManager:
             cursor.execute("""
                 UPDATE Consignaciones 
                 SET stock = ?,
-                    fecha_consignacion = CURRENT_TIMESTAMP
+                    fecha_consignment = CURRENT_TIMESTAMP
                 WHERE codigo = ? AND vendedor = ?
             """, (nuevo_stock, codigo, vendedor))
             
-            precio_unitario = consignacion['precio_unitario']
-            moneda = consignacion['moneda']
+            precio_unitario = consignment['precio_unitario']
+            moneda = consignment['moneda']
             
         else:
             if not es_incremento:
-                raise ValueError(f"No existe consignacion de {codigo} para {vendedor}")
+                raise ValueError(f"No existe consignment de {codigo} para {vendedor}")
             
             if precio_unitario is None or moneda is None:
-                raise ValueError("Precio y moneda son requeridos para nueva consignacion")
+                raise ValueError("Precio y moneda son requeridos para nueva consignment")
             
             nuevo_stock = cantidad
             
             cursor.execute("""
                 INSERT INTO Consignaciones (
-                    codigo, vendedor, stock, precio_unitario, moneda, fecha_consignacion
+                    codigo, vendedor, stock, precio_unitario, moneda, fecha_consignment
                 ) VALUES (?, ?, ?, ?, ?, CURRENT_TIMESTAMP)
             """, (codigo, vendedor, nuevo_stock, precio_unitario, moneda))
         
@@ -328,7 +328,7 @@ class ContainerManager:
     def create(conn: sqlite3.Connection, nombre: str) -> int:
         cursor = conn.cursor()
         cursor.execute(
-            "INSERT INTO Contenedores (nombre) VALUES (?)",
+            "INSERT INTO Containeres (nombre) VALUES (?)",
             (nombre.strip(),)
         )
         return cursor.lastrowid
@@ -336,25 +336,25 @@ class ContainerManager:
     @staticmethod
     def listar(conn: sqlite3.Connection) -> List[sqlite3.Row]:
         cursor = conn.cursor()
-        cursor.execute("SELECT id, nombre, fecha_creacion FROM Contenedores ORDER BY nombre ASC")
+        cursor.execute("SELECT id, nombre, fecha_creacion FROM Containeres ORDER BY nombre ASC")
         return cursor.fetchall()
 
     @staticmethod
     def get_by_id(conn: sqlite3.Connection, cont_id: int) -> Optional[sqlite3.Row]:
         cursor = conn.cursor()
-        cursor.execute("SELECT id, nombre, fecha_creacion FROM Contenedores WHERE id = ?", (cont_id,))
+        cursor.execute("SELECT id, nombre, fecha_creacion FROM Containeres WHERE id = ?", (cont_id,))
         return cursor.fetchone()
 
     @staticmethod
     def update(conn: sqlite3.Connection, cont_id: int, nuevo_nombre: str) -> None:
         cursor = conn.cursor()
-        cursor.execute("UPDATE Contenedores SET nombre = ? WHERE id = ?", (nuevo_nombre.strip(), cont_id))
+        cursor.execute("UPDATE Containeres SET nombre = ? WHERE id = ?", (nuevo_nombre.strip(), cont_id))
         if cursor.rowcount == 0:
-            raise ValueError("Contenedor not found")
+            raise ValueError("Container not found")
 
     @staticmethod
     def delete(conn: sqlite3.Connection, cont_id: int) -> None:
         cursor = conn.cursor()
-        cursor.execute("DELETE FROM Contenedores WHERE id = ?", (cont_id,))
+        cursor.execute("DELETE FROM Containeres WHERE id = ?", (cont_id,))
         if cursor.rowcount == 0:
-            raise ValueError("Contenedor not found")
+            raise ValueError("Container not found")

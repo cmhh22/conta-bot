@@ -34,9 +34,9 @@ logger = logging.getLogger(__name__)
 
 
 async def _cancel_conversation(update: Update, context: ContextTypes.DEFAULT_TYPE) -> int:
-    """Cancela la conversacion actual cuando se ejecuta cualquier comando."""
+    """Cancela la conversation actual cuando se ejecuta cualquier comando."""
     from utils.telegram_helpers import reply_text
-    await reply_text(update, "✅ Operation cancelada.")
+    await reply_text(update, "✅ Operation canceled.")
     return ConversationHandler.END
 
 
@@ -66,7 +66,7 @@ async def ingreso_form_entry(update: Update, context: ContextTypes.DEFAULT_TYPE)
             
             await reply_html(
                 update,
-                f"✅ <b>Ingreso registrado!</b>\n\n"
+                f"✅ <b>Ingreso recorded!</b>\n\n"
                 f"<b>Monto:</b> {monto:.2f} {moneda.upper()}\n"
                 f"<b>Caja:</b> {caja['nombre'].upper()}"
             )
@@ -75,13 +75,13 @@ async def ingreso_form_entry(update: Update, context: ContextTypes.DEFAULT_TYPE)
             await reply_html(
                 update,
                 f"<b>Error:</b> {e}\n"
-                "Uso correcto: <code>/ingreso [monto] [moneda] [caja]</code>\n"
+                "Correct usage: <code>/ingreso [monto] [moneda] [caja]</code>\n"
                 "Ejemplo: <code>/ingreso 100 usd cfg</code>"
             )
             return ConversationHandler.END
         except Exception as e:
             logger.error(f"Error inesperado en /ingreso: {e}", exc_info=True)
-            await reply_text(update, "An error occurred inesperado.")
+            await reply_text(update, "An unexpected error occurred.")
             return ConversationHandler.END
     
     # Limpiar datos previos
@@ -94,7 +94,7 @@ async def ingreso_form_entry(update: Update, context: ContextTypes.DEFAULT_TYPE)
         await reply_text(update, "❌ No cajas disponibles. Crea una primero con /cajas")
         return ConversationHandler.END
     
-    text = "➕ <b>Nuevo Ingreso</b>\n\nSelect la <b>caja</b>:"
+    text = "➕ <b>Nuevo Ingreso</b>\n\nSelect the <b>caja</b>:"
     keyboard: List[List[InlineKeyboardButton]] = []
     for caja in cajas:
         saldos_text = ""
@@ -118,7 +118,7 @@ async def ingreso_form_entry(update: Update, context: ContextTypes.DEFAULT_TYPE)
 
 
 async def ingreso_caja_callback(update: Update, context: ContextTypes.DEFAULT_TYPE) -> int:
-    """Maneja la selection de caja."""
+    """Handle la selection de caja."""
     from utils.telegram_helpers import reply_html, reply_text
     
     query = update.callback_query
@@ -130,7 +130,7 @@ async def ingreso_caja_callback(update: Update, context: ContextTypes.DEFAULT_TY
         keys_to_remove = ["ingreso_caja_id", "ingreso_monto", "ingreso_moneda"]
         for key in keys_to_remove:
             context.user_data.pop(key, None)
-        await reply_text(update, "✅ Operation cancelada.")
+        await reply_text(update, "✅ Operation canceled.")
         return ConversationHandler.END
     
     if data.startswith("ingreso:caja:"):
@@ -174,7 +174,7 @@ async def ingreso_monto_receive(update: Update, context: ContextTypes.DEFAULT_TY
             update,
             f"📦 <b>Caja:</b> {caja['nombre']}\n"
             f"💰 <b>Monto:</b> {monto:.2f}\n\n"
-            f"Select la <b>moneda</b>:",
+            f"Select the <b>moneda</b>:",
             reply_markup=create_moneda_keyboard("ingreso_moneda")
         )
         return INGRESO_MONEDA
@@ -184,7 +184,7 @@ async def ingreso_monto_receive(update: Update, context: ContextTypes.DEFAULT_TY
 
 
 async def ingreso_moneda_callback(update: Update, context: ContextTypes.DEFAULT_TYPE) -> int:
-    """Maneja la selection de moneda."""
+    """Handle la selection de moneda."""
     from utils.telegram_helpers import reply_html, reply_text
     
     query = update.callback_query
@@ -193,7 +193,7 @@ async def ingreso_moneda_callback(update: Update, context: ContextTypes.DEFAULT_
     data = (query.data if query else "") or ""
     
     if ":cancelar" in data:
-        await reply_text(update, "✅ Operation cancelada.")
+        await reply_text(update, "✅ Operation canceled.")
         return ConversationHandler.END
     
     # Extraer moneda del callback
@@ -254,7 +254,7 @@ async def ingreso_confirm_callback(update: Update, context: ContextTypes.DEFAULT
             
             await reply_html(
                 update,
-                f"✅ <b>Ingreso registrado!</b>\n\n"
+                f"✅ <b>Ingreso recorded!</b>\n\n"
                 f"💰 Monto: <b>{monto:.2f} {moneda.upper()}</b>\n"
                 f"📦 Caja: <b>{caja['nombre'].upper()}</b>"
             )
@@ -291,7 +291,7 @@ ingreso_conv_handler = ConversationHandler(
     },
     fallbacks=[
         CommandHandler("cancel", _cancel_conversation),
-        # Cualquier otro comando cancela la conversacion
+        # Cualquier otro comando cancela la conversation
         MessageHandler(filters.COMMAND, _cancel_conversation),
     ],
     name="ingreso_conversation",
@@ -330,7 +330,7 @@ async def gasto_monto_receive(update: Update, context: ContextTypes.DEFAULT_TYPE
         await reply_html(
             update,
             f"💰 Monto: <b>{monto:.2f}</b>\n\n"
-            "Select la <b>moneda</b>:",
+            "Select the <b>moneda</b>:",
             reply_markup=create_moneda_keyboard("gasto_moneda")
         )
         return GASTO_CAJA
@@ -340,7 +340,7 @@ async def gasto_monto_receive(update: Update, context: ContextTypes.DEFAULT_TYPE
 
 
 async def gasto_moneda_callback(update: Update, context: ContextTypes.DEFAULT_TYPE) -> int:
-    """Maneja la selection de moneda."""
+    """Handle la selection de moneda."""
     from utils.telegram_helpers import reply_html, reply_text
     
     query = update.callback_query
@@ -349,7 +349,7 @@ async def gasto_moneda_callback(update: Update, context: ContextTypes.DEFAULT_TY
     data = (query.data if query else "") or ""
     
     if ":cancelar" in data:
-        await reply_text(update, "✅ Operation cancelada.")
+        await reply_text(update, "✅ Operation canceled.")
         return ConversationHandler.END
     
     # Extraer moneda del callback
@@ -362,14 +362,14 @@ async def gasto_moneda_callback(update: Update, context: ContextTypes.DEFAULT_TY
         update,
         f"💰 Monto: <b>{context.user_data['gasto_monto']:.2f}</b>\n"
         f"💵 Moneda: <b>{moneda.upper()}</b>\n\n"
-        "Select la <b>caja</b>:",
+        "Select the <b>caja</b>:",
         reply_markup=create_caja_keyboard("gasto_caja")
     )
     return GASTO_DESC
 
 
 async def gasto_caja_callback(update: Update, context: ContextTypes.DEFAULT_TYPE) -> int:
-    """Maneja la selection de caja."""
+    """Handle la selection de caja."""
     from utils.telegram_helpers import reply_html, reply_text
     
     query = update.callback_query
@@ -378,7 +378,7 @@ async def gasto_caja_callback(update: Update, context: ContextTypes.DEFAULT_TYPE
     data = (query.data if query else "") or ""
     
     if ":cancelar" in data:
-        await reply_text(update, "✅ Operation cancelada.")
+        await reply_text(update, "✅ Operation canceled.")
         return ConversationHandler.END
     
     caja_id = int(data.split(":")[-1])
@@ -496,7 +496,7 @@ gasto_conv_handler = ConversationHandler(
     },
     fallbacks=[
         CommandHandler("cancel", _cancel_conversation),
-        # Cualquier otro comando cancela la conversacion
+        # Cualquier otro comando cancela la conversation
         MessageHandler(filters.COMMAND, _cancel_conversation),
     ],
     name="gasto_conversation",
@@ -514,8 +514,8 @@ async def traspaso_entry(update: Update, context: ContextTypes.DEFAULT_TYPE) -> 
     
     # Limpiar datos previos
     keys_to_remove = [
-        "traspaso_caja_origen_id", "traspaso_moneda_origen", "traspaso_monto",
-        "traspaso_caja_destino_id", "traspaso_moneda_destino", "traspaso_motivo"
+        "traspaso_caja_source_id", "traspaso_moneda_source", "traspaso_monto",
+        "traspaso_caja_destination_id", "traspaso_moneda_destination", "traspaso_motivo"
     ]
     for key in keys_to_remove:
         context.user_data.pop(key, None)
@@ -525,7 +525,7 @@ async def traspaso_entry(update: Update, context: ContextTypes.DEFAULT_TYPE) -> 
         await reply_html(update, "❌ No cajas disponibles. Crea una primero.")
         return ConversationHandler.END
     
-    text = "🔄 <b>Traspaso entre Cajas</b>\n\nSelect la <b>caja de origen</b>:"
+    text = "🔄 <b>Traspaso entre Cajas</b>\n\nSelect the <b>caja de source</b>:"
     keyboard: List[List[InlineKeyboardButton]] = []
     for caja in cajas:
         saldos_text = ""
@@ -538,7 +538,7 @@ async def traspaso_entry(update: Update, context: ContextTypes.DEFAULT_TYPE) -> 
         keyboard.append([
             InlineKeyboardButton(
                 f"📦 {caja['nombre']}{saldos_text}",
-                callback_data=f"traspaso:caja_origen:{caja['id']}"
+                callback_data=f"traspaso:caja_source:{caja['id']}"
             )
         ])
     keyboard.append([InlineKeyboardButton("❌ Cancel", callback_data="traspaso:cancel")])
@@ -549,7 +549,7 @@ async def traspaso_entry(update: Update, context: ContextTypes.DEFAULT_TYPE) -> 
 
 
 async def traspaso_callback(update: Update, context: ContextTypes.DEFAULT_TYPE) -> int:
-    """Maneja los callbacks del formulario de traspaso."""
+    """Handle callbacks del formulario de traspaso."""
     from utils.telegram_helpers import reply_html, reply_text
     
     q = update.callback_query
@@ -559,17 +559,17 @@ async def traspaso_callback(update: Update, context: ContextTypes.DEFAULT_TYPE) 
     
     if data == "traspaso:cancel":
         keys_to_remove = [
-            "traspaso_caja_origen_id", "traspaso_moneda_origen", "traspaso_monto",
-            "traspaso_caja_destino_id", "traspaso_moneda_destino", "traspaso_motivo"
+            "traspaso_caja_source_id", "traspaso_moneda_source", "traspaso_monto",
+            "traspaso_caja_destination_id", "traspaso_moneda_destination", "traspaso_motivo"
         ]
         for key in keys_to_remove:
             context.user_data.pop(key, None)
-        await reply_text(update, "✅ Operation cancelada.")
+        await reply_text(update, "✅ Operation canceled.")
         return ConversationHandler.END
     
-    if data.startswith("traspaso:caja_origen:"):
+    if data.startswith("traspaso:caja_source:"):
         caja_id = int(data.split(":")[-1])
-        context.user_data["traspaso_caja_origen_id"] = caja_id
+        context.user_data["traspaso_caja_source_id"] = caja_id
         
         caja = CajaService.obtener_por_id(caja_id)
         if not caja:
@@ -587,7 +587,7 @@ async def traspaso_callback(update: Update, context: ContextTypes.DEFAULT_TYPE) 
             saldo = saldos.get(moneda, 0)
             if saldo > 0:
                 text += f"• {moneda.upper()}: <b>{saldo:.2f}</b>\n"
-        text += "\nSelect la <b>moneda de origen</b>:"
+        text += "\nSelect the <b>moneda de source</b>:"
         
         keyboard: List[List[InlineKeyboardButton]] = []
         for moneda in VALID_MONEDAS:
@@ -596,7 +596,7 @@ async def traspaso_callback(update: Update, context: ContextTypes.DEFAULT_TYPE) 
                 keyboard.append([
                     InlineKeyboardButton(
                         f"{moneda.upper()} (Disponible: {saldo:.2f})",
-                        callback_data=f"traspaso:moneda_origen:{moneda}"
+                        callback_data=f"traspaso:moneda_source:{moneda}"
                     )
                 ])
         keyboard.append([InlineKeyboardButton("⬅️ Back", callback_data="traspaso:back")])
@@ -604,11 +604,11 @@ async def traspaso_callback(update: Update, context: ContextTypes.DEFAULT_TYPE) 
         await reply_html(update, text, reply_markup=kb)
         return TRASPASO_MONEDA_ORIGEN
     
-    if data.startswith("traspaso:moneda_origen:"):
+    if data.startswith("traspaso:moneda_source:"):
         moneda = data.split(":")[-1]
-        context.user_data["traspaso_moneda_origen"] = moneda
+        context.user_data["traspaso_moneda_source"] = moneda
         
-        caja_id = context.user_data.get("traspaso_caja_origen_id")
+        caja_id = context.user_data.get("traspaso_caja_source_id")
         caja = CajaService.obtener_por_id(caja_id)
         saldos = caja.get("saldos", {})
         saldo_disponible = saldos.get(moneda, 0)
@@ -622,26 +622,26 @@ async def traspaso_callback(update: Update, context: ContextTypes.DEFAULT_TYPE) 
         )
         return TRASPASO_MONTO
     
-    if data.startswith("traspaso:caja_destino:"):
+    if data.startswith("traspaso:caja_destination:"):
         caja_id = int(data.split(":")[-1])
-        caja_origen_id = context.user_data.get("traspaso_caja_origen_id")
+        caja_source_id = context.user_data.get("traspaso_caja_source_id")
         
-        if caja_id == caja_origen_id:
-            await reply_text(update, "❌ La caja destino no puede ser la misma que la de origen.")
+        if caja_id == caja_source_id:
+            await reply_text(update, "❌ La caja destination no puede ser la misma que la de source.")
             return TRASPASO_CAJA_DESTINO
         
-        context.user_data["traspaso_caja_destino_id"] = caja_id
+        context.user_data["traspaso_caja_destination_id"] = caja_id
         
-        caja_destino = CajaService.obtener_por_id(caja_id)
-        text = f"📦 <b>Caja Destino:</b> {caja_destino['nombre']}\n\n"
-        text += f"Select la <b>moneda de destino</b>:"
+        caja_destination = CajaService.obtener_por_id(caja_id)
+        text = f"📦 <b>Caja Destino:</b> {caja_destination['nombre']}\n\n"
+        text += f"Select the <b>moneda de destination</b>:"
         
         keyboard: List[List[InlineKeyboardButton]] = []
         for moneda in VALID_MONEDAS:
             keyboard.append([
                 InlineKeyboardButton(
                     moneda.upper(),
-                    callback_data=f"traspaso:moneda_destino:{moneda}"
+                    callback_data=f"traspaso:moneda_destination:{moneda}"
                 )
             ])
         keyboard.append([InlineKeyboardButton("⬅️ Back", callback_data="traspaso:back")])
@@ -649,34 +649,34 @@ async def traspaso_callback(update: Update, context: ContextTypes.DEFAULT_TYPE) 
         await reply_html(update, text, reply_markup=kb)
         return TRASPASO_MONEDA_DESTINO
     
-    if data.startswith("traspaso:moneda_destino:"):
+    if data.startswith("traspaso:moneda_destination:"):
         moneda = data.split(":")[-1]
-        context.user_data["traspaso_moneda_destino"] = moneda
+        context.user_data["traspaso_moneda_destination"] = moneda
         
-        caja_origen_id = context.user_data.get("traspaso_caja_origen_id")
-        moneda_origen = context.user_data.get("traspaso_moneda_origen")
+        caja_source_id = context.user_data.get("traspaso_caja_source_id")
+        moneda_source = context.user_data.get("traspaso_moneda_source")
         monto = context.user_data.get("traspaso_monto")
-        caja_destino_id = context.user_data.get("traspaso_caja_destino_id")
+        caja_destination_id = context.user_data.get("traspaso_caja_destination_id")
         
-        if caja_origen_id == caja_destino_id and moneda_origen == moneda:
-            await reply_text(update, "❌ Las cajas y monedas de origen y destino no pueden ser iguales.")
+        if caja_source_id == caja_destination_id and moneda_source == moneda:
+            await reply_text(update, "❌ Las cajas y monedas de source y destination no pueden ser iguales.")
             return TRASPASO_MONEDA_DESTINO
         
-        caja_origen = CajaService.obtener_por_id(caja_origen_id)
-        caja_destino = CajaService.obtener_por_id(caja_destino_id)
+        caja_source = CajaService.obtener_por_id(caja_source_id)
+        caja_destination = CajaService.obtener_por_id(caja_destination_id)
         
-        # Calcular monto destino
+        # Calcular monto destination
         from utils.currency import convert_currency
-        if moneda_origen == moneda:
-            monto_destino = monto
+        if moneda_source == moneda:
+            monto_destination = monto
         else:
-            monto_destino = convert_currency(monto, moneda_origen, moneda)
+            monto_destination = convert_currency(monto, moneda_source, moneda)
         
         text = f"🔄 <b>Resumen del Traspaso</b>\n\n"
-        text += f"<b>Origen:</b> {caja_origen['nombre']}\n"
-        text += f"• Monto: <b>{monto:.2f} {moneda_origen.upper()}</b>\n\n"
-        text += f"<b>Destino:</b> {caja_destino['nombre']}\n"
-        text += f"• Monto: <b>{monto_destino:.2f} {moneda.upper()}</b>\n\n"
+        text += f"<b>Origen:</b> {caja_source['nombre']}\n"
+        text += f"• Monto: <b>{monto:.2f} {moneda_source.upper()}</b>\n\n"
+        text += f"<b>Destino:</b> {caja_destination['nombre']}\n"
+        text += f"• Monto: <b>{monto_destination:.2f} {moneda.upper()}</b>\n\n"
         text += f"Send el <b>motivo</b> del traspaso:"
         
         await reply_html(update, text)
@@ -687,17 +687,17 @@ async def traspaso_callback(update: Update, context: ContextTypes.DEFAULT_TYPE) 
         if context.user_data.get("traspaso_motivo"):
             context.user_data.pop("traspaso_motivo", None)
             return TRASPASO_MONEDA_DESTINO
-        elif context.user_data.get("traspaso_moneda_destino"):
-            context.user_data.pop("traspaso_moneda_destino", None)
+        elif context.user_data.get("traspaso_moneda_destination"):
+            context.user_data.pop("traspaso_moneda_destination", None)
             return TRASPASO_CAJA_DESTINO
-        elif context.user_data.get("traspaso_caja_destino_id"):
-            context.user_data.pop("traspaso_caja_destino_id", None)
+        elif context.user_data.get("traspaso_caja_destination_id"):
+            context.user_data.pop("traspaso_caja_destination_id", None)
             return TRASPASO_MONTO
         elif context.user_data.get("traspaso_monto"):
             context.user_data.pop("traspaso_monto", None)
             return TRASPASO_MONEDA_ORIGEN
-        elif context.user_data.get("traspaso_moneda_origen"):
-            context.user_data.pop("traspaso_moneda_origen", None)
+        elif context.user_data.get("traspaso_moneda_source"):
+            context.user_data.pop("traspaso_moneda_source", None)
             return TRASPASO_CAJA_ORIGEN
         else:
             return await traspaso_entry(update, context)
@@ -716,8 +716,8 @@ async def traspaso_monto_receive(update: Update, context: ContextTypes.DEFAULT_T
         monto = validate_monto(update.message.text)
         context.user_data["traspaso_monto"] = monto
         
-        caja_id = context.user_data.get("traspaso_caja_origen_id")
-        moneda = context.user_data.get("traspaso_moneda_origen")
+        caja_id = context.user_data.get("traspaso_caja_source_id")
+        moneda = context.user_data.get("traspaso_moneda_source")
         
         if not caja_id or not moneda:
             await reply_text(update, "❌ Error: datos incompletos. Empieza de nuevo.")
@@ -734,23 +734,23 @@ async def traspaso_monto_receive(update: Update, context: ContextTypes.DEFAULT_T
             )
             return TRASPASO_MONTO
         
-        # Mostrar cajas disponibles para destino
+        # Mostrar cajas disponibles para destination
         cajas = CajaService.listar()
-        cajas_destino = [c for c in cajas if c['id'] != caja_id]
+        cajas_destination = [c for c in cajas if c['id'] != caja_id]
         
-        if not cajas_destino:
-            await reply_text(update, "❌ No otras cajas disponibles para destino.")
+        if not cajas_destination:
+            await reply_text(update, "❌ No otras cajas disponibles para destination.")
             return ConversationHandler.END
         
         text = f"✅ Monto: <b>{monto:.2f} {moneda.upper()}</b>\n\n"
-        text += f"Select la <b>caja de destino</b>:"
+        text += f"Select the <b>caja de destination</b>:"
         
         keyboard: List[List[InlineKeyboardButton]] = []
-        for caja_dest in cajas_destino:
+        for caja_dest in cajas_destination:
             keyboard.append([
                 InlineKeyboardButton(
                     f"📦 {caja_dest['nombre']}",
-                    callback_data=f"traspaso:caja_destino:{caja_dest['id']}"
+                    callback_data=f"traspaso:caja_destination:{caja_dest['id']}"
                 )
             ])
         keyboard.append([InlineKeyboardButton("⬅️ Back", callback_data="traspaso:back")])
@@ -776,32 +776,32 @@ async def traspaso_motivo_receive(update: Update, context: ContextTypes.DEFAULT_
     
     context.user_data["traspaso_motivo"] = motivo
     
-    caja_origen_id = context.user_data.get("traspaso_caja_origen_id")
-    moneda_origen = context.user_data.get("traspaso_moneda_origen")
+    caja_source_id = context.user_data.get("traspaso_caja_source_id")
+    moneda_source = context.user_data.get("traspaso_moneda_source")
     monto = context.user_data.get("traspaso_monto")
-    caja_destino_id = context.user_data.get("traspaso_caja_destino_id")
-    moneda_destino = context.user_data.get("traspaso_moneda_destino")
+    caja_destination_id = context.user_data.get("traspaso_caja_destination_id")
+    moneda_destination = context.user_data.get("traspaso_moneda_destination")
     
-    if not all([caja_origen_id, moneda_origen, monto, caja_destino_id, moneda_destino]):
+    if not all([caja_source_id, moneda_source, monto, caja_destination_id, moneda_destination]):
         await reply_text(update, "❌ Error: datos incompletos. Empieza de nuevo.")
         return ConversationHandler.END
     
-    caja_origen = CajaService.obtener_por_id(caja_origen_id)
-    caja_destino = CajaService.obtener_por_id(caja_destino_id)
+    caja_source = CajaService.obtener_por_id(caja_source_id)
+    caja_destination = CajaService.obtener_por_id(caja_destination_id)
     
-    # Calcular monto destino
+    # Calcular monto destination
     from utils.currency import convert_currency
-    if moneda_origen == moneda_destino:
-        monto_destino = monto
+    if moneda_source == moneda_destination:
+        monto_destination = monto
     else:
-        monto_destino = convert_currency(monto, moneda_origen, moneda_destino)
+        monto_destination = convert_currency(monto, moneda_source, moneda_destination)
     
     text = f"✅ <b>Confirmar Traspaso</b>\n\n"
-    text += f"<b>Origen:</b> {caja_origen['nombre']}\n"
-    text += f"• Monto: <b>-{monto:.2f} {moneda_origen.upper()}</b>\n\n"
-    text += f"<b>Destino:</b> {caja_destino['nombre']}\n"
-    text += f"• Monto: <b>+{monto_destino:.2f} {moneda_destino.upper()}</b>\n\n"
-    text += f"<b>Motivo:</b> {motivo}\n\n"
+    text += f"<b>Origen:</b> {caja_source['nombre']}\n"
+    text += f"• Monto: <b>-{monto:.2f} {moneda_source.upper()}</b>\n\n"
+    text += f"<b>Destino:</b> {caja_destination['nombre']}\n"
+    text += f"• Monto: <b>+{monto_destination:.2f} {moneda_destination.upper()}</b>\n\n"
+    text += f"<b>Reason:</b> {motivo}\n\n"
     text += f"Confirmar este traspaso?"
     
     await reply_html(update, text, reply_markup=create_yes_no_keyboard("traspaso_confirm"))
@@ -823,39 +823,39 @@ async def traspaso_confirm_callback(update: Update, context: ContextTypes.DEFAUL
     
     if ":yes" in data:
         try:
-            caja_origen_id = context.user_data.get("traspaso_caja_origen_id")
-            moneda_origen = context.user_data.get("traspaso_moneda_origen")
+            caja_source_id = context.user_data.get("traspaso_caja_source_id")
+            moneda_source = context.user_data.get("traspaso_moneda_source")
             monto = context.user_data.get("traspaso_monto")
-            caja_destino_id = context.user_data.get("traspaso_caja_destino_id")
-            moneda_destino = context.user_data.get("traspaso_moneda_destino")
+            caja_destination_id = context.user_data.get("traspaso_caja_destination_id")
+            moneda_destination = context.user_data.get("traspaso_moneda_destination")
             motivo = context.user_data.get("traspaso_motivo")
             user_id = update.effective_user.id
             
-            if not all([caja_origen_id, moneda_origen, monto, caja_destino_id, moneda_destino, motivo]):
+            if not all([caja_source_id, moneda_source, monto, caja_destination_id, moneda_destination, motivo]):
                 await reply_text(update, "❌ Error: datos incompletos. Empieza de nuevo.")
                 return ConversationHandler.END
             
             resultado = ContabilidadService.registrar_traspaso(
-                monto, moneda_origen, caja_origen_id, moneda_destino, caja_destino_id, user_id, motivo
+                monto, moneda_source, caja_source_id, moneda_destination, caja_destination_id, user_id, motivo
             )
             
-            caja_origen = CajaService.obtener_por_id(caja_origen_id)
-            caja_destino = CajaService.obtener_por_id(caja_destino_id)
+            caja_source = CajaService.obtener_por_id(caja_source_id)
+            caja_destination = CajaService.obtener_por_id(caja_destination_id)
             
             await reply_html(
                 update,
                 f"✅ <b>Traspaso Registrado!</b>\n\n"
-                f"<b>Origen:</b> {caja_origen['nombre']}\n"
-                f"• Monto: <b>-{resultado['monto_origen']:.2f} {resultado['moneda_origen'].upper()}</b>\n\n"
-                f"<b>Destino:</b> {caja_destino['nombre']}\n"
-                f"• Monto: <b>+{resultado['monto_destino']:.2f} {resultado['moneda_destino'].upper()}</b>\n\n"
-                f"<b>Motivo:</b> {motivo}"
+                f"<b>Origen:</b> {caja_source['nombre']}\n"
+                f"• Monto: <b>-{resultado['monto_source']:.2f} {resultado['moneda_source'].upper()}</b>\n\n"
+                f"<b>Destino:</b> {caja_destination['nombre']}\n"
+                f"• Monto: <b>+{resultado['monto_destination']:.2f} {resultado['moneda_destination'].upper()}</b>\n\n"
+                f"<b>Reason:</b> {motivo}"
             )
             
             # Limpiar datos
             keys_to_remove = [
-                "traspaso_caja_origen_id", "traspaso_moneda_origen", "traspaso_monto",
-                "traspaso_caja_destino_id", "traspaso_moneda_destino", "traspaso_motivo"
+                "traspaso_caja_source_id", "traspaso_moneda_source", "traspaso_monto",
+                "traspaso_caja_destination_id", "traspaso_moneda_destination", "traspaso_motivo"
             ]
             for key in keys_to_remove:
                 context.user_data.pop(key, None)
@@ -876,20 +876,20 @@ traspaso_conv_handler = ConversationHandler(
     ],
     states={
         TRASPASO_CAJA_ORIGEN: [
-            CallbackQueryHandler(traspaso_callback, pattern=r"^traspaso:(caja_origen:|cancel)"),
+            CallbackQueryHandler(traspaso_callback, pattern=r"^traspaso:(caja_source:|cancel)"),
         ],
         TRASPASO_MONEDA_ORIGEN: [
-            CallbackQueryHandler(traspaso_callback, pattern=r"^traspaso:(moneda_origen:|back)"),
+            CallbackQueryHandler(traspaso_callback, pattern=r"^traspaso:(moneda_source:|back)"),
         ],
         TRASPASO_MONTO: [
             MessageHandler(filters.TEXT & ~filters.COMMAND, traspaso_monto_receive),
             CallbackQueryHandler(traspaso_callback, pattern=r"^traspaso:.*"),
         ],
         TRASPASO_CAJA_DESTINO: [
-            CallbackQueryHandler(traspaso_callback, pattern=r"^traspaso:(caja_destino:|back)"),
+            CallbackQueryHandler(traspaso_callback, pattern=r"^traspaso:(caja_destination:|back)"),
         ],
         TRASPASO_MONEDA_DESTINO: [
-            CallbackQueryHandler(traspaso_callback, pattern=r"^traspaso:(moneda_destino:|back)"),
+            CallbackQueryHandler(traspaso_callback, pattern=r"^traspaso:(moneda_destination:|back)"),
         ],
         TRASPASO_MOTIVO: [
             MessageHandler(filters.TEXT & ~filters.COMMAND, traspaso_motivo_receive),
@@ -901,7 +901,7 @@ traspaso_conv_handler = ConversationHandler(
     },
     fallbacks=[
         CommandHandler("cancel", _cancel_conversation),
-        # Cualquier otro comando cancela la conversacion
+        # Cualquier otro comando cancela la conversation
         MessageHandler(filters.COMMAND, _cancel_conversation),
     ],
     name="traspaso_conversation",
@@ -914,7 +914,7 @@ DEUDA_PROV_PROVEEDOR, DEUDA_PROV_PRODUCTO, DEUDA_PROV_CANTIDAD, DEUDA_PROV_COSTO
 
 @admin_only
 async def deuda_proveedor_entry(update: Update, context: ContextTypes.DEFAULT_TYPE) -> int:
-    """Inicia el formulario para generar deuda con proveedor."""
+    """Inicia el formulario para generar deuda with supplier."""
     from utils.telegram_helpers import reply_html, reply_text
     
     # Limpiar datos previos
@@ -927,8 +927,8 @@ async def deuda_proveedor_entry(update: Update, context: ContextTypes.DEFAULT_TY
         await reply_text(update, "❌ No proveedores disponibles. Crea uno primero con /proveedores")
         return ConversationHandler.END
     
-    text = "💳 <b>Generar Deuda con Proveedor</b>\n\n"
-    text += "Select el <b>proveedor</b>:"
+    text = "💳 <b>Generar Deuda con Supplier</b>\n\n"
+    text += "Select the <b>proveedor</b>:"
     
     keyboard: List[List[InlineKeyboardButton]] = []
     for prov in proveedores:
@@ -946,7 +946,7 @@ async def deuda_proveedor_entry(update: Update, context: ContextTypes.DEFAULT_TY
 
 
 async def deuda_proveedor_callback(update: Update, context: ContextTypes.DEFAULT_TYPE) -> int:
-    """Maneja la selection de proveedor."""
+    """Handle la selection de proveedor."""
     from utils.telegram_helpers import reply_html, reply_text
     
     q = update.callback_query
@@ -958,7 +958,7 @@ async def deuda_proveedor_callback(update: Update, context: ContextTypes.DEFAULT
         keys_to_remove = ["deuda_prov_proveedor_id", "deuda_prov_producto_codigo", "deuda_prov_cantidad", "deuda_prov_costo", "deuda_prov_moneda"]
         for key in keys_to_remove:
             context.user_data.pop(key, None)
-        await reply_text(update, "✅ Operation cancelada.")
+        await reply_text(update, "✅ Operation canceled.")
         return ConversationHandler.END
     
     if data.startswith("deuda_prov:proveedor:"):
@@ -967,7 +967,7 @@ async def deuda_proveedor_callback(update: Update, context: ContextTypes.DEFAULT
         
         proveedor = ProveedorService.obtener_por_id(proveedor_id)
         if not proveedor:
-            await reply_text(update, "❌ Proveedor not found.")
+            await reply_text(update, "❌ Supplier not found.")
             return ConversationHandler.END
         
         # Mostrar productos disponibles
@@ -977,12 +977,12 @@ async def deuda_proveedor_callback(update: Update, context: ContextTypes.DEFAULT
         if not productos:
             await reply_html(
                 update,
-                f"🏢 <b>Proveedor:</b> {proveedor['name']}\n\n"
+                f"🏢 <b>Supplier:</b> {proveedor['name']}\n\n"
                 f"Send el <b>codigo del producto</b> (o crea uno nuevo con /productos):"
             )
         else:
-            text = f"🏢 <b>Proveedor:</b> {proveedor['name']}\n\n"
-            text += "Select el <b>producto</b> o send un codigo nuevo:"
+            text = f"🏢 <b>Supplier:</b> {proveedor['name']}\n\n"
+            text += "Select the <b>producto</b> o send un codigo nuevo:"
             
             keyboard: List[List[InlineKeyboardButton]] = []
             for prod in productos[:20]:  # Limitar a 20 productos
@@ -1029,7 +1029,7 @@ async def deuda_proveedor_producto_receive(update: Update, context: ContextTypes
     
     await reply_html(
         update,
-        f"🏢 <b>Proveedor:</b> {proveedor['name']}\n"
+        f"🏢 <b>Supplier:</b> {proveedor['name']}\n"
         f"📦 <b>Producto:</b> {producto['codigo']} - {producto['nombre']}\n\n"
         f"Send la <b>cantidad</b>:"
     )
@@ -1037,7 +1037,7 @@ async def deuda_proveedor_producto_receive(update: Update, context: ContextTypes
 
 
 async def deuda_proveedor_producto_callback(update: Update, context: ContextTypes.DEFAULT_TYPE) -> int:
-    """Maneja la selection de producto desde botones."""
+    """Handle la selection de producto desde botones."""
     from utils.telegram_helpers import reply_html, reply_text
     
     q = update.callback_query
@@ -1065,7 +1065,7 @@ async def deuda_proveedor_producto_callback(update: Update, context: ContextType
         
         await reply_html(
             update,
-            f"🏢 <b>Proveedor:</b> {proveedor['name']}\n"
+            f"🏢 <b>Supplier:</b> {proveedor['name']}\n"
             f"📦 <b>Producto:</b> {producto['codigo']} - {producto['nombre']}\n\n"
             f"Send la <b>cantidad</b>:"
         )
@@ -1098,7 +1098,7 @@ async def deuda_proveedor_cantidad_receive(update: Update, context: ContextTypes
         
         await reply_html(
             update,
-            f"🏢 <b>Proveedor:</b> {proveedor['name']}\n"
+            f"🏢 <b>Supplier:</b> {proveedor['name']}\n"
             f"📦 <b>Producto:</b> {producto['codigo']} - {producto['nombre']}\n"
             f"📊 <b>Cantidad:</b> {cantidad}\n\n"
             f"Send el <b>costo unitario</b>:"
@@ -1136,12 +1136,12 @@ async def deuda_proveedor_costo_receive(update: Update, context: ContextTypes.DE
         
         await reply_html(
             update,
-            f"🏢 <b>Proveedor:</b> {proveedor['name']}\n"
+            f"🏢 <b>Supplier:</b> {proveedor['name']}\n"
             f"📦 <b>Producto:</b> {producto['codigo']} - {producto['nombre']}\n"
             f"📊 <b>Cantidad:</b> {cantidad}\n"
             f"💰 <b>Costo Unitario:</b> {costo:.2f}\n"
             f"💵 <b>Total:</b> {monto_total:.2f}\n\n"
-            f"Select la <b>moneda</b>:",
+            f"Select the <b>moneda</b>:",
             reply_markup=create_moneda_keyboard("deuda_prov_moneda")
         )
         return DEUDA_PROV_MONEDA
@@ -1151,7 +1151,7 @@ async def deuda_proveedor_costo_receive(update: Update, context: ContextTypes.DE
 
 
 async def deuda_proveedor_moneda_callback(update: Update, context: ContextTypes.DEFAULT_TYPE) -> int:
-    """Maneja la selection de moneda y muestra confirmacion."""
+    """Handle la selection de moneda y muestra confirmacion."""
     from utils.telegram_helpers import reply_html, reply_text
     
     q = update.callback_query
@@ -1160,7 +1160,7 @@ async def deuda_proveedor_moneda_callback(update: Update, context: ContextTypes.
     data = (q.data if q else "") or ""
     
     if ":cancelar" in data:
-        await reply_text(update, "✅ Operation cancelada.")
+        await reply_text(update, "✅ Operation canceled.")
         return ConversationHandler.END
     
     # Extraer moneda del callback
@@ -1187,7 +1187,7 @@ async def deuda_proveedor_moneda_callback(update: Update, context: ContextTypes.
     # Mostrar confirmacion
     msg = (
         f"✅ <b>Confirmar Deuda</b>\n\n"
-        f"🏢 <b>Proveedor:</b> {proveedor['name']}\n"
+        f"🏢 <b>Supplier:</b> {proveedor['name']}\n"
         f"📦 <b>Producto:</b> {producto['codigo']} - {producto['nombre']}\n"
         f"📊 <b>Cantidad:</b> {cantidad}\n"
         f"💰 <b>Costo Unitario:</b> {costo:.2f} {moneda.upper()}\n"
@@ -1209,7 +1209,7 @@ async def deuda_proveedor_confirm_callback(update: Update, context: ContextTypes
     data = (q.data if q else "") or ""
     
     if ":no" in data or ":cancel" in data:
-        await reply_text(update, "❌ Deuda cancelada.")
+        await reply_text(update, "❌ Debt canceled.")
         return ConversationHandler.END
     
     if ":yes" in data:
@@ -1226,7 +1226,7 @@ async def deuda_proveedor_confirm_callback(update: Update, context: ContextTypes
             
             proveedor = ProveedorService.obtener_por_id(proveedor_id)
             if not proveedor:
-                await reply_text(update, "❌ Proveedor not found.")
+                await reply_text(update, "❌ Supplier not found.")
                 return ConversationHandler.END
             
             with get_db_connection() as conn:
@@ -1258,12 +1258,12 @@ async def deuda_proveedor_confirm_callback(update: Update, context: ContextTypes
             await reply_html(
                 update,
                 f"✅ <b>Deuda Generada!</b>\n\n"
-                f"🏢 <b>Proveedor:</b> {proveedor['name']}\n"
+                f"🏢 <b>Supplier:</b> {proveedor['name']}\n"
                 f"📦 <b>Producto:</b> {producto['codigo']} - {producto['nombre']}\n"
                 f"📊 <b>Cantidad:</b> {cantidad}\n"
                 f"💰 <b>Costo Unitario:</b> {costo:.2f} {moneda.upper()}\n"
                 f"💵 <b>Monto de esta deuda:</b> {monto_total:.2f} {moneda.upper()}\n"
-                f"📊 <b>Saldo Total con Proveedor:</b> {nuevo_monto:.2f} {moneda.upper()}\n"
+                f"📊 <b>Saldo Total con Supplier:</b> {nuevo_monto:.2f} {moneda.upper()}\n"
                 f"📋 <b>Tipo:</b> POR PAGAR"
             )
             
@@ -1279,7 +1279,7 @@ async def deuda_proveedor_confirm_callback(update: Update, context: ContextTypes
     return ConversationHandler.END
 
 
-# ConversationHandler para deuda con proveedor
+# ConversationHandler para deuda with supplier
 deuda_proveedor_conv_handler = ConversationHandler(
     entry_points=[
         CommandHandler("deuda_proveedor", deuda_proveedor_entry),
@@ -1310,7 +1310,7 @@ deuda_proveedor_conv_handler = ConversationHandler(
     },
     fallbacks=[
         CommandHandler("cancel", _cancel_conversation),
-        # Cualquier otro comando cancela la conversacion
+        # Cualquier otro comando cancela la conversation
         MessageHandler(filters.COMMAND, _cancel_conversation),
     ],
     name="deuda_proveedor_conversation",
@@ -1328,7 +1328,7 @@ async def cambio_moneda_entry(update: Update, context: ContextTypes.DEFAULT_TYPE
     from utils.form_helpers import create_caja_keyboard
     
     # Limpiar datos previos
-    keys_to_remove = ["cambio_caja_id", "cambio_moneda_origen", "cambio_monto", "cambio_tasa", "cambio_moneda_destino"]
+    keys_to_remove = ["cambio_caja_id", "cambio_moneda_source", "cambio_monto", "cambio_tasa", "cambio_moneda_destination"]
     for key in keys_to_remove:
         context.user_data.pop(key, None)
     
@@ -1338,14 +1338,14 @@ async def cambio_moneda_entry(update: Update, context: ContextTypes.DEFAULT_TYPE
         return ConversationHandler.END
     
     text = "💱 <b>Cambio de Moneda en Caja</b>\n\n"
-    text += "Select la <b>caja</b> donde quieres cambiar moneda:"
+    text += "Select the <b>caja</b> donde quieres cambiar moneda:"
     
     await reply_html(update, text, reply_markup=create_caja_keyboard("cambio_caja"))
     return CAMBIO_CAJA
 
 
 async def cambio_caja_callback(update: Update, context: ContextTypes.DEFAULT_TYPE) -> int:
-    """Maneja la selection de caja."""
+    """Handle la selection de caja."""
     from utils.telegram_helpers import reply_html, reply_text
     
     q = update.callback_query
@@ -1354,7 +1354,7 @@ async def cambio_caja_callback(update: Update, context: ContextTypes.DEFAULT_TYP
     data = (q.data if q else "") or ""
     
     if ":cancelar" in data:
-        await reply_text(update, "✅ Operation cancelada.")
+        await reply_text(update, "✅ Operation canceled.")
         return ConversationHandler.END
     
     if data.startswith("cambio_caja:"):
@@ -1377,16 +1377,16 @@ async def cambio_caja_callback(update: Update, context: ContextTypes.DEFAULT_TYP
         else:
             text += "<i>Sin saldo disponible</i>\n"
         
-        text += "\nSelect la <b>moneda origen</b> (la que quieres cambiar):"
+        text += "\nSelect the <b>moneda source</b> (la que quieres cambiar):"
         
-        await reply_html(update, text, reply_markup=create_moneda_keyboard("cambio_moneda_origen"))
+        await reply_html(update, text, reply_markup=create_moneda_keyboard("cambio_moneda_source"))
         return CAMBIO_MONEDA_ORIGEN
     
     return CAMBIO_CAJA
 
 
-async def cambio_moneda_origen_callback(update: Update, context: ContextTypes.DEFAULT_TYPE) -> int:
-    """Maneja la selection de moneda origen."""
+async def cambio_moneda_source_callback(update: Update, context: ContextTypes.DEFAULT_TYPE) -> int:
+    """Handle la selection de moneda source."""
     from utils.telegram_helpers import reply_html, reply_text
     
     q = update.callback_query
@@ -1395,13 +1395,13 @@ async def cambio_moneda_origen_callback(update: Update, context: ContextTypes.DE
     data = (q.data if q else "") or ""
     
     if ":cancelar" in data:
-        await reply_text(update, "✅ Operation cancelada.")
+        await reply_text(update, "✅ Operation canceled.")
         return ConversationHandler.END
     
     # Extraer moneda del callback
     moneda_part = data.split(":")[-1]
     moneda_map = {"usd": "usd", "cup": "cup", "cup_t": "cup-t", "eur": "eur"}
-    moneda_origen = moneda_map.get(moneda_part, moneda_part.replace("_", "-"))
+    moneda_source = moneda_map.get(moneda_part, moneda_part.replace("_", "-"))
     
     caja_id = context.user_data.get("cambio_caja_id")
     if not caja_id:
@@ -1410,19 +1410,19 @@ async def cambio_moneda_origen_callback(update: Update, context: ContextTypes.DE
     
     caja = CajaService.obtener_por_id(caja_id)
     saldos = caja.get("saldos", {})
-    saldo_disponible = saldos.get(moneda_origen, 0)
+    saldo_disponible = saldos.get(moneda_source, 0)
     
     if saldo_disponible <= 0:
-        await reply_text(update, f"❌ No saldo disponible en {moneda_origen.upper()} en esta caja.")
+        await reply_text(update, f"❌ No saldo disponible en {moneda_source.upper()} en esta caja.")
         return ConversationHandler.END
     
-    context.user_data["cambio_moneda_origen"] = moneda_origen
+    context.user_data["cambio_moneda_source"] = moneda_source
     
     await reply_html(
         update,
         f"📦 <b>Caja:</b> {caja['nombre']}\n"
-        f"💵 <b>Moneda Origen:</b> {moneda_origen.upper()}\n"
-        f"💰 <b>Saldo Disponible:</b> {saldo_disponible:.2f} {moneda_origen.upper()}\n\n"
+        f"💵 <b>Moneda Origen:</b> {moneda_source.upper()}\n"
+        f"💰 <b>Saldo Disponible:</b> {saldo_disponible:.2f} {moneda_source.upper()}\n\n"
         f"Send el <b>monto</b> a cambiar:"
     )
     return CAMBIO_MONTO
@@ -1439,18 +1439,18 @@ async def cambio_monto_receive(update: Update, context: ContextTypes.DEFAULT_TYP
         monto = validate_monto(update.message.text)
         
         caja_id = context.user_data.get("cambio_caja_id")
-        moneda_origen = context.user_data.get("cambio_moneda_origen")
+        moneda_source = context.user_data.get("cambio_moneda_source")
         
-        if not caja_id or not moneda_origen:
+        if not caja_id or not moneda_source:
             await reply_text(update, "❌ Error: Datos incompletos. Empieza de nuevo.")
             return ConversationHandler.END
         
         caja = CajaService.obtener_por_id(caja_id)
         saldos = caja.get("saldos", {})
-        saldo_disponible = saldos.get(moneda_origen, 0)
+        saldo_disponible = saldos.get(moneda_source, 0)
         
         if monto > saldo_disponible:
-            await reply_text(update, f"❌ Saldo insuficiente. Disponible: {saldo_disponible:.2f} {moneda_origen.upper()}")
+            await reply_text(update, f"❌ Saldo insuficiente. Disponible: {saldo_disponible:.2f} {moneda_source.upper()}")
             return CAMBIO_MONTO
         
         context.user_data["cambio_monto"] = monto
@@ -1458,8 +1458,8 @@ async def cambio_monto_receive(update: Update, context: ContextTypes.DEFAULT_TYP
         await reply_html(
             update,
             f"📦 <b>Caja:</b> {caja['nombre']}\n"
-            f"💵 <b>Moneda Origen:</b> {moneda_origen.upper()}\n"
-            f"💰 <b>Monto:</b> {monto:.2f} {moneda_origen.upper()}\n\n"
+            f"💵 <b>Moneda Origen:</b> {moneda_source.upper()}\n"
+            f"💰 <b>Monto:</b> {monto:.2f} {moneda_source.upper()}\n\n"
             f"Send la <b>tasa de cambio</b>:\n"
             f"• Si cambias de USD/EUR a CUP: tasa = cuantos CUP por 1 USD/EUR (ej: 410)\n"
             f"• Si cambias de CUP a USD/EUR: tasa = cuantos CUP por 1 USD/EUR (ej: 410)\n"
@@ -1485,10 +1485,10 @@ async def cambio_tasa_receive(update: Update, context: ContextTypes.DEFAULT_TYPE
             return CAMBIO_TASA
         
         caja_id = context.user_data.get("cambio_caja_id")
-        moneda_origen = context.user_data.get("cambio_moneda_origen")
+        moneda_source = context.user_data.get("cambio_moneda_source")
         monto = context.user_data.get("cambio_monto")
         
-        if not all([caja_id, moneda_origen, monto]):
+        if not all([caja_id, moneda_source, monto]):
             await reply_text(update, "❌ Error: Datos incompletos. Empieza de nuevo.")
             return ConversationHandler.END
         
@@ -1499,11 +1499,11 @@ async def cambio_tasa_receive(update: Update, context: ContextTypes.DEFAULT_TYPE
         await reply_html(
             update,
             f"📦 <b>Caja:</b> {caja['nombre']}\n"
-            f"💵 <b>Moneda Origen:</b> {moneda_origen.upper()}\n"
-            f"💰 <b>Monto:</b> {monto:.2f} {moneda_origen.upper()}\n"
+            f"💵 <b>Moneda Origen:</b> {moneda_source.upper()}\n"
+            f"💰 <b>Monto:</b> {monto:.2f} {moneda_source.upper()}\n"
             f"📊 <b>Tasa:</b> {tasa:.2f}\n\n"
-            f"Select la <b>moneda destino</b>:",
-            reply_markup=create_moneda_keyboard("cambio_moneda_destino")
+            f"Select the <b>moneda destination</b>:",
+            reply_markup=create_moneda_keyboard("cambio_moneda_destination")
         )
         return CAMBIO_MONEDA_DESTINO
     except ValidationError as e:
@@ -1511,8 +1511,8 @@ async def cambio_tasa_receive(update: Update, context: ContextTypes.DEFAULT_TYPE
         return CAMBIO_TASA
 
 
-async def cambio_moneda_destino_callback(update: Update, context: ContextTypes.DEFAULT_TYPE) -> int:
-    """Maneja la selection de moneda destino y muestra confirmacion."""
+async def cambio_moneda_destination_callback(update: Update, context: ContextTypes.DEFAULT_TYPE) -> int:
+    """Handle la selection de moneda destination y muestra confirmacion."""
     from utils.telegram_helpers import reply_html, reply_text
     
     q = update.callback_query
@@ -1521,69 +1521,69 @@ async def cambio_moneda_destino_callback(update: Update, context: ContextTypes.D
     data = (q.data if q else "") or ""
     
     if ":cancelar" in data:
-        await reply_text(update, "✅ Operation cancelada.")
+        await reply_text(update, "✅ Operation canceled.")
         return ConversationHandler.END
     
     # Extraer moneda del callback
     moneda_part = data.split(":")[-1]
     moneda_map = {"usd": "usd", "cup": "cup", "cup_t": "cup-t", "eur": "eur"}
-    moneda_destino = moneda_map.get(moneda_part, moneda_part.replace("_", "-"))
+    moneda_destination = moneda_map.get(moneda_part, moneda_part.replace("_", "-"))
     
     caja_id = context.user_data.get("cambio_caja_id")
-    moneda_origen = context.user_data.get("cambio_moneda_origen")
+    moneda_source = context.user_data.get("cambio_moneda_source")
     monto = context.user_data.get("cambio_monto")
     tasa = context.user_data.get("cambio_tasa")
     
-    if not all([caja_id, moneda_origen, monto, tasa]):
+    if not all([caja_id, moneda_source, monto, tasa]):
         await reply_text(update, "❌ Error: Datos incompletos. Empieza de nuevo.")
         return ConversationHandler.END
     
-    if moneda_origen == moneda_destino:
-        await reply_text(update, "❌ La moneda origen y destino no pueden ser iguales.")
+    if moneda_source == moneda_destination:
+        await reply_text(update, "❌ La moneda source y destination no pueden ser iguales.")
         return CAMBIO_MONEDA_DESTINO
     
-    context.user_data["cambio_moneda_destino"] = moneda_destino
+    context.user_data["cambio_moneda_destination"] = moneda_destination
     
     caja = CajaService.obtener_por_id(caja_id)
     
-    # Calcular monto destino basado en la direccion de conversion
+    # Calcular monto destination basado en la direccion de conversion
     # La tasa se interpreta como "1 moneda_base = tasa moneda_menor"
     monedas_base = ['usd', 'eur']
     monedas_menores = ['cup', 'cup-t']
     
     # Determinar si necesitamos multiplicar o dividir
-    if moneda_origen in monedas_base and moneda_destino in monedas_menores:
+    if moneda_source in monedas_base and moneda_destination in monedas_menores:
         # De base a menor: multiplicar (ej: USD -> CUP)
-        monto_destino = monto * tasa
-        tasa_texto = f"1 {moneda_origen.upper()} = {tasa:.2f} {moneda_destino.upper()}"
-    elif moneda_origen in monedas_menores and moneda_destino in monedas_base:
+        monto_destination = monto * tasa
+        tasa_texto = f"1 {moneda_source.upper()} = {tasa:.2f} {moneda_destination.upper()}"
+    elif moneda_source in monedas_menores and moneda_destination in monedas_base:
         # De menor a base: dividir (ej: CUP -> USD)
-        monto_destino = monto / tasa
-        tasa_texto = f"1 {moneda_destino.upper()} = {tasa:.2f} {moneda_origen.upper()}"
-    elif moneda_origen in monedas_base and moneda_destino in monedas_base:
+        monto_destination = monto / tasa
+        tasa_texto = f"1 {moneda_destination.upper()} = {tasa:.2f} {moneda_source.upper()}"
+    elif moneda_source in monedas_base and moneda_destination in monedas_base:
         # Entre monedas base (USD <-> EUR): usar tasa directa
-        if moneda_origen == 'usd' and moneda_destino == 'eur':
+        if moneda_source == 'usd' and moneda_destination == 'eur':
             # 1 USD = tasa EUR, entonces para convertir USD a EUR: multiplicar
-            monto_destino = monto * tasa
-            tasa_texto = f"1 {moneda_origen.upper()} = {tasa:.2f} {moneda_destino.upper()}"
+            monto_destination = monto * tasa
+            tasa_texto = f"1 {moneda_source.upper()} = {tasa:.2f} {moneda_destination.upper()}"
         else:
             # 1 EUR = tasa USD, entonces para convertir EUR a USD: dividir
-            monto_destino = monto / tasa
-            tasa_texto = f"1 {moneda_destino.upper()} = {tasa:.2f} {moneda_origen.upper()}"
+            monto_destination = monto / tasa
+            tasa_texto = f"1 {moneda_destination.upper()} = {tasa:.2f} {moneda_source.upper()}"
     else:
         # Por defecto, multiplicar
-        monto_destino = monto * tasa
-        tasa_texto = f"1 {moneda_origen.upper()} = {tasa:.2f} {moneda_destino.upper()}"
+        monto_destination = monto * tasa
+        tasa_texto = f"1 {moneda_source.upper()} = {tasa:.2f} {moneda_destination.upper()}"
     
     # Mostrar confirmacion
     msg = (
         f"✅ <b>Confirmar Cambio de Moneda</b>\n\n"
         f"📦 <b>Caja:</b> {caja['nombre']}\n"
-        f"💵 <b>Moneda Origen:</b> {moneda_origen.upper()}\n"
-        f"💰 <b>Monto Origen:</b> -{monto:.2f} {moneda_origen.upper()}\n"
+        f"💵 <b>Moneda Origen:</b> {moneda_source.upper()}\n"
+        f"💰 <b>Monto Origen:</b> -{monto:.2f} {moneda_source.upper()}\n"
         f"📊 <b>Tasa:</b> {tasa_texto}\n"
-        f"💵 <b>Moneda Destino:</b> {moneda_destino.upper()}\n"
-        f"💰 <b>Monto Destino:</b> +{monto_destino:.2f} {moneda_destino.upper()}\n\n"
+        f"💵 <b>Moneda Destino:</b> {moneda_destination.upper()}\n"
+        f"💰 <b>Monto Destino:</b> +{monto_destination:.2f} {moneda_destination.upper()}\n\n"
         f"Confirmar este cambio?"
     )
     await reply_html(update, msg, reply_markup=create_yes_no_keyboard("cambio_confirm"))
@@ -1608,12 +1608,12 @@ async def cambio_confirm_callback(update: Update, context: ContextTypes.DEFAULT_
     if ":yes" in data:
         try:
             caja_id = context.user_data.get("cambio_caja_id")
-            moneda_origen = context.user_data.get("cambio_moneda_origen")
+            moneda_source = context.user_data.get("cambio_moneda_source")
             monto = context.user_data.get("cambio_monto")
             tasa = context.user_data.get("cambio_tasa")
-            moneda_destino = context.user_data.get("cambio_moneda_destino")
+            moneda_destination = context.user_data.get("cambio_moneda_destination")
             
-            if not all([caja_id, moneda_origen, monto, tasa, moneda_destino]):
+            if not all([caja_id, moneda_source, monto, tasa, moneda_destination]):
                 await reply_text(update, "❌ Error: datos incompletos. Empieza de nuevo.")
                 return ConversationHandler.END
             
@@ -1622,61 +1622,61 @@ async def cambio_confirm_callback(update: Update, context: ContextTypes.DEFAULT_
                 await reply_text(update, "❌ Caja not found.")
                 return ConversationHandler.END
             
-            # Calcular monto destino basado en la direccion de conversion
+            # Calcular monto destination basado en la direccion de conversion
             monedas_base = ['usd', 'eur']
             monedas_menores = ['cup', 'cup-t']
             
-            if moneda_origen in monedas_base and moneda_destino in monedas_menores:
+            if moneda_source in monedas_base and moneda_destination in monedas_menores:
                 # De base a menor: multiplicar (ej: USD -> CUP)
-                monto_destino = monto * tasa
-            elif moneda_origen in monedas_menores and moneda_destino in monedas_base:
+                monto_destination = monto * tasa
+            elif moneda_source in monedas_menores and moneda_destination in monedas_base:
                 # De menor a base: dividir (ej: CUP -> USD)
-                monto_destino = monto / tasa
-            elif moneda_origen in monedas_base and moneda_destino in monedas_base:
+                monto_destination = monto / tasa
+            elif moneda_source in monedas_base and moneda_destination in monedas_base:
                 # Entre monedas base (USD <-> EUR)
-                if moneda_origen == 'usd' and moneda_destino == 'eur':
-                    monto_destino = monto * tasa
+                if moneda_source == 'usd' and moneda_destination == 'eur':
+                    monto_destination = monto * tasa
                 else:
-                    monto_destino = monto / tasa
+                    monto_destination = monto / tasa
             else:
                 # Por defecto, multiplicar
-                monto_destino = monto * tasa
+                monto_destination = monto * tasa
             
             user_id = update.effective_user.id
             
             with get_db_connection() as conn:
                 # Verificar saldo suficiente
-                saldo_actual = MovimientoRepository.get_saldo_caja(conn, caja_id, moneda_origen)
+                saldo_actual = MovimientoRepository.get_saldo_caja(conn, caja_id, moneda_source)
                 if saldo_actual < monto:
                     await reply_text(
                         update,
-                        f"❌ Saldo insuficiente. Disponible: {saldo_actual:.2f} {moneda_origen.upper()}"
+                        f"❌ Saldo insuficiente. Disponible: {saldo_actual:.2f} {moneda_source.upper()}"
                     )
                     return ConversationHandler.END
                 
-                # Registrar gasto en moneda origen
+                # Registrar gasto en moneda source
                 MovimientoRepository.create(
-                    conn, 'gasto', monto, moneda_origen, caja_id, user_id,
-                    f"CAMBIO DE MONEDA: {monto:.2f} {moneda_origen.upper()} -> {monto_destino:.2f} {moneda_destino.upper()} (Tasa: {tasa:.2f})"
+                    conn, 'gasto', monto, moneda_source, caja_id, user_id,
+                    f"CAMBIO DE MONEDA: {monto:.2f} {moneda_source.upper()} -> {monto_destination:.2f} {moneda_destination.upper()} (Tasa: {tasa:.2f})"
                 )
                 
-                # Registrar ingreso en moneda destino
+                # Registrar ingreso en moneda destination
                 MovimientoRepository.create(
-                    conn, 'ingreso', monto_destino, moneda_destino, caja_id, user_id,
-                    f"CAMBIO DE MONEDA: {monto:.2f} {moneda_origen.upper()} -> {monto_destino:.2f} {moneda_destino.upper()} (Tasa: {tasa:.2f})"
+                    conn, 'ingreso', monto_destination, moneda_destination, caja_id, user_id,
+                    f"CAMBIO DE MONEDA: {monto:.2f} {moneda_source.upper()} -> {monto_destination:.2f} {moneda_destination.upper()} (Tasa: {tasa:.2f})"
                 )
             
             await reply_html(
                 update,
                 f"✅ <b>Cambio de Moneda Registrado!</b>\n\n"
                 f"📦 <b>Caja:</b> {caja['nombre']}\n"
-                f"💵 <b>Origen:</b> -{monto:.2f} {moneda_origen.upper()}\n"
-                f"💵 <b>Destino:</b> +{monto_destino:.2f} {moneda_destino.upper()}\n"
-                f"📊 <b>Tasa:</b> 1 {moneda_origen.upper()} = {tasa:.2f} {moneda_destino.upper()}"
+                f"💵 <b>Origen:</b> -{monto:.2f} {moneda_source.upper()}\n"
+                f"💵 <b>Destino:</b> +{monto_destination:.2f} {moneda_destination.upper()}\n"
+                f"📊 <b>Tasa:</b> 1 {moneda_source.upper()} = {tasa:.2f} {moneda_destination.upper()}"
             )
             
             # Limpiar datos
-            keys_to_remove = ["cambio_caja_id", "cambio_moneda_origen", "cambio_monto", "cambio_tasa", "cambio_moneda_destino"]
+            keys_to_remove = ["cambio_caja_id", "cambio_moneda_source", "cambio_monto", "cambio_tasa", "cambio_moneda_destination"]
             for key in keys_to_remove:
                 context.user_data.pop(key, None)
             
@@ -1697,7 +1697,7 @@ cambio_moneda_conv_handler = ConversationHandler(
             CallbackQueryHandler(cambio_caja_callback, pattern=r"^cambio_caja:"),
         ],
         CAMBIO_MONEDA_ORIGEN: [
-            CallbackQueryHandler(cambio_moneda_origen_callback, pattern=r"^cambio_moneda_origen:"),
+            CallbackQueryHandler(cambio_moneda_source_callback, pattern=r"^cambio_moneda_source:"),
         ],
         CAMBIO_MONTO: [
             MessageHandler(filters.TEXT & ~filters.COMMAND, cambio_monto_receive),
@@ -1708,7 +1708,7 @@ cambio_moneda_conv_handler = ConversationHandler(
             CallbackQueryHandler(cambio_caja_callback, pattern=r"^cambio_caja:.*"),
         ],
         CAMBIO_MONEDA_DESTINO: [
-            CallbackQueryHandler(cambio_moneda_destino_callback, pattern=r"^cambio_moneda_destino:"),
+            CallbackQueryHandler(cambio_moneda_destination_callback, pattern=r"^cambio_moneda_destination:"),
         ],
         CAMBIO_CONFIRM: [
             CallbackQueryHandler(cambio_confirm_callback, pattern=r"^cambio_confirm:"),
@@ -1716,7 +1716,7 @@ cambio_moneda_conv_handler = ConversationHandler(
     },
     fallbacks=[
         CommandHandler("cancel", _cancel_conversation),
-        # Cualquier otro comando cancela la conversacion
+        # Cualquier otro comando cancela la conversation
         MessageHandler(filters.COMMAND, _cancel_conversation),
     ],
     name="cambio_moneda_conversation",
@@ -1734,7 +1734,7 @@ async def transferencia_externa_entry(update: Update, context: ContextTypes.DEFA
     from utils.form_helpers import create_caja_keyboard
     
     # Limpiar datos previos
-    keys_to_remove = ["transf_ext_caja_origen_id", "transf_ext_caja_externa_id", "transf_ext_producto_codigo",
+    keys_to_remove = ["transf_ext_caja_source_id", "transf_ext_caja_externa_id", "transf_ext_producto_codigo",
                       "transf_ext_monto", "transf_ext_moneda", "transf_ext_porcentaje"]
     for key in keys_to_remove:
         context.user_data.pop(key, None)
@@ -1745,14 +1745,14 @@ async def transferencia_externa_entry(update: Update, context: ContextTypes.DEFA
         return ConversationHandler.END
     
     text = "🌍 <b>Transferencia a Caja Externa</b>\n\n"
-    text += "Select la <b>caja origen</b> (en Cuba):"
+    text += "Select the <b>caja source</b> (en Cuba):"
     
-    await reply_html(update, text, reply_markup=create_caja_keyboard("transf_ext_caja_origen"))
+    await reply_html(update, text, reply_markup=create_caja_keyboard("transf_ext_caja_source"))
     return TRANSF_EXT_CAJA_ORIGEN
 
 
-async def transf_ext_caja_origen_callback(update: Update, context: ContextTypes.DEFAULT_TYPE) -> int:
-    """Maneja la selection de caja origen."""
+async def transf_ext_caja_source_callback(update: Update, context: ContextTypes.DEFAULT_TYPE) -> int:
+    """Handle la selection de caja source."""
     from utils.telegram_helpers import reply_html, reply_text
     
     q = update.callback_query
@@ -1761,10 +1761,10 @@ async def transf_ext_caja_origen_callback(update: Update, context: ContextTypes.
     data = (q.data if q else "") or ""
     
     if ":cancelar" in data:
-        await reply_text(update, "✅ Operation cancelada.")
+        await reply_text(update, "✅ Operation canceled.")
         return ConversationHandler.END
     
-    if data.startswith("transf_ext_caja_origen:"):
+    if data.startswith("transf_ext_caja_source:"):
         caja_id = int(data.split(":")[-1])
         caja = CajaService.obtener_por_id(caja_id)
         
@@ -1772,16 +1772,16 @@ async def transf_ext_caja_origen_callback(update: Update, context: ContextTypes.
             await reply_text(update, "❌ Caja not found.")
             return ConversationHandler.END
         
-        context.user_data["transf_ext_caja_origen_id"] = caja_id
+        context.user_data["transf_ext_caja_source_id"] = caja_id
         
         # Mostrar cajas externas disponibles
         cajas_externas = CajaExternaService.listar()
         if not cajas_externas:
-            await reply_text(update, "❌ No cajas externas disponibles. Crea una primero.")
+            await reply_text(update, "❌ No external cash boxes available. Create one first.")
             return ConversationHandler.END
         
         text = f"📦 <b>Caja Origen:</b> {caja['nombre']}\n\n"
-        text += "Select la <b>caja externa</b> (destino):"
+        text += "Select the <b>caja externa</b> (destination):"
         
         keyboard: List[List[InlineKeyboardButton]] = []
         for caja_ext in cajas_externas:
@@ -1801,7 +1801,7 @@ async def transf_ext_caja_origen_callback(update: Update, context: ContextTypes.
 
 
 async def transf_ext_caja_externa_callback(update: Update, context: ContextTypes.DEFAULT_TYPE) -> int:
-    """Maneja la selection de caja externa."""
+    """Handle la selection de caja externa."""
     from utils.telegram_helpers import reply_html, reply_text
     
     q = update.callback_query
@@ -1810,7 +1810,7 @@ async def transf_ext_caja_externa_callback(update: Update, context: ContextTypes
     data = (q.data if q else "") or ""
     
     if ":cancel" in data:
-        await reply_text(update, "✅ Operation cancelada.")
+        await reply_text(update, "✅ Operation canceled.")
         return ConversationHandler.END
     
     if data.startswith("transf_ext_caja_externa:"):
@@ -1827,16 +1827,16 @@ async def transf_ext_caja_externa_callback(update: Update, context: ContextTypes
         with get_db_connection() as conn:
             productos = ProductoRepository.obtener_todos(conn)
         
-        caja_origen_id = context.user_data.get("transf_ext_caja_origen_id")
-        caja_origen = CajaService.obtener_por_id(caja_origen_id)
+        caja_source_id = context.user_data.get("transf_ext_caja_source_id")
+        caja_source = CajaService.obtener_por_id(caja_source_id)
         
-        text = f"📦 <b>Caja Origen:</b> {caja_origen['nombre']}\n"
+        text = f"📦 <b>Caja Origen:</b> {caja_source['nombre']}\n"
         text += f"🌍 <b>Caja Externa:</b> {caja_externa['nombre']} ({caja_externa['ubicacion']})\n\n"
         
         if not productos:
             text += "Send el <b>codigo del producto</b> (o crea uno nuevo con /productos):"
         else:
-            text += "Select el <b>producto</b> o send un codigo nuevo:"
+            text += "Select the <b>producto</b> o send un codigo nuevo:"
             
             keyboard: List[List[InlineKeyboardButton]] = []
             for prod in productos[:20]:  # Limitar a 20 productos
@@ -1880,14 +1880,14 @@ async def transf_ext_producto_receive(update: Update, context: ContextTypes.DEFA
     
     context.user_data["transf_ext_producto_codigo"] = codigo
     
-    caja_origen_id = context.user_data.get("transf_ext_caja_origen_id")
+    caja_source_id = context.user_data.get("transf_ext_caja_source_id")
     caja_externa_id = context.user_data.get("transf_ext_caja_externa_id")
-    caja_origen = CajaService.obtener_por_id(caja_origen_id)
+    caja_source = CajaService.obtener_por_id(caja_source_id)
     caja_externa = CajaExternaService.obtener_por_id(caja_externa_id)
     
     await reply_html(
         update,
-        f"📦 <b>Caja Origen:</b> {caja_origen['nombre']}\n"
+        f"📦 <b>Caja Origen:</b> {caja_source['nombre']}\n"
         f"🌍 <b>Caja Externa:</b> {caja_externa['nombre']} ({caja_externa['ubicacion']})\n"
         f"📦 <b>Producto:</b> {producto['codigo']} - {producto['nombre']}\n\n"
         f"Send el <b>monto</b> a transferir:"
@@ -1896,7 +1896,7 @@ async def transf_ext_producto_receive(update: Update, context: ContextTypes.DEFA
 
 
 async def transf_ext_producto_callback(update: Update, context: ContextTypes.DEFAULT_TYPE) -> int:
-    """Maneja la selection de producto desde botones."""
+    """Handle la selection de producto desde botones."""
     from utils.telegram_helpers import reply_html, reply_text
     
     q = update.callback_query
@@ -1919,14 +1919,14 @@ async def transf_ext_producto_callback(update: Update, context: ContextTypes.DEF
             await reply_text(update, "❌ Producto not found.")
             return ConversationHandler.END
         
-        caja_origen_id = context.user_data.get("transf_ext_caja_origen_id")
+        caja_source_id = context.user_data.get("transf_ext_caja_source_id")
         caja_externa_id = context.user_data.get("transf_ext_caja_externa_id")
-        caja_origen = CajaService.obtener_por_id(caja_origen_id)
+        caja_source = CajaService.obtener_por_id(caja_source_id)
         caja_externa = CajaExternaService.obtener_por_id(caja_externa_id)
         
         await reply_html(
             update,
-            f"📦 <b>Caja Origen:</b> {caja_origen['nombre']}\n"
+            f"📦 <b>Caja Origen:</b> {caja_source['nombre']}\n"
             f"🌍 <b>Caja Externa:</b> {caja_externa['nombre']} ({caja_externa['ubicacion']})\n"
             f"📦 <b>Producto:</b> {producto['codigo']} - {producto['nombre']}\n\n"
             f"Send el <b>monto</b> a transferir:"
@@ -1946,12 +1946,12 @@ async def transf_ext_monto_receive(update: Update, context: ContextTypes.DEFAULT
     try:
         monto = validate_monto(update.message.text)
         
-        caja_origen_id = context.user_data.get("transf_ext_caja_origen_id")
-        if not caja_origen_id:
-            await reply_text(update, "❌ Error: Caja origen no selectda. Empieza de nuevo.")
+        caja_source_id = context.user_data.get("transf_ext_caja_source_id")
+        if not caja_source_id:
+            await reply_text(update, "❌ Error: Caja source no selectda. Empieza de nuevo.")
             return ConversationHandler.END
         
-        caja_origen = CajaService.obtener_por_id(caja_origen_id)
+        caja_source = CajaService.obtener_por_id(caja_source_id)
         
         context.user_data["transf_ext_monto"] = monto
         
@@ -1964,11 +1964,11 @@ async def transf_ext_monto_receive(update: Update, context: ContextTypes.DEFAULT
         
         await reply_html(
             update,
-            f"📦 <b>Caja Origen:</b> {caja_origen['nombre']}\n"
+            f"📦 <b>Caja Origen:</b> {caja_source['nombre']}\n"
             f"🌍 <b>Caja Externa:</b> {caja_externa['nombre']} ({caja_externa['ubicacion']})\n"
             f"📦 <b>Producto:</b> {producto['codigo']} - {producto['nombre']}\n"
             f"💰 <b>Monto:</b> {monto:.2f}\n\n"
-            f"Select la <b>moneda</b>:",
+            f"Select the <b>moneda</b>:",
             reply_markup=create_moneda_keyboard("transf_ext_moneda")
         )
         return TRANSF_EXT_MONEDA
@@ -1978,7 +1978,7 @@ async def transf_ext_monto_receive(update: Update, context: ContextTypes.DEFAULT
 
 
 async def transf_ext_moneda_callback(update: Update, context: ContextTypes.DEFAULT_TYPE) -> int:
-    """Maneja la selection de moneda."""
+    """Handle la selection de moneda."""
     from utils.telegram_helpers import reply_html, reply_text
     
     q = update.callback_query
@@ -1987,7 +1987,7 @@ async def transf_ext_moneda_callback(update: Update, context: ContextTypes.DEFAU
     data = (q.data if q else "") or ""
     
     if ":cancelar" in data:
-        await reply_text(update, "✅ Operation cancelada.")
+        await reply_text(update, "✅ Operation canceled.")
         return ConversationHandler.END
     
     # Extraer moneda del callback
@@ -1995,17 +1995,17 @@ async def transf_ext_moneda_callback(update: Update, context: ContextTypes.DEFAU
     moneda_map = {"usd": "usd", "cup": "cup", "cup_t": "cup-t", "eur": "eur"}
     moneda = moneda_map.get(moneda_part, moneda_part.replace("_", "-"))
     
-    caja_origen_id = context.user_data.get("transf_ext_caja_origen_id")
+    caja_source_id = context.user_data.get("transf_ext_caja_source_id")
     caja_externa_id = context.user_data.get("transf_ext_caja_externa_id")
     monto = context.user_data.get("transf_ext_monto")
     
-    if not all([caja_origen_id, caja_externa_id, monto]):
+    if not all([caja_source_id, caja_externa_id, monto]):
         await reply_text(update, "❌ Error: Datos incompletos. Empieza de nuevo.")
         return ConversationHandler.END
     
     # Verificar saldo suficiente
-    caja_origen = CajaService.obtener_por_id(caja_origen_id)
-    saldos = caja_origen.get("saldos", {})
+    caja_source = CajaService.obtener_por_id(caja_source_id)
+    saldos = caja_source.get("saldos", {})
     saldo_disponible = saldos.get(moneda, 0)
     
     if monto > saldo_disponible:
@@ -2019,7 +2019,7 @@ async def transf_ext_moneda_callback(update: Update, context: ContextTypes.DEFAU
     
     await reply_html(
         update,
-        f"📦 <b>Caja Origen:</b> {caja_origen['nombre']}\n"
+        f"📦 <b>Caja Origen:</b> {caja_source['nombre']}\n"
         f"🌍 <b>Caja Externa:</b> {caja_externa['nombre']} ({caja_externa['ubicacion']})\n"
         f"💰 <b>Monto:</b> {monto:.2f} {moneda.upper()}\n"
         f"💵 <b>Moneda:</b> {moneda.upper()}\n\n"
@@ -2041,13 +2041,13 @@ async def transf_ext_porcentaje_receive(update: Update, context: ContextTypes.DE
             await reply_text(update, "❌ El porcentaje debe estar entre 0 y 100.")
             return TRANSF_EXT_PORCENTAJE
         
-        caja_origen_id = context.user_data.get("transf_ext_caja_origen_id")
+        caja_source_id = context.user_data.get("transf_ext_caja_source_id")
         caja_externa_id = context.user_data.get("transf_ext_caja_externa_id")
         producto_codigo = context.user_data.get("transf_ext_producto_codigo")
         monto = context.user_data.get("transf_ext_monto")
         moneda = context.user_data.get("transf_ext_moneda")
         
-        if not all([caja_origen_id, caja_externa_id, producto_codigo, monto, moneda]):
+        if not all([caja_source_id, caja_externa_id, producto_codigo, monto, moneda]):
             await reply_text(update, "❌ Error: Datos incompletos. Empieza de nuevo.")
             return ConversationHandler.END
         
@@ -2057,7 +2057,7 @@ async def transf_ext_porcentaje_receive(update: Update, context: ContextTypes.DE
         monto_envio = monto * (porcentaje / 100)
         monto_recibido = monto - monto_envio
         
-        caja_origen = CajaService.obtener_por_id(caja_origen_id)
+        caja_source = CajaService.obtener_por_id(caja_source_id)
         caja_externa = CajaExternaService.obtener_por_id(caja_externa_id)
         
         with get_db_connection() as conn:
@@ -2066,7 +2066,7 @@ async def transf_ext_porcentaje_receive(update: Update, context: ContextTypes.DE
         # Mostrar confirmacion
         msg = (
             f"✅ <b>Confirmar Transferencia Externa</b>\n\n"
-            f"📦 <b>Caja Origen:</b> {caja_origen['nombre']}\n"
+            f"📦 <b>Caja Origen:</b> {caja_source['nombre']}\n"
             f"🌍 <b>Caja Externa:</b> {caja_externa['nombre']} ({caja_externa['ubicacion']})\n"
             f"📦 <b>Producto:</b> {producto['codigo']} - {producto['nombre']}\n"
             f"💰 <b>Monto Total:</b> {monto:.2f} {moneda.upper()}\n"
@@ -2092,26 +2092,26 @@ async def transf_ext_confirm_callback(update: Update, context: ContextTypes.DEFA
     data = (q.data if q else "") or ""
     
     if ":no" in data or ":cancel" in data:
-        await reply_text(update, "❌ Transferencia cancelada.")
+        await reply_text(update, "❌ Transfer canceled.")
         return ConversationHandler.END
     
     if ":yes" in data:
         try:
-            caja_origen_id = context.user_data.get("transf_ext_caja_origen_id")
+            caja_source_id = context.user_data.get("transf_ext_caja_source_id")
             caja_externa_id = context.user_data.get("transf_ext_caja_externa_id")
             producto_codigo = context.user_data.get("transf_ext_producto_codigo")
             monto = context.user_data.get("transf_ext_monto")
             moneda = context.user_data.get("transf_ext_moneda")
             porcentaje = context.user_data.get("transf_ext_porcentaje")
             
-            if not all([caja_origen_id, caja_externa_id, producto_codigo, monto, moneda, porcentaje is not None]):
+            if not all([caja_source_id, caja_externa_id, producto_codigo, monto, moneda, porcentaje is not None]):
                 await reply_text(update, "❌ Error: datos incompletos. Empieza de nuevo.")
                 return ConversationHandler.END
             
-            caja_origen = CajaService.obtener_por_id(caja_origen_id)
+            caja_source = CajaService.obtener_por_id(caja_source_id)
             caja_externa = CajaExternaService.obtener_por_id(caja_externa_id)
             
-            if not caja_origen or not caja_externa:
+            if not caja_source or not caja_externa:
                 await reply_text(update, "❌ Caja not found.")
                 return ConversationHandler.END
             
@@ -2122,7 +2122,7 @@ async def transf_ext_confirm_callback(update: Update, context: ContextTypes.DEFA
                     return ConversationHandler.END
                 
                 # Verificar saldo suficiente
-                saldo_actual = MovimientoRepository.get_saldo_caja(conn, caja_origen_id, moneda)
+                saldo_actual = MovimientoRepository.get_saldo_caja(conn, caja_source_id, moneda)
                 if saldo_actual < monto:
                     await reply_text(
                         update,
@@ -2136,18 +2136,18 @@ async def transf_ext_confirm_callback(update: Update, context: ContextTypes.DEFA
                 
                 user_id = update.effective_user.id
                 
-                # Registrar gasto en caja origen (monto total, que incluye el gasto de envio)
+                # Registrar gasto en caja source (monto total, que incluye el gasto de envio)
                 descripcion_gasto = f"TRANSFERENCIA EXTERNA: {monto:.2f} {moneda.upper()} a {caja_externa['nombre']} ({caja_externa['ubicacion']}) - Producto: {producto['codigo']}"
                 if monto_envio > 0:
                     descripcion_gasto += f" (Envio: {monto_envio:.2f} {moneda.upper()} - {porcentaje:.2f}%)"
                 
                 MovimientoRepository.create(
-                    conn, 'gasto', monto, moneda, caja_origen_id, user_id, descripcion_gasto
+                    conn, 'gasto', monto, moneda, caja_source_id, user_id, descripcion_gasto
                 )
                 
                 # Registrar transferencia externa
                 TransferenciaExternaRepository.create(
-                    conn, caja_origen_id, caja_externa_id, producto_codigo,
+                    conn, caja_source_id, caja_externa_id, producto_codigo,
                     monto, moneda, porcentaje, monto_envio, monto_recibido, user_id,
                     f"Transferencia de {producto['codigo']} a {caja_externa['nombre']}"
                 )
@@ -2155,7 +2155,7 @@ async def transf_ext_confirm_callback(update: Update, context: ContextTypes.DEFA
             await reply_html(
                 update,
                 f"✅ <b>Transferencia Externa Registrada!</b>\n\n"
-                f"📦 <b>Caja Origen:</b> {caja_origen['nombre']}\n"
+                f"📦 <b>Caja Origen:</b> {caja_source['nombre']}\n"
                 f"🌍 <b>Caja Externa:</b> {caja_externa['nombre']} ({caja_externa['ubicacion']})\n"
                 f"📦 <b>Producto:</b> {producto['codigo']} - {producto['nombre']}\n"
                 f"💰 <b>Monto Total:</b> {monto:.2f} {moneda.upper()}\n"
@@ -2164,7 +2164,7 @@ async def transf_ext_confirm_callback(update: Update, context: ContextTypes.DEFA
             )
             
             # Limpiar datos
-            keys_to_remove = ["transf_ext_caja_origen_id", "transf_ext_caja_externa_id", "transf_ext_producto_codigo",
+            keys_to_remove = ["transf_ext_caja_source_id", "transf_ext_caja_externa_id", "transf_ext_producto_codigo",
                             "transf_ext_monto", "transf_ext_moneda", "transf_ext_porcentaje"]
             for key in keys_to_remove:
                 context.user_data.pop(key, None)
@@ -2183,7 +2183,7 @@ transferencia_externa_conv_handler = ConversationHandler(
     ],
     states={
         TRANSF_EXT_CAJA_ORIGEN: [
-            CallbackQueryHandler(transf_ext_caja_origen_callback, pattern=r"^transf_ext_caja_origen:"),
+            CallbackQueryHandler(transf_ext_caja_source_callback, pattern=r"^transf_ext_caja_source:"),
         ],
         TRANSF_EXT_CAJA_EXTERNA: [
             CallbackQueryHandler(transf_ext_caja_externa_callback, pattern=r"^transf_ext_caja_externa:|transf_ext:cancel"),
@@ -2194,14 +2194,14 @@ transferencia_externa_conv_handler = ConversationHandler(
         ],
         TRANSF_EXT_MONTO: [
             MessageHandler(filters.TEXT & ~filters.COMMAND, transf_ext_monto_receive),
-            CallbackQueryHandler(transf_ext_caja_origen_callback, pattern=r"^transf_ext:.*"),
+            CallbackQueryHandler(transf_ext_caja_source_callback, pattern=r"^transf_ext:.*"),
         ],
         TRANSF_EXT_MONEDA: [
             CallbackQueryHandler(transf_ext_moneda_callback, pattern=r"^transf_ext_moneda:"),
         ],
         TRANSF_EXT_PORCENTAJE: [
             MessageHandler(filters.TEXT & ~filters.COMMAND, transf_ext_porcentaje_receive),
-            CallbackQueryHandler(transf_ext_caja_origen_callback, pattern=r"^transf_ext:.*"),
+            CallbackQueryHandler(transf_ext_caja_source_callback, pattern=r"^transf_ext:.*"),
         ],
         TRANSF_EXT_CONFIRM: [
             CallbackQueryHandler(transf_ext_confirm_callback, pattern=r"^transf_ext_confirm:"),
@@ -2233,7 +2233,7 @@ async def pago_proveedor_entry(update: Update, context: ContextTypes.DEFAULT_TYP
     for key in keys_to_remove:
         context.user_data.pop(key, None)
     
-    # Obtener proveedores con deudas pendientes
+    # Obtener proveedores con pending debts
     with get_db_connection() as conn:
         deudas = DeudaRepository.obtener_pendientes(conn)
     
@@ -2249,7 +2249,7 @@ async def pago_proveedor_entry(update: Update, context: ContextTypes.DEFAULT_TYP
             })
     
     if not proveedores_con_deuda:
-        await reply_text(update, "❌ No proveedores con deudas pendientes.")
+        await reply_text(update, "❌ No proveedores con pending debts.")
         return ConversationHandler.END
     
     # Obtener todos los proveedores para mostrar
@@ -2257,11 +2257,11 @@ async def pago_proveedor_entry(update: Update, context: ContextTypes.DEFAULT_TYP
     proveedores_con_deuda_list = [p for p in proveedores if p['name'].upper() in proveedores_con_deuda]
     
     if not proveedores_con_deuda_list:
-        await reply_text(update, "❌ No se encontraron proveedores registrados con deudas.")
+        await reply_text(update, "❌ No se encontraron proveedores recordeds con deudas.")
         return ConversationHandler.END
     
-    text = "💸 <b>Pago a Proveedor</b>\n\n"
-    text += "Select el <b>proveedor</b> al que deseas pagar:"
+    text = "💸 <b>Pago a Supplier</b>\n\n"
+    text += "Select the <b>proveedor</b> al que deseas pagar:"
     
     keyboard: List[List[InlineKeyboardButton]] = []
     for prov in proveedores_con_deuda_list:
@@ -2281,7 +2281,7 @@ async def pago_proveedor_entry(update: Update, context: ContextTypes.DEFAULT_TYP
 
 
 async def pago_prov_proveedor_callback(update: Update, context: ContextTypes.DEFAULT_TYPE) -> int:
-    """Maneja la selection del proveedor."""
+    """Handle la selection del proveedor."""
     from utils.telegram_helpers import reply_html, reply_text
     
     q = update.callback_query
@@ -2297,7 +2297,7 @@ async def pago_prov_proveedor_callback(update: Update, context: ContextTypes.DEF
         ]
         for key in keys_to_remove:
             context.user_data.pop(key, None)
-        await reply_text(update, "✅ Operation cancelada.")
+        await reply_text(update, "✅ Operation canceled.")
         return ConversationHandler.END
     
     if data.startswith("pago_prov:proveedor:"):
@@ -2306,7 +2306,7 @@ async def pago_prov_proveedor_callback(update: Update, context: ContextTypes.DEF
         
         proveedor = ProveedorService.obtener_por_id(proveedor_id)
         if not proveedor:
-            await reply_text(update, "❌ Proveedor not found.")
+            await reply_text(update, "❌ Supplier not found.")
             return ConversationHandler.END
         
         # Obtener deudas del proveedor
@@ -2319,14 +2319,14 @@ async def pago_prov_proveedor_callback(update: Update, context: ContextTypes.DEF
         ]
         
         if not deudas_proveedor:
-            await reply_text(update, "❌ Este proveedor no tiene deudas pendientes.")
+            await reply_text(update, "❌ This supplier has no pending debts.")
             return ConversationHandler.END
         
-        text = f"🏢 <b>Proveedor:</b> {proveedor['name']}\n\n"
-        text += "<b>Deudas pendientes:</b>\n"
+        text = f"🏢 <b>Supplier:</b> {proveedor['name']}\n\n"
+        text += "<b>Pending debts:</b>\n"
         for deuda in deudas_proveedor:
             text += f"  • {deuda['monto_pendiente']:,.2f} {deuda['moneda'].upper()}\n"
-        text += "\nDesde que tipo de caja deseas pagar?"
+        text += "\nWhich cash box type do you want to pay from?"
         
         keyboard = [
             [
@@ -2343,7 +2343,7 @@ async def pago_prov_proveedor_callback(update: Update, context: ContextTypes.DEF
 
 
 async def pago_prov_tipo_caja_callback(update: Update, context: ContextTypes.DEFAULT_TYPE) -> int:
-    """Maneja la selection del tipo de caja."""
+    """Handle la selection del tipo de caja."""
     from utils.telegram_helpers import reply_html, reply_text
     
     q = update.callback_query
@@ -2359,7 +2359,7 @@ async def pago_prov_tipo_caja_callback(update: Update, context: ContextTypes.DEF
         ]
         for key in keys_to_remove:
             context.user_data.pop(key, None)
-        await reply_text(update, "✅ Operation cancelada.")
+        await reply_text(update, "✅ Operation canceled.")
         return ConversationHandler.END
     
     if data.startswith("pago_prov:tipo_caja:"):
@@ -2374,7 +2374,7 @@ async def pago_prov_tipo_caja_callback(update: Update, context: ContextTypes.DEF
                 return ConversationHandler.END
             
             text = "🏦 <b>Caja Interna</b>\n\n"
-            text += "Select la <b>caja</b> desde la que deseas pagar:"
+            text += "Select the <b>caja</b> desde la que deseas pagar:"
             
             await reply_html(update, text, reply_markup=create_caja_keyboard("pago_prov:caja_interna"))
             return PAGO_PROV_CAJA_INTERNA
@@ -2383,11 +2383,11 @@ async def pago_prov_tipo_caja_callback(update: Update, context: ContextTypes.DEF
             # Mostrar cajas externas
             cajas_externas = CajaExternaService.listar()
             if not cajas_externas:
-                await reply_text(update, "❌ No cajas externas disponibles. Crea una primero con /cajas_externas")
+                await reply_text(update, "❌ No external cash boxes available. Create one first with /cajas_externas")
                 return ConversationHandler.END
             
             text = "🌍 <b>Caja Externa</b>\n\n"
-            text += "Select la <b>caja externa</b> desde la que deseas pagar:"
+            text += "Select the <b>caja externa</b> desde la que deseas pagar:"
             
             keyboard: List[List[InlineKeyboardButton]] = []
             for caja in cajas_externas:
@@ -2406,7 +2406,7 @@ async def pago_prov_tipo_caja_callback(update: Update, context: ContextTypes.DEF
 
 
 async def pago_prov_caja_interna_callback(update: Update, context: ContextTypes.DEFAULT_TYPE) -> int:
-    """Maneja la selection de caja interna."""
+    """Handle la selection de caja interna."""
     from utils.telegram_helpers import reply_html, reply_text
     
     q = update.callback_query
@@ -2422,7 +2422,7 @@ async def pago_prov_caja_interna_callback(update: Update, context: ContextTypes.
         ]
         for key in keys_to_remove:
             context.user_data.pop(key, None)
-        await reply_text(update, "✅ Operation cancelada.")
+        await reply_text(update, "✅ Operation canceled.")
         return ConversationHandler.END
     
     if data.startswith("pago_prov:caja_interna:"):
@@ -2444,7 +2444,7 @@ async def pago_prov_caja_interna_callback(update: Update, context: ContextTypes.
 
 
 async def pago_prov_caja_externa_callback(update: Update, context: ContextTypes.DEFAULT_TYPE) -> int:
-    """Maneja la selection de caja externa."""
+    """Handle la selection de caja externa."""
     from utils.telegram_helpers import reply_html, reply_text
     
     q = update.callback_query
@@ -2460,7 +2460,7 @@ async def pago_prov_caja_externa_callback(update: Update, context: ContextTypes.
         ]
         for key in keys_to_remove:
             context.user_data.pop(key, None)
-        await reply_text(update, "✅ Operation cancelada.")
+        await reply_text(update, "✅ Operation canceled.")
         return ConversationHandler.END
     
     if data.startswith("pago_prov:caja_externa:"):
@@ -2481,7 +2481,7 @@ async def pago_prov_caja_externa_callback(update: Update, context: ContextTypes.
             return ConversationHandler.END
         
         text = f"🌍 <b>Caja Externa:</b> {caja_externa['nombre']} - {caja_externa['ubicacion']}\n\n"
-        text += "Select el <b>producto</b> asociado al pago:"
+        text += "Select the <b>producto</b> asociado al pago:"
         
         keyboard: List[List[InlineKeyboardButton]] = []
         for prod in productos[:20]:  # Limitar a 20 productos
@@ -2500,7 +2500,7 @@ async def pago_prov_caja_externa_callback(update: Update, context: ContextTypes.
 
 
 async def pago_prov_producto_callback(update: Update, context: ContextTypes.DEFAULT_TYPE) -> int:
-    """Maneja la selection del producto (solo para cajas externas)."""
+    """Handle la selection del producto (solo para cajas externas)."""
     from utils.telegram_helpers import reply_html, reply_text
     
     q = update.callback_query
@@ -2516,7 +2516,7 @@ async def pago_prov_producto_callback(update: Update, context: ContextTypes.DEFA
         ]
         for key in keys_to_remove:
             context.user_data.pop(key, None)
-        await reply_text(update, "✅ Operation cancelada.")
+        await reply_text(update, "✅ Operation canceled.")
         return ConversationHandler.END
     
     if data.startswith("pago_prov:producto:"):
@@ -2548,7 +2548,7 @@ async def pago_prov_monto_receive(update: Update, context: ContextTypes.DEFAULT_
         context.user_data["pago_prov_monto"] = monto
         
         text = f"💰 <b>Monto:</b> {monto:.2f}\n\n"
-        text += "Select la <b>moneda</b>:"
+        text += "Select the <b>moneda</b>:"
         
         await reply_html(update, text, reply_markup=create_moneda_keyboard("pago_prov_moneda"))
         return PAGO_PROV_MONEDA
@@ -2559,7 +2559,7 @@ async def pago_prov_monto_receive(update: Update, context: ContextTypes.DEFAULT_
 
 
 async def pago_prov_moneda_callback(update: Update, context: ContextTypes.DEFAULT_TYPE) -> int:
-    """Maneja la selection de moneda."""
+    """Handle la selection de moneda."""
     from utils.telegram_helpers import reply_html, reply_text
     
     q = update.callback_query
@@ -2575,7 +2575,7 @@ async def pago_prov_moneda_callback(update: Update, context: ContextTypes.DEFAUL
         ]
         for key in keys_to_remove:
             context.user_data.pop(key, None)
-        await reply_text(update, "✅ Operation cancelada.")
+        await reply_text(update, "✅ Operation canceled.")
         return ConversationHandler.END
     
     if data.startswith("pago_prov_moneda:"):
@@ -2609,7 +2609,7 @@ async def pago_prov_motivo_receive(update: Update, context: ContextTypes.DEFAULT
     proveedor = ProveedorService.obtener_por_id(proveedor_id)
     
     text = "📋 <b>Resumen del Pago</b>\n\n"
-    text += f"🏢 <b>Proveedor:</b> {proveedor['name']}\n"
+    text += f"🏢 <b>Supplier:</b> {proveedor['name']}\n"
     text += f"💰 <b>Monto:</b> {monto:.2f} {moneda.upper()}\n"
     
     if tipo_caja == "interna":
@@ -2626,7 +2626,7 @@ async def pago_prov_motivo_receive(update: Update, context: ContextTypes.DEFAULT
         text += f"📦 <b>Producto:</b> {producto['codigo']} - {producto['nombre']}\n"
     
     if motivo:
-        text += f"📝 <b>Motivo:</b> {motivo}\n"
+        text += f"📝 <b>Reason:</b> {motivo}\n"
     
     text += "\nConfirmas el pago?"
     
@@ -2658,7 +2658,7 @@ async def pago_prov_confirm_callback(update: Update, context: ContextTypes.DEFAU
         ]
         for key in keys_to_remove:
             context.user_data.pop(key, None)
-        await reply_text(update, "✅ Operation cancelada.")
+        await reply_text(update, "✅ Operation canceled.")
         return ConversationHandler.END
     
     if data == "pago_prov_confirm:yes":
@@ -2678,9 +2678,9 @@ async def pago_prov_confirm_callback(update: Update, context: ContextTypes.DEFAU
                 caja_id = context.user_data.get("pago_prov_caja_interna_id")
                 caja = CajaService.obtener_por_id(caja_id)
                 
-                descripcion = f"PAGO a Proveedor: {proveedor_nombre}"
+                descripcion = f"PAGO a Supplier: {proveedor_nombre}"
                 if motivo:
-                    descripcion += f" - Motivo: {motivo}"
+                    descripcion += f" - Reason: {motivo}"
                 
                 # Registrar gasto
                 ContabilidadService.registrar_gasto(
@@ -2692,14 +2692,14 @@ async def pago_prov_confirm_callback(update: Update, context: ContextTypes.DEFAU
                     DeudaService.update_deuda(proveedor_nombre, monto, moneda, 'POR_PAGAR', es_incremento=False)
                     mensaje_deuda = f"<b>Deuda Actualizada:</b> Monto {monto:.2f} {moneda.upper()} restado de POR PAGAR."
                 except ValueError:
-                    mensaje_deuda = "<b>Aviso:</b> No se encontro deuda 'POR PAGAR' para este proveedor."
+                    mensaje_deuda = "<b>Notice:</b> Not found deuda 'POR PAGAR' para este proveedor."
                 
                 await reply_html(
                     update,
-                    f"💸 <b>Pago a Proveedor Registrado!</b>\n\n"
-                    f"<b>Proveedor:</b> {proveedor_nombre}\n"
+                    f"💸 <b>Pago a Supplier Registrado!</b>\n\n"
+                    f"<b>Supplier:</b> {proveedor_nombre}\n"
                     f"<b>Monto:</b> -{monto:.2f} {moneda.upper()} de {caja['nombre'].upper()}\n"
-                    f"<b>Motivo:</b> {motivo if motivo else 'Sin motivo'}\n"
+                    f"<b>Reason:</b> {motivo if motivo else 'Sin motivo'}\n"
                     f"{mensaje_deuda}"
                 )
                 
@@ -2708,25 +2708,25 @@ async def pago_prov_confirm_callback(update: Update, context: ContextTypes.DEFAU
                 caja_externa_id = context.user_data.get("pago_prov_caja_externa_id")
                 producto_codigo = context.user_data.get("pago_prov_producto_codigo")
                 
-                # Necesitamos una caja interna de origen para la transferencia
+                # Necesitamos una caja interna de source para la transferencia
                 # Por ahora, usaremos la primera caja disponible o pediremos al usuario
                 cajas = CajaService.listar()
                 if not cajas:
                     await reply_text(update, "❌ No cajas internas disponibles para realizar la transferencia.")
                     return ConversationHandler.END
                 
-                # Usar la primera caja como origen (o podriamos pedir al usuario)
-                caja_origen_id = cajas[0]['id']
-                caja_origen = cajas[0]
+                # Usar la primera caja como source (o podriamos pedir al usuario)
+                caja_source_id = cajas[0]['id']
+                caja_source = cajas[0]
                 
-                descripcion = f"PAGO a Proveedor: {proveedor_nombre}"
+                descripcion = f"PAGO a Supplier: {proveedor_nombre}"
                 if motivo:
-                    descripcion += f" - Motivo: {motivo}"
+                    descripcion += f" - Reason: {motivo}"
                 
                 # Registrar transferencia externa
                 from services.cajas_externas_service import CajaExternaService
                 transferencia = CajaExternaService.registrar_transferencia_externa(
-                    caja_origen_id, caja_externa_id, producto_codigo, monto, moneda, user_id, descripcion
+                    caja_source_id, caja_externa_id, producto_codigo, monto, moneda, user_id, descripcion
                 )
                 
                 # Update deuda
@@ -2734,7 +2734,7 @@ async def pago_prov_confirm_callback(update: Update, context: ContextTypes.DEFAU
                     DeudaService.update_deuda(proveedor_nombre, monto, moneda, 'POR_PAGAR', es_incremento=False)
                     mensaje_deuda = f"<b>Deuda Actualizada:</b> Monto {monto:.2f} {moneda.upper()} restado de POR PAGAR."
                 except ValueError:
-                    mensaje_deuda = "<b>Aviso:</b> No se encontro deuda 'POR PAGAR' para este proveedor."
+                    mensaje_deuda = "<b>Notice:</b> Not found deuda 'POR PAGAR' para este proveedor."
                 
                 caja_externa = CajaExternaService.obtener_por_id(caja_externa_id)
                 with get_db_connection() as conn:
@@ -2742,19 +2742,19 @@ async def pago_prov_confirm_callback(update: Update, context: ContextTypes.DEFAU
                 
                 await reply_html(
                     update,
-                    f"💸 <b>Pago a Proveedor Registrado!</b>\n\n"
-                    f"<b>Proveedor:</b> {proveedor_nombre}\n"
+                    f"💸 <b>Pago a Supplier Registrado!</b>\n\n"
+                    f"<b>Supplier:</b> {proveedor_nombre}\n"
                     f"<b>Monto Enviado:</b> {monto:.2f} {moneda.upper()}\n"
                     f"<b>Monto Envio:</b> {transferencia['monto_envio']:.2f} {moneda.upper()}\n"
                     f"<b>Monto Recibido:</b> {transferencia['monto_recibido']:.2f} {moneda.upper()}\n"
-                    f"<b>Desde:</b> {caja_origen['nombre']}\n"
+                    f"<b>Desde:</b> {caja_source['nombre']}\n"
                     f"<b>Hacia:</b> {caja_externa['nombre']} - {caja_externa['ubicacion']}\n"
                     f"<b>Producto:</b> {producto['codigo']} - {producto['nombre']}\n"
-                    f"<b>Motivo:</b> {motivo if motivo else 'Sin motivo'}\n"
+                    f"<b>Reason:</b> {motivo if motivo else 'Sin motivo'}\n"
                     f"{mensaje_deuda}"
                 )
             
-            logger.info(f"Pago a Proveedor {proveedor_nombre} registrado por {user_id}")
+            logger.info(f"Pago a Supplier {proveedor_nombre} recorded por {user_id}")
             
             # Limpiar datos
             keys_to_remove = [
@@ -2772,7 +2772,7 @@ async def pago_prov_confirm_callback(update: Update, context: ContextTypes.DEFAU
             return PAGO_PROV_CONFIRM
         except Exception as e:
             logger.error(f"Error inesperado en pago a proveedor: {e}", exc_info=True)
-            await reply_text(update, f"❌ An error occurred inesperado: {e}")
+            await reply_text(update, f"❌ An unexpected error occurred: {e}")
             return PAGO_PROV_CONFIRM
     
     return PAGO_PROV_CONFIRM

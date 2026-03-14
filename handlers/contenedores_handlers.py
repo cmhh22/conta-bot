@@ -1,5 +1,5 @@
 """
-Handlers refactorizados para management de contenedores.
+Handlers refactorizados para management de containeres.
 """
 import logging
 from typing import List
@@ -13,17 +13,17 @@ from telegram.ext import (
     filters,
 )
 from utils.decorators import admin_only
-from services.contenedores_service import ContenedorService
+from services.containeres_service import ContainerService
 from services.proveedores_service import ProveedorService
 
 logger = logging.getLogger(__name__)
 
-# Estados de la conversacion
+# Estados de la conversation
 MENU, CREAR_NOMBRE, CREAR_NUMERO, CREAR_PROVEEDOR, EDIT_MENU, EDIT_NOMBRE, EDIT_NUMERO, EDIT_PROVEEDOR, CONFIRM_DELETE = range(9)
 
 
 def _main_menu_kb() -> InlineKeyboardMarkup:
-    """Genera el teclado del menu principal."""
+    """Genera el teclado del main menu."""
     keyboard = [
         [
             InlineKeyboardButton("➕ Create", callback_data="cont:create"),
@@ -35,13 +35,13 @@ def _main_menu_kb() -> InlineKeyboardMarkup:
 
 
 async def _render_list(update: Update, context: ContextTypes.DEFAULT_TYPE) -> None:
-    """Renderiza la lista de contenedores."""
+    """Renderiza la lista de containeres."""
     from utils.telegram_helpers import reply_html
     
-    contenedores = ContenedorService.listar()
+    containeres = ContainerService.listar()
     
-    if not contenedores:
-        text = "📦 <b>Contenedores</b>\n\nStill no hay contenedores registrados."
+    if not containeres:
+        text = "📦 <b>Containeres</b>\n\nStill no hay containeres recordeds."
         kb = InlineKeyboardMarkup([
             [InlineKeyboardButton("➕ Create", callback_data="cont:create")],
             [InlineKeyboardButton("⬅️ Back", callback_data="cont:back")]
@@ -49,12 +49,12 @@ async def _render_list(update: Update, context: ContextTypes.DEFAULT_TYPE) -> No
         await reply_html(update, text, reply_markup=kb)
         return
     
-    text = "📦 <b>Contenedores</b>\n\nSelect una action para cada item:"
+    text = "📦 <b>Containeres</b>\n\nSelect aa action para cada item:"
     keyboard: List[List[InlineKeyboardButton]] = []
-    for cont in contenedores:
+    for cont in containeres:
         cont_id = cont["id"]
         nombre = cont["nombre"]
-        numero = cont.get("numero_contenedor", "")
+        numero = cont.get("numero_container", "")
         proveedor = cont.get("proveedor_name", "")
         
         # Mostrar informacion adicional si existe
@@ -75,11 +75,11 @@ async def _render_list(update: Update, context: ContextTypes.DEFAULT_TYPE) -> No
 
 
 @admin_only
-async def contenedores_entry(update: Update, context: ContextTypes.DEFAULT_TYPE) -> int:
-    """Punto de entrada para la management de contenedores."""
+async def containeres_entry(update: Update, context: ContextTypes.DEFAULT_TYPE) -> int:
+    """Punto de entrada para la management de containeres."""
     from utils.telegram_helpers import reply_html
     
-    # Limpiar cualquier dato residual de conversaciones anteriores
+    # Limpiar cualquier dato residual de conversationes anteriores
     keys_to_remove = [
         "cont_nombre", "cont_numero", "cont_proveedor_id",
         "cont_edit_id", "cont_del_id"
@@ -88,15 +88,15 @@ async def contenedores_entry(update: Update, context: ContextTypes.DEFAULT_TYPE)
         context.user_data.pop(key, None)
     
     msg = (
-        "🧰 <b>Management de Contenedores</b>\n\n"
-        "Administra tus contenedores. Usa el menu de abajo."
+        "🧰 <b>Management de Containeres</b>\n\n"
+        "Administra tus containeres. Usa el menu de abajo."
     )
     await reply_html(update, msg, reply_markup=_main_menu_kb())
     return MENU
 
 
 async def menu_callback(update: Update, context: ContextTypes.DEFAULT_TYPE) -> int:
-    """Maneja los callbacks del menu."""
+    """Handle callbacks del menu."""
     from utils.telegram_helpers import reply_html, reply_text
     from core.config import ADMIN_USER_IDS
     
@@ -113,7 +113,7 @@ async def menu_callback(update: Update, context: ContextTypes.DEFAULT_TYPE) -> i
     data = (q.data if q else "") or ""
     
     if data == "cont:create":
-        logger.info(f"Usuario {user_id} iniciando creation de contenedor")
+        logger.info(f"Usuario {user_id} iniciando creation de container")
         
         # Limpiar datos previos
         for key in ["cont_nombre", "cont_numero", "cont_proveedor_id"]:
@@ -125,7 +125,7 @@ async def menu_callback(update: Update, context: ContextTypes.DEFAULT_TYPE) -> i
             try:
                 # Intentar editar el mensaje directamente
                 await q.edit_message_text(
-                    "🆕 <b>Nuevo Contenedor</b>\n\nSend el <b>nombre</b> para el contenedor:",
+                    "🆕 <b>Nuevo Container</b>\n\nSend el <b>nombre</b> para el container:",
                     parse_mode="HTML"
                 )
                 logger.info("Mensaje editado correctamente")
@@ -134,12 +134,12 @@ async def menu_callback(update: Update, context: ContextTypes.DEFAULT_TYPE) -> i
                 # Si falla editar, enviar nuevo mensaje
                 if q.message:
                     await q.message.reply_html(
-                        "🆕 <b>Nuevo Contenedor</b>\n\nSend el <b>nombre</b> para el contenedor:"
+                        "🆕 <b>Nuevo Container</b>\n\nSend el <b>nombre</b> para el container:"
                     )
         else:
             await reply_html(
                 update,
-                "🆕 <b>Nuevo Contenedor</b>\n\nSend el <b>nombre</b> para el contenedor:"
+                "🆕 <b>Nuevo Container</b>\n\nSend el <b>nombre</b> para el container:"
             )
         
         logger.info(f"Retornando estado CREAR_NOMBRE ({CREAR_NOMBRE})")
@@ -157,14 +157,14 @@ async def menu_callback(update: Update, context: ContextTypes.DEFAULT_TYPE) -> i
             return await _finalizar_creacion(update, context)
         
         kb = InlineKeyboardMarkup([
-            [InlineKeyboardButton("✅ Yes, asignar proveedor", callback_data="cont:si_proveedor")],
+            [InlineKeyboardButton("✅ Yes, assign supplier", callback_data="cont:si_proveedor")],
             [InlineKeyboardButton("⏭️ Omitir", callback_data="cont:skip_proveedor")],
             [InlineKeyboardButton("❌ Cancel", callback_data="cont:cancel")]
         ])
         await reply_html(
             update,
             f"✅ Nombre: <b>{context.user_data.get('cont_nombre', '')}</b>\n\n"
-            "Deseas asignar un <b>proveedor</b>?",
+            "Do you want to asignar un <b>proveedor</b>?",
             reply_markup=kb
         )
         return CREAR_PROVEEDOR
@@ -174,10 +174,10 @@ async def menu_callback(update: Update, context: ContextTypes.DEFAULT_TYPE) -> i
         return MENU
     
     if data == "cont:back":
-        return await contenedores_entry(update, context)
+        return await containeres_entry(update, context)
     
     if data == "cont:close":
-        # Limpiar todos los datos de la conversacion
+        # Limpiar todos los datos de la conversation
         keys_to_remove = [
             "cont_nombre", "cont_numero", "cont_proveedor_id",
             "cont_edit_id", "cont_del_id"
@@ -193,28 +193,28 @@ async def menu_callback(update: Update, context: ContextTypes.DEFAULT_TYPE) -> i
         
         cont_id = int(data.split(":")[-1])
         context.user_data["cont_edit_id"] = cont_id
-        contenedor = ContenedorService.obtener_por_id(cont_id)
-        if not contenedor:
-            await reply_text(update, "❌ Contenedor not found.")
+        container = ContainerService.obtener_por_id(cont_id)
+        if not container:
+            await reply_text(update, "❌ Container not found.")
             return MENU
         
         # Mostrar menu de edicion
-        nombre = contenedor['nombre']
-        numero = contenedor.get('numero_contenedor', 'No asignado')
-        proveedor = contenedor.get('proveedor_name', 'No asignado')
+        nombre = container['nombre']
+        numero = container.get('numero_container', 'No asignado')
+        proveedor = container.get('proveedor_name', 'No asignado')
         
         msg = (
-            f"✏️ <b>Editar Contenedor</b>\n\n"
+            f"✏️ <b>Editar Container</b>\n\n"
             f"📦 Nombre: <code>{nombre}</code>\n"
             f"🔢 Numero: <code>{numero}</code>\n"
-            f"👥 Proveedor: <code>{proveedor}</code>\n\n"
+            f"👥 Supplier: <code>{proveedor}</code>\n\n"
             f"What would you like to edit?"
         )
         
         kb = InlineKeyboardMarkup([
             [InlineKeyboardButton("📝 Nombre", callback_data="cont:edit_nombre")],
-            [InlineKeyboardButton("🔢 Numero de Contenedor", callback_data="cont:edit_numero")],
-            [InlineKeyboardButton("👥 Proveedor", callback_data="cont:edit_proveedor")],
+            [InlineKeyboardButton("🔢 Numero de Container", callback_data="cont:edit_numero")],
+            [InlineKeyboardButton("👥 Supplier", callback_data="cont:edit_proveedor")],
             [InlineKeyboardButton("⬅️ Back", callback_data="cont:back")]
         ])
         
@@ -224,16 +224,16 @@ async def menu_callback(update: Update, context: ContextTypes.DEFAULT_TYPE) -> i
     if data == "cont:edit_nombre":
         cont_id = context.user_data.get("cont_edit_id")
         if cont_id is None:
-            await reply_text(update, "❌ No contenedor en edicion.")
+            await reply_text(update, "❌ No container en edicion.")
             return MENU
-        contenedor = ContenedorService.obtener_por_id(cont_id)
-        if not contenedor:
-            await reply_text(update, "❌ Contenedor not found.")
+        container = ContainerService.obtener_por_id(cont_id)
+        if not container:
+            await reply_text(update, "❌ Container not found.")
             return MENU
         await reply_html(
             update,
             f"✏️ <b>Editar Nombre</b>\n\n"
-            f"Actual: <code>{contenedor['nombre']}</code>\n"
+            f"Actual: <code>{container['nombre']}</code>\n"
             f"Send el <b>nuevo nombre</b>:"
         )
         return EDIT_NOMBRE
@@ -241,20 +241,20 @@ async def menu_callback(update: Update, context: ContextTypes.DEFAULT_TYPE) -> i
     if data == "cont:edit_numero":
         cont_id = context.user_data.get("cont_edit_id")
         if cont_id is None:
-            await reply_text(update, "❌ No contenedor en edicion.")
+            await reply_text(update, "❌ No container en edicion.")
             return MENU
-        contenedor = ContenedorService.obtener_por_id(cont_id)
-        if not contenedor:
-            await reply_text(update, "❌ Contenedor not found.")
+        container = ContainerService.obtener_por_id(cont_id)
+        if not container:
+            await reply_text(update, "❌ Container not found.")
             return MENU
-        numero_actual = contenedor.get('numero_contenedor', 'No asignado')
+        numero_actual = container.get('numero_container', 'No asignado')
         kb = InlineKeyboardMarkup([
             [InlineKeyboardButton("🗑️ Delete numero", callback_data="cont:remove_numero")],
             [InlineKeyboardButton("⬅️ Cancel", callback_data="cont:back")]
         ])
         await reply_html(
             update,
-            f"🔢 <b>Editar Numero de Contenedor</b>\n\n"
+            f"🔢 <b>Editar Numero de Container</b>\n\n"
             f"Actual: <code>{numero_actual}</code>\n"
             f"Send el <b>nuevo numero</b> (o usa el boton para deletelo):",
             reply_markup=kb
@@ -264,14 +264,14 @@ async def menu_callback(update: Update, context: ContextTypes.DEFAULT_TYPE) -> i
     if data == "cont:edit_proveedor":
         cont_id = context.user_data.get("cont_edit_id")
         if cont_id is None:
-            await reply_text(update, "❌ No contenedor en edicion.")
+            await reply_text(update, "❌ No container en edicion.")
             return MENU
-        contenedor = ContenedorService.obtener_por_id(cont_id)
-        if not contenedor:
-            await reply_text(update, "❌ Contenedor not found.")
+        container = ContainerService.obtener_por_id(cont_id)
+        if not container:
+            await reply_text(update, "❌ Container not found.")
             return MENU
         
-        proveedor_actual = contenedor["proveedor_name"] if contenedor["proveedor_name"] else "No asignado"
+        proveedor_actual = container["proveedor_name"] if container["proveedor_name"] else "No asignado"
         proveedores = ProveedorService.listar()
         
         keyboard: List[List[InlineKeyboardButton]] = []
@@ -285,16 +285,16 @@ async def menu_callback(update: Update, context: ContextTypes.DEFAULT_TYPE) -> i
                     InlineKeyboardButton(f"{marker}{nombre}", callback_data=f"cont:set_prov:{prov_id}")
                 ])
         keyboard.append([
-            InlineKeyboardButton("🗑️ Quitar proveedor", callback_data="cont:remove_proveedor"),
+            InlineKeyboardButton("🗑️ Remove supplier", callback_data="cont:remove_proveedor"),
             InlineKeyboardButton("⬅️ Cancel", callback_data="cont:back")
         ])
         kb = InlineKeyboardMarkup(keyboard)
         
         await reply_html(
             update,
-            f"👥 <b>Editar Proveedor</b>\n\n"
+            f"👥 <b>Editar Supplier</b>\n\n"
             f"Actual: <code>{proveedor_actual}</code>\n\n"
-            f"Select un proveedor:",
+            f"Select a proveedor:",
             reply_markup=kb
         )
         return EDIT_PROVEEDOR
@@ -302,11 +302,11 @@ async def menu_callback(update: Update, context: ContextTypes.DEFAULT_TYPE) -> i
     if data == "cont:remove_numero":
         cont_id = context.user_data.get("cont_edit_id")
         if cont_id is None:
-            await reply_text(update, "❌ No contenedor en edicion.")
+            await reply_text(update, "❌ No container en edicion.")
             return MENU
         try:
-            ContenedorService.update(int(cont_id), numero_contenedor="")
-            await reply_text(update, "✅ Numero de contenedor deleted.")
+            ContainerService.update(int(cont_id), numero_container="")
+            await reply_text(update, "✅ Numero de container deleted.")
             context.user_data.pop("cont_edit_id", None)
             await _render_list(update, context)
             return MENU
@@ -322,27 +322,27 @@ async def menu_callback(update: Update, context: ContextTypes.DEFAULT_TYPE) -> i
         
         cont_id = context.user_data.get("cont_edit_id")
         if cont_id is None:
-            await reply_text(update, "❌ No contenedor en edicion.")
+            await reply_text(update, "❌ No container en edicion.")
             return MENU
         
         try:
             prov_id = int(data.split(":")[-1])
-            ContenedorService.update(int(cont_id), proveedor_id=prov_id)
+            ContainerService.update(int(cont_id), proveedor_id=prov_id)
             proveedor = ProveedorService.obtener_por_id(prov_id)
-            nombre_prov = proveedor['name'] if proveedor else "Proveedor"
+            nombre_prov = proveedor['name'] if proveedor else "Supplier"
             
             # Editar el mensaje o enviar uno nuevo
             if q:
                 try:
                     await q.edit_message_text(
-                        f"✅ <b>Proveedor asignado</b>\n\nProveedor: <code>{nombre_prov}</code>",
+                        f"✅ <b>Supplier asignado</b>\n\nSupplier: <code>{nombre_prov}</code>",
                         parse_mode="HTML"
                     )
                 except Exception:
                     if q.message:
-                        await q.message.reply_html(f"✅ <b>Proveedor asignado</b>\n\nProveedor: <code>{nombre_prov}</code>")
+                        await q.message.reply_html(f"✅ <b>Supplier asignado</b>\n\nSupplier: <code>{nombre_prov}</code>")
             else:
-                await reply_text(update, f"✅ Proveedor asignado: {nombre_prov}")
+                await reply_text(update, f"✅ Supplier asignado: {nombre_prov}")
             
             context.user_data.pop("cont_edit_id", None)
             await _render_list(update, context)
@@ -353,7 +353,7 @@ async def menu_callback(update: Update, context: ContextTypes.DEFAULT_TYPE) -> i
             return MENU
         except Exception as e:
             logger.error(f"Error asignando proveedor: {e}", exc_info=True)
-            await reply_text(update, "❌ Error while asignar el proveedor.")
+            await reply_text(update, "❌ Error while assigning supplier.")
             return MENU
     
     if data == "cont:remove_proveedor":
@@ -363,28 +363,28 @@ async def menu_callback(update: Update, context: ContextTypes.DEFAULT_TYPE) -> i
         
         cont_id = context.user_data.get("cont_edit_id")
         if cont_id is None:
-            await reply_text(update, "❌ No contenedor en edicion.")
+            await reply_text(update, "❌ No container en edicion.")
             return MENU
         try:
             # Usar quitar_proveedor=True para establecer proveedor_id a NULL
-            ContenedorService.update(int(cont_id), quitar_proveedor=True)
+            ContainerService.update(int(cont_id), quitar_proveedor=True)
             
             # Editar el mensaje o enviar uno nuevo
             if q:
                 try:
-                    await q.edit_message_text("✅ Proveedor quitado del contenedor.")
+                    await q.edit_message_text("✅ Supplier quitado del container.")
                 except Exception:
                     if q.message:
-                        await q.message.reply_text("✅ Proveedor quitado del contenedor.")
+                        await q.message.reply_text("✅ Supplier quitado del container.")
             else:
-                await reply_text(update, "✅ Proveedor quitado del contenedor.")
+                await reply_text(update, "✅ Supplier quitado del container.")
             
             context.user_data.pop("cont_edit_id", None)
             await _render_list(update, context)
             return MENU
         except Exception as e:
             logger.error(f"Error eliminando proveedor: {e}", exc_info=True)
-            await reply_text(update, "❌ Error while delete el proveedor.")
+            await reply_text(update, "❌ Error while removing supplier.")
             return MENU
     
     if data.startswith("cont:del:"):
@@ -392,9 +392,9 @@ async def menu_callback(update: Update, context: ContextTypes.DEFAULT_TYPE) -> i
         
         cont_id = int(data.split(":")[-1])
         context.user_data["cont_del_id"] = cont_id
-        contenedor = ContenedorService.obtener_por_id(cont_id)
-        if not contenedor:
-            await reply_text(update, "❌ Contenedor not found.")
+        container = ContainerService.obtener_por_id(cont_id)
+        if not container:
+            await reply_text(update, "❌ Container not found.")
             return MENU
         kb = InlineKeyboardMarkup([
             [InlineKeyboardButton("✅ Yes, borrar", callback_data="cont:delok"),
@@ -403,7 +403,7 @@ async def menu_callback(update: Update, context: ContextTypes.DEFAULT_TYPE) -> i
         await reply_html(
             update,
             f"⚠️ <b>Confirmar deletion</b>\n\n"
-            f"Vas a borrar: <code>{contenedor['nombre']}</code>\n"
+            f"Vas a borrar: <code>{container['nombre']}</code>\n"
             f"Esta action no se puede deshacer.",
             reply_markup=kb
         )
@@ -418,18 +418,18 @@ async def menu_callback(update: Update, context: ContextTypes.DEFAULT_TYPE) -> i
             await _render_list(update, context)
             return MENU
         try:
-            ContenedorService.delete(int(cont_id))
+            ContainerService.delete(int(cont_id))
             # Limpiar el ID de deletion
             context.user_data.pop("cont_del_id", None)
             # Mostrar mensaje y luego la lista updated
-            await reply_text(update, "🗑️ Contenedor deleted correctamente.")
+            await reply_text(update, "🗑️ Container deleted correctamente.")
             await _render_list(update, context)
         except ValueError as e:
             await reply_text(update, f"❌ {e}")
             await _render_list(update, context)
         except Exception as e:
-            logger.error(f"Error eliminando contenedor: {e}", exc_info=True)
-            await reply_text(update, "❌ No se pudo delete. Intenta de nuevo.")
+            logger.error(f"Error eliminando container: {e}", exc_info=True)
+            await reply_text(update, "❌ Could not delete. Intenta de nuevo.")
             await _render_list(update, context)
         return MENU
     
@@ -442,7 +442,7 @@ async def menu_callback(update: Update, context: ContextTypes.DEFAULT_TYPE) -> i
 
 @admin_only
 async def create_nombre_receive(update: Update, context: ContextTypes.DEFAULT_TYPE) -> int:
-    """Recibe el nombre para create un contenedor."""
+    """Recibe el nombre para create un container."""
     from utils.telegram_helpers import reply_html, reply_text
     
     if not update.message:
@@ -456,7 +456,7 @@ async def create_nombre_receive(update: Update, context: ContextTypes.DEFAULT_TY
     # Guardar el nombre en el contexto
     context.user_data["cont_nombre"] = nombre
     
-    # Preguntar por numero de contenedor
+    # Preguntar por numero de container
     kb = InlineKeyboardMarkup([
         [InlineKeyboardButton("⏭️ Omitir", callback_data="cont:skip_numero")],
         [InlineKeyboardButton("❌ Cancel", callback_data="cont:cancel")]
@@ -464,7 +464,7 @@ async def create_nombre_receive(update: Update, context: ContextTypes.DEFAULT_TY
     await reply_html(
         update,
         f"✅ Nombre: <b>{nombre}</b>\n\n"
-        "Send el <b>numero de contenedor</b> (opcional):",
+        "Send el <b>numero de container</b> (opcional):",
         reply_markup=kb
     )
     return CREAR_NUMERO
@@ -472,7 +472,7 @@ async def create_nombre_receive(update: Update, context: ContextTypes.DEFAULT_TY
 
 @admin_only
 async def create_numero_receive(update: Update, context: ContextTypes.DEFAULT_TYPE) -> int:
-    """Recibe el numero de contenedor."""
+    """Recibe el numero de container."""
     from utils.telegram_helpers import reply_html, reply_text
     
     if not update.message:
@@ -488,7 +488,7 @@ async def create_numero_receive(update: Update, context: ContextTypes.DEFAULT_TY
         return await _finalizar_creacion(update, context)
     
     kb = InlineKeyboardMarkup([
-        [InlineKeyboardButton("✅ Yes, asignar proveedor", callback_data="cont:si_proveedor")],
+        [InlineKeyboardButton("✅ Yes, assign supplier", callback_data="cont:si_proveedor")],
         [InlineKeyboardButton("⏭️ Omitir", callback_data="cont:skip_proveedor")],
         [InlineKeyboardButton("❌ Cancel", callback_data="cont:cancel")]
     ])
@@ -498,7 +498,7 @@ async def create_numero_receive(update: Update, context: ContextTypes.DEFAULT_TY
         update,
         f"✅ Nombre: <b>{context.user_data['cont_nombre']}</b>\n"
         f"{numero_text}\n"
-        "Deseas asignar un <b>proveedor</b>?",
+        "Do you want to asignar un <b>proveedor</b>?",
         reply_markup=kb
     )
     return CREAR_PROVEEDOR
@@ -506,7 +506,7 @@ async def create_numero_receive(update: Update, context: ContextTypes.DEFAULT_TY
 
 @admin_only
 async def create_proveedor_callback(update: Update, context: ContextTypes.DEFAULT_TYPE) -> int:
-    """Maneja la selection de proveedor."""
+    """Handle la selection de proveedor."""
     from utils.telegram_helpers import reply_html, reply_text
     
     q = update.callback_query
@@ -521,7 +521,7 @@ async def create_proveedor_callback(update: Update, context: ContextTypes.DEFAUL
         return await _finalizar_creacion(update, context)
     
     if data == "cont:cancel":
-        await reply_text(update, "✅ Operation cancelada.")
+        await reply_text(update, "✅ Operation canceled.")
         # Limpiar datos
         for key in ["cont_nombre", "cont_numero", "cont_proveedor_id"]:
             context.user_data.pop(key, None)
@@ -531,7 +531,7 @@ async def create_proveedor_callback(update: Update, context: ContextTypes.DEFAUL
         # Mostrar lista de proveedores
         proveedores = ProveedorService.listar()
         if not proveedores:
-            await reply_text(update, "❌ No proveedores disponibles. Creando contenedor sin proveedor.")
+            await reply_text(update, "❌ No suppliers available. Creating container without supplier.")
             context.user_data["cont_proveedor_id"] = None
             return await _finalizar_creacion(update, context)
         
@@ -552,26 +552,26 @@ async def create_proveedor_callback(update: Update, context: ContextTypes.DEFAUL
         if q:
             try:
                 await q.edit_message_text(
-                    "👥 <b>Select un proveedor:</b>",
+                    "👥 <b>Select a proveedor:</b>",
                     parse_mode="HTML",
                     reply_markup=kb
                 )
             except Exception as e:
                 logger.error(f"Error editando mensaje: {e}")
-                await reply_html(update, "👥 <b>Select un proveedor:</b>", reply_markup=kb)
+                await reply_html(update, "👥 <b>Select a proveedor:</b>", reply_markup=kb)
         else:
-            await reply_html(update, "👥 <b>Select un proveedor:</b>", reply_markup=kb)
+            await reply_html(update, "👥 <b>Select a proveedor:</b>", reply_markup=kb)
         return CREAR_PROVEEDOR
     
     if data.startswith("cont:prov:"):
         try:
             prov_id = int(data.split(":")[-1])
-            logger.info(f"Asignando proveedor {prov_id} al contenedor")
+            logger.info(f"Asignando proveedor {prov_id} al container")
             context.user_data["cont_proveedor_id"] = prov_id
             return await _finalizar_creacion(update, context)
         except (ValueError, IndexError) as e:
             logger.error(f"Error parseando proveedor_id: {e}, data={data}")
-            await reply_text(update, "❌ Error while procesar la selection del proveedor.")
+            await reply_text(update, "❌ Error while processing supplier selection.")
             return CREAR_PROVEEDOR
     
     logger.warning(f"Callback no manejado en create_proveedor_callback: {data}")
@@ -579,7 +579,7 @@ async def create_proveedor_callback(update: Update, context: ContextTypes.DEFAUL
 
 
 async def _finalizar_creacion(update: Update, context: ContextTypes.DEFAULT_TYPE) -> int:
-    """Finaliza la creation del contenedor con todos los datos."""
+    """Finaliza la creation del container con todos los datos."""
     from utils.telegram_helpers import reply_html, reply_text
     
     nombre = context.user_data.get("cont_nombre")
@@ -589,21 +589,21 @@ async def _finalizar_creacion(update: Update, context: ContextTypes.DEFAULT_TYPE
     logger.info(f"_finalizar_creacion: nombre={nombre}, numero={numero}, proveedor_id={proveedor_id}")
     
     if not nombre:
-        await reply_text(update, "❌ Error: No se encontro el nombre del contenedor.")
+        await reply_text(update, "❌ Error: Not found el nombre del container.")
         return ConversationHandler.END
     
     try:
-        resultado = ContenedorService.create(nombre, numero, proveedor_id)
+        resultado = ContainerService.create(nombre, numero, proveedor_id)
         
         # Construir mensaje de confirmacion
-        msg = f"✅ <b>Contenedor Creado</b>\n\n"
+        msg = f"✅ <b>Container Creado</b>\n\n"
         msg += f"📦 Nombre: <code>{nombre}</code>\n"
         if numero:
             msg += f"🔢 Numero: <code>{numero}</code>\n"
         if proveedor_id:
             proveedor = ProveedorService.obtener_por_id(proveedor_id)
             if proveedor:
-                msg += f"👥 Proveedor: <code>{proveedor['name']}</code>\n"
+                msg += f"👥 Supplier: <code>{proveedor['name']}</code>\n"
         
         # Si es un callback, editar el mensaje, sino enviar uno nuevo
         q = update.callback_query
@@ -626,7 +626,7 @@ async def _finalizar_creacion(update: Update, context: ContextTypes.DEFAULT_TYPE
         return MENU
     except ValueError as e:
         if "UNIQUE" in str(e) or "ya existe" in str(e).lower():
-            await reply_text(update, "⚠️ Ya existe un contenedor con ese nombre. Usa otro nombre.")
+            await reply_text(update, "⚠️ Ya existe un container con ese nombre. Usa otro nombre.")
         else:
             await reply_text(update, f"❌ {e}")
         # Limpiar y volver al inicio
@@ -634,7 +634,7 @@ async def _finalizar_creacion(update: Update, context: ContextTypes.DEFAULT_TYPE
             context.user_data.pop(key, None)
         return ConversationHandler.END
     except Exception as e:
-        logger.error(f"Error creando contenedor: {e}", exc_info=True)
+        logger.error(f"Error creando container: {e}", exc_info=True)
         await reply_text(update, "❌ An error occurred al create. Try again.")
         # Limpiar datos
         for key in ["cont_nombre", "cont_numero", "cont_proveedor_id"]:
@@ -644,7 +644,7 @@ async def _finalizar_creacion(update: Update, context: ContextTypes.DEFAULT_TYPE
 
 @admin_only
 async def edit_nombre_receive(update: Update, context: ContextTypes.DEFAULT_TYPE) -> int:
-    """Recibe el nuevo nombre para editar un contenedor."""
+    """Recibe el nuevo nombre para editar un container."""
     from utils.telegram_helpers import reply_html, reply_text
     
     if not update.message:
@@ -652,7 +652,7 @@ async def edit_nombre_receive(update: Update, context: ContextTypes.DEFAULT_TYPE
     
     cont_id = context.user_data.get("cont_edit_id")
     if cont_id is None:
-        await reply_text(update, "❌ No contenedor en edicion.")
+        await reply_text(update, "❌ No container en edicion.")
         return MENU
     
     nuevo_nombre = (update.message.text or "").strip()
@@ -661,7 +661,7 @@ async def edit_nombre_receive(update: Update, context: ContextTypes.DEFAULT_TYPE
         return EDIT_NOMBRE
     
     try:
-        ContenedorService.update(int(cont_id), nuevo_nombre=nuevo_nombre)
+        ContainerService.update(int(cont_id), nuevo_nombre=nuevo_nombre)
         await reply_html(
             update,
             f"✅ <b>Actualizado</b>\n\nNuevo nombre: <code>{nuevo_nombre}</code>"
@@ -671,19 +671,19 @@ async def edit_nombre_receive(update: Update, context: ContextTypes.DEFAULT_TYPE
         return MENU
     except ValueError as e:
         if "UNIQUE" in str(e) or "ya existe" in str(e).lower():
-            await reply_text(update, "⚠️ Ya existe un contenedor con ese nombre. Usa otro nombre.")
+            await reply_text(update, "⚠️ Ya existe un container con ese nombre. Usa otro nombre.")
         else:
             await reply_text(update, f"❌ {e}")
         return EDIT_NOMBRE
     except Exception as e:
-        logger.error(f"Error actualizando contenedor: {e}", exc_info=True)
+        logger.error(f"Error actualizando container: {e}", exc_info=True)
         await reply_text(update, "❌ An error occurred al update. Try again.")
         return EDIT_NOMBRE
 
 
 @admin_only
 async def edit_numero_receive(update: Update, context: ContextTypes.DEFAULT_TYPE) -> int:
-    """Recibe el nuevo numero de contenedor."""
+    """Recibe el nuevo numero de container."""
     from utils.telegram_helpers import reply_html, reply_text
     
     if not update.message:
@@ -691,13 +691,13 @@ async def edit_numero_receive(update: Update, context: ContextTypes.DEFAULT_TYPE
     
     cont_id = context.user_data.get("cont_edit_id")
     if cont_id is None:
-        await reply_text(update, "❌ No contenedor en edicion.")
+        await reply_text(update, "❌ No container en edicion.")
         return MENU
     
     nuevo_numero = (update.message.text or "").strip()
     
     try:
-        ContenedorService.update(int(cont_id), numero_contenedor=nuevo_numero if nuevo_numero else None)
+        ContainerService.update(int(cont_id), numero_container=nuevo_numero if nuevo_numero else None)
         await reply_html(
             update,
             f"✅ <b>Actualizado</b>\n\nNuevo numero: <code>{nuevo_numero if nuevo_numero else 'Eliminado'}</code>"
@@ -715,7 +715,7 @@ async def cancel_command(update: Update, context: ContextTypes.DEFAULT_TYPE) -> 
     """Cancela la operation actual."""
     from utils.telegram_helpers import reply_text
     
-    # Limpiar todos los datos de la conversacion
+    # Limpiar todos los datos de la conversation
     keys_to_remove = [
         "cont_nombre", "cont_numero", "cont_proveedor_id",
         "cont_edit_id", "cont_del_id"
@@ -723,15 +723,15 @@ async def cancel_command(update: Update, context: ContextTypes.DEFAULT_TYPE) -> 
     for key in keys_to_remove:
         context.user_data.pop(key, None)
     
-    await reply_text(update, "✅ Operation cancelada.")
+    await reply_text(update, "✅ Operation canceled.")
     return ConversationHandler.END
 
 
 # ConversationHandler exportable
-contenedores_conv_handler = ConversationHandler(
+containeres_conv_handler = ConversationHandler(
     entry_points=[
-        CommandHandler("contenedores", contenedores_entry),
-        CallbackQueryHandler(contenedores_entry, pattern=r"^menu:contenedores$"),
+        CommandHandler("containeres", containeres_entry),
+        CallbackQueryHandler(containeres_entry, pattern=r"^menu:containeres$"),
     ],
     states={
         MENU: [
@@ -767,7 +767,7 @@ contenedores_conv_handler = ConversationHandler(
         ],
     },
     fallbacks=[CommandHandler("cancel", cancel_command)],
-    name="contenedores_conversation",
+    name="containeres_conversation",
     persistent=False,
 )
 

@@ -19,24 +19,24 @@ from handlers.inventario_handlers import (
     entrada_command, stock_command, venta_command, ganancia_command,
     consignar_command, stock_consignado_command
 )
-from handlers.contenedores_handlers import contenedores_conv_handler
+from handlers.containeres_handlers import containeres_conv_handler
 from handlers.proveedores_handlers import proveedores_conv_handler
 from handlers.vendedores_handlers import vendedores_conv_handler
-from handlers.almacenes_handlers import almacenes_conv_handler
+from handlers.warehousees_handlers import warehousees_conv_handler
 from handlers.productos_handlers import productos_conv_handler
 from handlers.cajas_handlers import cajas_conv_handler
 from handlers.cajas_externas_handlers import cajas_externas_conv_handler
-from handlers.logistica_handlers import (
-    productos_contenedor_command,
-    inventario_almacen_command,
-    inventario_almacen_callback,
+from handlers.logistics_handlers import (
+    productos_container_command,
+    inventario_warehouse_command,
+    inventario_warehouse_callback,
     mover_producto_conv_handler,
     agregar_producto_conv_handler,
-    mover_almacen_conv_handler,
-    consignar_almacen_conv_handler,
-    mover_consignacion_conv_handler,
-    pagar_consignacion_conv_handler,
-    resumen_logistica_command,
+    mover_warehouse_conv_handler,
+    consignar_warehouse_conv_handler,
+    mover_consignment_conv_handler,
+    pagar_consignment_conv_handler,
+    resumen_logistics_command,
 )
 from handlers.menu_handlers import start_command, menu_callback, menu_query_handler, contabilidad_query_handler
 from handlers.form_handlers import ingreso_conv_handler, gasto_conv_handler, traspaso_conv_handler, deuda_proveedor_conv_handler, cambio_moneda_conv_handler, transferencia_externa_conv_handler, pago_proveedor_conv_handler
@@ -51,7 +51,7 @@ logger = logging.getLogger(__name__)
 
 
 async def cancel_active_conversations(update: Update, context: ContextTypes.DEFAULT_TYPE) -> None:
-    """Cancela cualquier conversacion activa cuando se ejecuta un comando."""
+    """Cancela cualquier conversation activa cuando se ejecuta un comando."""
     if not update.message or not update.message.text:
         return
     
@@ -62,19 +62,19 @@ async def cancel_active_conversations(update: Update, context: ContextTypes.DEFA
     # Obtener el nombre del comando
     command = update.message.text.split()[0].replace('/', '').lower()
     
-    # Lista de comandos que inician conversaciones (no cancelar si es el mismo comando)
+    # Lista de comandos que inician conversationes (no cancelar si es el mismo comando)
     conversation_commands = [
         'ingreso', 'gasto', 'traspaso', 'deuda_proveedor', 'cambio_moneda', 'pago_proveedor', 'pago_prov',
-        'contenedores', 'proveedores', 'vendedores', 'almacenes', 'productos', 'cajas',
-        'mover_producto', 'agregar_producto_contenedor', 'mover_almacen',
-        'consignar_almacen', 'mover_consignacion', 'pagar_consignacion', 'start', 'cancel'
+        'containeres', 'proveedores', 'vendedores', 'warehousees', 'productos', 'cajas',
+        'mover_producto', 'agregar_producto_container', 'mover_warehouse',
+        'consignar_warehouse', 'mover_consignment', 'pagar_consignment', 'start', 'cancel'
     ]
     
-    # Si el comando actual inicia una conversacion o es cancel/start, no cancelar
+    # Si el comando actual inicia una conversation o es cancel/start, no cancelar
     if command in conversation_commands:
         return
     
-    # Cancel todas las conversaciones activas
+    # Cancel todas las conversationes activas
     from telegram.ext import ConversationHandler
     user_id = update.effective_user.id
     chat_id = update.effective_chat.id
@@ -199,22 +199,22 @@ def main() -> None:
         """Configure bot commands after initialization."""
         commands = [
             BotCommand("start", "Main bot menu"),
-            BotCommand("contenedores", "Container management"),
+            BotCommand("containeres", "Container management"),
             BotCommand("proveedores", "Supplier management"),
             BotCommand("vendedores", "Seller management"),
-            BotCommand("almacenes", "Warehouse management"),
+            BotCommand("warehousees", "Warehouse management"),
             BotCommand("productos", "Product management"),
             BotCommand("cajas", "Cash box management"),
             BotCommand("cajas_externas", "External cash box management (USA)"),
             BotCommand("mover_producto", "Move products from container to warehouse"),
-            BotCommand("mover_almacen", "Move products between warehouses"),
-            BotCommand("consignar_almacen", "Consign products from warehouse to seller"),
-            BotCommand("mover_consignacion", "Move consignment from one seller to another"),
-            BotCommand("pagar_consignacion", "Pay seller consignment"),
-            BotCommand("agregar_producto_contenedor", "Add products to a container"),
-            BotCommand("productos_contenedor", "View products in a container"),
-            BotCommand("inventario_almacen", "View warehouse inventory"),
-            BotCommand("resumen_logistica", "View logistics summary"),
+            BotCommand("mover_warehouse", "Move products between warehouses"),
+            BotCommand("consignar_warehouse", "Consign products from warehouse to seller"),
+            BotCommand("mover_consignment", "Move consignment from one seller to another"),
+            BotCommand("pagar_consignment", "Pay seller consignment"),
+            BotCommand("agregar_producto_container", "Add products to a container"),
+            BotCommand("productos_container", "View products in a container"),
+            BotCommand("inventario_warehouse", "View warehouse inventory"),
+            BotCommand("resumen_logistics", "View logistics summary"),
             BotCommand("balance", "View balances for all cash boxes"),
             BotCommand("ingreso", "Record incoming cash"),
             BotCommand("gasto", "Record outgoing cash"),
@@ -242,30 +242,30 @@ def main() -> None:
     # Agregar error handler global para manejar errores de red y otros errores
     application.add_error_handler(error_handler)
     
-    # Handler para cancelar conversaciones activas cuando se ejecuta un comando
+    # Handler para cancelar conversationes activas cuando se ejecuta un comando
     # Debe ir ANTES de los ConversationHandlers para que se ejecute primero
     from telegram.ext import MessageHandler, filters
     application.add_handler(MessageHandler(filters.COMMAND, cancel_active_conversations), group=-1)
     
-    # --- MENU PRINCIPAL Y NAVEGACION ---
+    # --- MAIN MENU AND NAVIGATION ---
     application.add_handler(CommandHandler("start", start_command))
     
     # --- CONTENEDORES, PROVEEDORES Y ALMACENES (deben ir antes del menu_query_handler) ---
-    application.add_handler(contenedores_conv_handler)
+    application.add_handler(containeres_conv_handler)
     application.add_handler(proveedores_conv_handler)
     application.add_handler(vendedores_conv_handler)
-    application.add_handler(almacenes_conv_handler)
+    application.add_handler(warehousees_conv_handler)
     application.add_handler(productos_conv_handler)
     application.add_handler(cajas_conv_handler)
     application.add_handler(cajas_externas_conv_handler)
     application.add_handler(mover_producto_conv_handler)
     application.add_handler(agregar_producto_conv_handler)
-    application.add_handler(mover_almacen_conv_handler)
-    application.add_handler(consignar_almacen_conv_handler)
-    application.add_handler(mover_consignacion_conv_handler)
-    application.add_handler(pagar_consignacion_conv_handler)
+    application.add_handler(mover_warehouse_conv_handler)
+    application.add_handler(consignar_warehouse_conv_handler)
+    application.add_handler(mover_consignment_conv_handler)
+    application.add_handler(pagar_consignment_conv_handler)
     
-    # --- MENU Y NAVEGACION (despues de ConversationHandlers) ---
+    # --- MENU AND NAVIGATION (despues de ConversationHandlers) ---
     application.add_handler(menu_query_handler)
     application.add_handler(contabilidad_query_handler)
     
@@ -299,11 +299,11 @@ def main() -> None:
     application.add_handler(CommandHandler("consignar", consignar_command))
     application.add_handler(CommandHandler("stock_consignado", stock_consignado_command))
     
-    # Logistica
-    application.add_handler(CommandHandler("productos_contenedor", productos_contenedor_command))
-    application.add_handler(CommandHandler("inventario_almacen", inventario_almacen_command))
-    application.add_handler(CallbackQueryHandler(inventario_almacen_callback, pattern=r"^inv_alm:\d+$"))
-    application.add_handler(CommandHandler("resumen_logistica", resumen_logistica_command))
+    # Logistics
+    application.add_handler(CommandHandler("productos_container", productos_container_command))
+    application.add_handler(CommandHandler("inventario_warehouse", inventario_warehouse_command))
+    application.add_handler(CallbackQueryHandler(inventario_warehouse_callback, pattern=r"^inv_alm:\d+$"))
+    application.add_handler(CommandHandler("resumen_logistics", resumen_logistics_command))
     
     # --- CHATBOT DE IA (debe ir al final para no interferir con comandos) ---
     application.add_handler(chatbot_handler)

@@ -1,5 +1,5 @@
 """
-Handlers para operaciones de logistica (mover productos entre contenedores y almacenes).
+Handlers para operaciones de logistics (mover productos entre containeres y warehousees).
 """
 import logging
 from typing import List
@@ -14,20 +14,20 @@ from telegram.ext import (
 )
 from utils.decorators import admin_only
 from utils.telegram_helpers import reply_html, reply_text
-from services.logistica_service import (
-    agregar_producto_a_contenedor,
-    obtener_productos_de_contenedor,
-    mover_producto_contenedor_a_almacen,
-    mover_producto_almacen_a_almacen,
-    ajustar_inventario_almacen,
-    obtener_inventario_almacen,
-    obtener_resumen_logistica,
-    consignar_desde_almacen,
-    mover_consignacion_vendedor,
-    pagar_consignacion,
+from services.logistics_service import (
+    agregar_producto_a_container,
+    obtener_productos_de_container,
+    mover_producto_container_a_warehouse,
+    mover_producto_warehouse_a_warehouse,
+    ajustar_inventario_warehouse,
+    obtener_inventario_warehouse,
+    obtener_resumen_logistics,
+    consignar_desde_warehouse,
+    mover_consignment_vendedor,
+    pagar_consignment,
 )
-from services.contenedores_service import ContenedorService
-from services.almacenes_service import listar as listar_almacenes, obtener_por_id
+from services.containeres_service import ContainerService
+from services.warehousees_service import listar as listar_warehousees, obtener_por_id
 from services.vendedores_service import VendedorService
 from core.config import VALID_MONEDAS
 from services.cajas_service import CajaService
@@ -36,16 +36,16 @@ from database.repositories import ProductoRepository
 
 logger = logging.getLogger(__name__)
 
-# Estados para mover productos (contenedor → almacen)
+# Estados para mover productos (container → warehouse)
 MOVER_MENU, MOVER_SEL_CONTENEDOR, MOVER_SEL_ALMACEN, MOVER_SEL_PRODUCTO, MOVER_CANTIDAD = range(5)
 
-# Estados para agregar productos a contenedores
+# Estados para agregar productos a containeres
 AGREGAR_SEL_CONTENEDOR, AGREGAR_SEL_PRODUCTO, AGREGAR_CANTIDAD = range(5, 8)
 
-# Estados para mover entre almacenes
+# Estados para mover entre warehousees
 MOVER_ALM_SEL_ORIGEN, MOVER_ALM_SEL_DESTINO, MOVER_ALM_SEL_PRODUCTO, MOVER_ALM_CANTIDAD = range(8, 12)
 
-# Estados para consignar desde almacenes
+# Estados para consignar desde warehousees
 CONSIGNAR_SEL_ALMACEN, CONSIGNAR_SEL_PRODUCTO, CONSIGNAR_SEL_VENDEDOR, CONSIGNAR_PRECIO, CONSIGNAR_MONEDA, CONSIGNAR_CANTIDAD = range(12, 18)
 
 # Estados para mover consignaciones entre vendedores
@@ -56,35 +56,35 @@ PAGAR_CONS_SEL_VENDEDOR, PAGAR_CONS_SEL_MONEDA, PAGAR_CONS_MONTO, PAGAR_CONS_SEL
 
 
 @admin_only
-async def productos_contenedor_command(update: Update, context: ContextTypes.DEFAULT_TYPE) -> None:
-    """Muestra los productos de un contenedor."""
+async def productos_container_command(update: Update, context: ContextTypes.DEFAULT_TYPE) -> None:
+    """Show los productos de un container."""
     if not context.args or len(context.args) < 1:
         await reply_text(
             update,
-            "📦 <b>Productos de Contenedor</b>\n\n"
-            "Uso: <code>/productos_contenedor [ID]</code>\n"
-            "Ejemplo: <code>/productos_contenedor 1</code>"
+            "📦 <b>Productos de Container</b>\n\n"
+            "Uso: <code>/productos_container [ID]</code>\n"
+            "Ejemplo: <code>/productos_container 1</code>"
         )
         return
     
     try:
-        contenedor_id = int(context.args[0])
-        productos = obtener_productos_de_contenedor(contenedor_id)
+        container_id = int(context.args[0])
+        productos = obtener_productos_de_container(container_id)
         
-        contenedor = ContenedorService.obtener_por_id(contenedor_id)
-        if not contenedor:
-            await reply_text(update, f"❌ No existe un contenedor con ID {contenedor_id}")
+        container = ContainerService.obtener_por_id(container_id)
+        if not container:
+            await reply_text(update, f"❌ No existe un container con ID {container_id}")
             return
         
         if not productos:
             await reply_html(
                 update,
-                f"📦 <b>Contenedor: {contenedor['nombre']}</b>\n\n"
-                f"Este contenedor no tiene productos registrados."
+                f"📦 <b>Container: {container['nombre']}</b>\n\n"
+                f"Este container no tiene productos recordeds."
             )
             return
         
-        text = f"📦 <b>Productos en Contenedor: {contenedor['nombre']}</b>\n\n"
+        text = f"📦 <b>Productos en Container: {container['nombre']}</b>\n\n"
         for prod in productos:
             text += (
                 f"• <b>{prod['producto_nombre']}</b> ({prod['producto_codigo']})\n"
@@ -95,25 +95,25 @@ async def productos_contenedor_command(update: Update, context: ContextTypes.DEF
     except ValueError:
         await reply_text(update, "❌ El ID debe ser un numero valid.")
     except Exception as e:
-        logger.error(f"Error obteniendo productos del contenedor: {e}", exc_info=True)
+        logger.error(f"Error obteniendo productos del container: {e}", exc_info=True)
         await reply_text(update, f"❌ Error: {str(e)}")
 
 
 @admin_only
-async def inventario_almacen_command(update: Update, context: ContextTypes.DEFAULT_TYPE) -> None:
-    """Muestra el inventario de un almacen."""
-    from services.almacenes_service import obtener_por_id
+async def inventario_warehouse_command(update: Update, context: ContextTypes.DEFAULT_TYPE) -> None:
+    """Show el inventario de un warehouse."""
+    from services.warehousees_service import obtener_por_id
     
-    # Si no hay argumentos, mostrar lista de almacenes para selectr
+    # Si no hay argumentos, mostrar lista de warehousees para selectr
     if not context.args or len(context.args) < 1:
-        almacenes = listar_almacenes()
-        if not almacenes:
-            await reply_text(update, "❌ No almacenes disponibles. Crea uno primero.")
+        warehousees = listar_warehousees()
+        if not warehousees:
+            await reply_text(update, "❌ No warehousees disponibles. Crea uno primero.")
             return
         
-        text = "🏢 <b>Select un almacen para ver su inventario:</b>"
+        text = "🏢 <b>Select a warehouse para ver su inventario:</b>"
         keyboard: List[List[InlineKeyboardButton]] = []
-        for alm in almacenes:
+        for alm in warehousees:
             keyboard.append([
                 InlineKeyboardButton(
                     f"🏢 {alm['nombre']}",
@@ -126,23 +126,23 @@ async def inventario_almacen_command(update: Update, context: ContextTypes.DEFAU
     
     # Si hay argumentos, mostrar inventario directamente
     try:
-        almacen_id = int(context.args[0])
-        inventario = obtener_inventario_almacen(almacen_id)
+        warehouse_id = int(context.args[0])
+        inventario = obtener_inventario_warehouse(warehouse_id)
         
-        almacen = obtener_por_id(almacen_id)
-        if not almacen:
-            await reply_text(update, f"❌ No existe un almacen con ID {almacen_id}")
+        warehouse = obtener_por_id(warehouse_id)
+        if not warehouse:
+            await reply_text(update, f"❌ No existe un warehouse con ID {warehouse_id}")
             return
         
         if not inventario:
             await reply_html(
                 update,
-                f"🏢 <b>Almacen: {almacen['nombre']}</b>\n\n"
-                f"Este almacen no tiene productos en inventario."
+                f"🏢 <b>Warehouse: {warehouse['nombre']}</b>\n\n"
+                f"Este warehouse no tiene productos en inventario."
             )
             return
         
-        text = f"🏢 <b>Inventario: {almacen['nombre']}</b>\n\n"
+        text = f"🏢 <b>Inventario: {warehouse['nombre']}</b>\n\n"
         for item in inventario:
             text += (
                 f"• <b>{item['producto_nombre']}</b> ({item['producto_codigo']})\n"
@@ -153,14 +153,14 @@ async def inventario_almacen_command(update: Update, context: ContextTypes.DEFAU
     except ValueError:
         await reply_text(update, "❌ El ID debe ser un numero valid.")
     except Exception as e:
-        logger.error(f"Error obteniendo inventario del almacen: {e}", exc_info=True)
+        logger.error(f"Error obteniendo inventario del warehouse: {e}", exc_info=True)
         await reply_text(update, f"❌ Error: {str(e)}")
 
 
 @admin_only
-async def inventario_almacen_callback(update: Update, context: ContextTypes.DEFAULT_TYPE) -> None:
-    """Maneja el callback para mostrar inventario de almacen."""
-    from services.almacenes_service import obtener_por_id
+async def inventario_warehouse_callback(update: Update, context: ContextTypes.DEFAULT_TYPE) -> None:
+    """Handle el callback para mostrar inventario de warehouse."""
+    from services.warehousees_service import obtener_por_id
     
     q = update.callback_query
     if q:
@@ -171,18 +171,18 @@ async def inventario_almacen_callback(update: Update, context: ContextTypes.DEFA
     
     if q.data.startswith("inv_alm:"):
         try:
-            almacen_id = int(q.data.split(":")[-1])
-            inventario = obtener_inventario_almacen(almacen_id)
+            warehouse_id = int(q.data.split(":")[-1])
+            inventario = obtener_inventario_warehouse(warehouse_id)
             
-            almacen = obtener_por_id(almacen_id)
-            if not almacen:
-                await reply_text(update, f"❌ No existe un almacen con ID {almacen_id}")
+            warehouse = obtener_por_id(warehouse_id)
+            if not warehouse:
+                await reply_text(update, f"❌ No existe un warehouse con ID {warehouse_id}")
                 return
             
             if not inventario:
-                text = f"📦 <b>Inventario: {almacen['nombre']}</b>\n\nEste almacen no tiene productos en inventario."
+                text = f"📦 <b>Inventario: {warehouse['nombre']}</b>\n\nEste warehouse no tiene productos en inventario."
             else:
-                text = f"📦 <b>Inventario: {almacen['nombre']}</b>\n\n"
+                text = f"📦 <b>Inventario: {warehouse['nombre']}</b>\n\n"
                 for item in inventario:
                     text += (
                         f"• <b>{item['producto_nombre']}</b> ({item['producto_codigo']})\n"
@@ -196,13 +196,13 @@ async def inventario_almacen_callback(update: Update, context: ContextTypes.DEFA
         except ValueError:
             await reply_text(update, "❌ El ID debe ser un numero valid.")
         except Exception as e:
-            logger.error(f"Error obteniendo inventario del almacen: {e}", exc_info=True)
+            logger.error(f"Error obteniendo inventario del warehouse: {e}", exc_info=True)
             await reply_text(update, f"❌ Error: {str(e)}")
 
 
 @admin_only
 async def mover_producto_entry(update: Update, context: ContextTypes.DEFAULT_TYPE) -> int:
-    """Punto de entrada para mover productos de contenedor a almacen."""
+    """Punto de entrada para mover productos de container a warehouse."""
     # Limpiar datos previos
     keys_to_remove = [
         "log_cont_id", "log_alm_id", "log_prod_codigo", "log_cantidad"
@@ -210,15 +210,15 @@ async def mover_producto_entry(update: Update, context: ContextTypes.DEFAULT_TYP
     for key in keys_to_remove:
         context.user_data.pop(key, None)
     
-    # Listar contenedores
-    contenedores = ContenedorService.listar()
-    if not contenedores:
-        await reply_text(update, "❌ No contenedores disponibles. Crea uno primero.")
+    # Listar containeres
+    containeres = ContainerService.listar()
+    if not containeres:
+        await reply_text(update, "❌ No containeres disponibles. Crea uno primero.")
         return ConversationHandler.END
     
-    text = "📦 <b>Mover Producto: Contenedor → Almacen</b>\n\nSelect el contenedor:"
+    text = "📦 <b>Mover Producto: Container → Warehouse</b>\n\nSelect the container:"
     keyboard: List[List[InlineKeyboardButton]] = []
-    for cont in contenedores:
+    for cont in containeres:
         keyboard.append([
             InlineKeyboardButton(
                 f"📦 {cont['nombre']}",
@@ -233,25 +233,25 @@ async def mover_producto_entry(update: Update, context: ContextTypes.DEFAULT_TYP
 
 
 async def mover_menu_callback(update: Update, context: ContextTypes.DEFAULT_TYPE) -> int:
-    """Maneja los callbacks del flujo de mover productos."""
+    """Handle callbacks del flujo de mover productos."""
     q = update.callback_query
     if q:
         await q.answer()
     data = (q.data if q else "") or ""
     
     if data.startswith("log:cont:"):
-        contenedor_id = int(data.split(":")[-1])
-        context.user_data["log_cont_id"] = contenedor_id
+        container_id = int(data.split(":")[-1])
+        context.user_data["log_cont_id"] = container_id
         
-        # Obtener productos del contenedor
+        # Obtener productos del container
         try:
-            productos = obtener_productos_de_contenedor(contenedor_id)
+            productos = obtener_productos_de_container(container_id)
             if not productos:
-                await reply_text(update, "❌ Este contenedor no tiene productos.")
+                await reply_text(update, "❌ Este container no tiene productos.")
                 return ConversationHandler.END
             
-            contenedor = ContenedorService.obtener_por_id(contenedor_id)
-            text = f"📦 <b>Contenedor: {contenedor['nombre']}</b>\n\nSelect el producto:"
+            container = ContainerService.obtener_por_id(container_id)
+            text = f"📦 <b>Container: {container['nombre']}</b>\n\nSelect the producto:"
             keyboard: List[List[InlineKeyboardButton]] = []
             for prod in productos:
                 keyboard.append([
@@ -273,15 +273,15 @@ async def mover_menu_callback(update: Update, context: ContextTypes.DEFAULT_TYPE
         producto_codigo = data.split(":")[-1]
         context.user_data["log_prod_codigo"] = producto_codigo
         
-        # Listar almacenes
-        almacenes = listar_almacenes()
-        if not almacenes:
-            await reply_text(update, "❌ No almacenes disponibles. Crea uno primero.")
+        # Listar warehousees
+        warehousees = listar_warehousees()
+        if not warehousees:
+            await reply_text(update, "❌ No warehousees disponibles. Crea uno primero.")
             return ConversationHandler.END
         
-        text = "🏢 <b>Select el almacen destino:</b>"
+        text = "🏢 <b>Select the warehouse destination:</b>"
         keyboard: List[List[InlineKeyboardButton]] = []
-        for alm in almacenes:
+        for alm in warehousees:
             keyboard.append([
                 InlineKeyboardButton(
                     f"🏢 {alm['nombre']}",
@@ -294,8 +294,8 @@ async def mover_menu_callback(update: Update, context: ContextTypes.DEFAULT_TYPE
         return MOVER_SEL_ALMACEN
     
     if data.startswith("log:alm:"):
-        almacen_id = int(data.split(":")[-1])
-        context.user_data["log_alm_id"] = almacen_id
+        warehouse_id = int(data.split(":")[-1])
+        context.user_data["log_alm_id"] = warehouse_id
         
         cont_id = context.user_data.get("log_cont_id")
         prod_codigo = context.user_data.get("log_prod_codigo")
@@ -305,23 +305,23 @@ async def mover_menu_callback(update: Update, context: ContextTypes.DEFAULT_TYPE
             return ConversationHandler.END
         
         # Obtener cantidad disponible
-        productos = obtener_productos_de_contenedor(cont_id)
+        productos = obtener_productos_de_container(cont_id)
         producto = next((p for p in productos if p["producto_codigo"] == prod_codigo), None)
         
         if not producto:
-            await reply_text(update, "❌ Producto not found en el contenedor.")
+            await reply_text(update, "❌ Producto not found en el container.")
             return ConversationHandler.END
         
-        contenedor = ContenedorService.obtener_por_id(cont_id)
-        from services.almacenes_service import obtener_por_id
-        almacen = obtener_por_id(almacen_id)
+        container = ContainerService.obtener_por_id(cont_id)
+        from services.warehousees_service import obtener_por_id
+        warehouse = obtener_por_id(warehouse_id)
         
         await reply_html(
             update,
             f"📦 <b>Mover Producto</b>\n\n"
-            f"Contenedor: <code>{contenedor['nombre']}</code>\n"
+            f"Container: <code>{container['nombre']}</code>\n"
             f"Producto: <code>{producto['producto_nombre']}</code>\n"
-            f"Almacen: <code>{almacen['nombre']}</code>\n\n"
+            f"Warehouse: <code>{warehouse['nombre']}</code>\n\n"
             f"Cantidad disponible: <b>{producto['cantidad']}</b>\n\n"
             f"Send la <b>cantidad</b> a mover:"
         )
@@ -336,7 +336,7 @@ async def mover_menu_callback(update: Update, context: ContextTypes.DEFAULT_TYPE
         ]
         for key in keys_to_remove:
             context.user_data.pop(key, None)
-        await reply_text(update, "✅ Operation cancelada.")
+        await reply_text(update, "✅ Operation canceled.")
         return ConversationHandler.END
     
     return MOVER_MENU
@@ -363,18 +363,18 @@ async def mover_cantidad_receive(update: Update, context: ContextTypes.DEFAULT_T
             return ConversationHandler.END
         
         # Realizar el movimiento
-        resultado = mover_producto_contenedor_a_almacen(
+        resultado = mover_producto_container_a_warehouse(
             cont_id, alm_id, prod_codigo, cantidad, user_id
         )
         
-        contenedor = ContenedorService.obtener_por_id(cont_id)
-        almacen = obtener_por_id(alm_id)
+        container = ContainerService.obtener_por_id(cont_id)
+        warehouse = obtener_por_id(alm_id)
         
         await reply_html(
             update,
             f"✅ <b>Producto Movido</b>\n\n"
-            f"De: <code>{contenedor['nombre']}</code>\n"
-            f"A: <code>{almacen['nombre']}</code>\n"
+            f"De: <code>{container['nombre']}</code>\n"
+            f"A: <code>{warehouse['nombre']}</code>\n"
             f"Cantidad: <b>{cantidad}</b>"
         )
         
@@ -402,7 +402,7 @@ async def mover_cancel_command(update: Update, context: ContextTypes.DEFAULT_TYP
     ]
     for key in keys_to_remove:
         context.user_data.pop(key, None)
-    await reply_text(update, "✅ Operation cancelada.")
+    await reply_text(update, "✅ Operation canceled.")
     return ConversationHandler.END
 
 
@@ -435,20 +435,20 @@ mover_producto_conv_handler = ConversationHandler(
 # ========== AGREGAR PRODUCTOS A CONTENEDORES ==========
 
 @admin_only
-async def agregar_producto_contenedor_entry(update: Update, context: ContextTypes.DEFAULT_TYPE) -> int:
-    """Punto de entrada para agregar productos a contenedores."""
+async def agregar_producto_container_entry(update: Update, context: ContextTypes.DEFAULT_TYPE) -> int:
+    """Punto de entrada para agregar productos a containeres."""
     keys_to_remove = ["agr_cont_id", "agr_prod_codigo", "agr_cantidad"]
     for key in keys_to_remove:
         context.user_data.pop(key, None)
     
-    contenedores = ContenedorService.listar()
-    if not contenedores:
-        await reply_text(update, "❌ No contenedores disponibles. Crea uno primero.")
+    containeres = ContainerService.listar()
+    if not containeres:
+        await reply_text(update, "❌ No containeres disponibles. Crea uno primero.")
         return ConversationHandler.END
     
-    text = "📦 <b>Agregar Producto a Contenedor</b>\n\nSelect el contenedor:"
+    text = "📦 <b>Agregar Producto a Container</b>\n\nSelect the container:"
     keyboard: List[List[InlineKeyboardButton]] = []
-    for cont in contenedores:
+    for cont in containeres:
         keyboard.append([
             InlineKeyboardButton(
                 f"📦 {cont['nombre']}",
@@ -463,15 +463,15 @@ async def agregar_producto_contenedor_entry(update: Update, context: ContextType
 
 
 async def agregar_producto_callback(update: Update, context: ContextTypes.DEFAULT_TYPE) -> int:
-    """Maneja los callbacks del flujo de agregar productos."""
+    """Handle callbacks del flujo de agregar productos."""
     q = update.callback_query
     if q:
         await q.answer()
     data = (q.data if q else "") or ""
     
     if data.startswith("agr:cont:"):
-        contenedor_id = int(data.split(":")[-1])
-        context.user_data["agr_cont_id"] = contenedor_id
+        container_id = int(data.split(":")[-1])
+        context.user_data["agr_cont_id"] = container_id
         
         with get_db_connection() as conn:
             productos = ProductoRepository.obtener_todos(conn)
@@ -480,8 +480,8 @@ async def agregar_producto_callback(update: Update, context: ContextTypes.DEFAUL
             await reply_text(update, "❌ No productos disponibles. Crea uno primero.")
             return ConversationHandler.END
         
-        contenedor = ContenedorService.obtener_por_id(contenedor_id)
-        text = f"📦 <b>Contenedor: {contenedor['nombre']}</b>\n\nSelect el producto:"
+        container = ContainerService.obtener_por_id(container_id)
+        text = f"📦 <b>Container: {container['nombre']}</b>\n\nSelect the producto:"
         keyboard: List[List[InlineKeyboardButton]] = []
         for prod in productos[:20]:
             keyboard.append([
@@ -500,7 +500,7 @@ async def agregar_producto_callback(update: Update, context: ContextTypes.DEFAUL
         context.user_data["agr_prod_codigo"] = producto_codigo
         
         cont_id = context.user_data.get("agr_cont_id")
-        contenedor = ContenedorService.obtener_por_id(cont_id)
+        container = ContainerService.obtener_por_id(cont_id)
         
         with get_db_connection() as conn:
             producto = ProductoRepository.obtener_por_codigo(conn, producto_codigo)
@@ -508,27 +508,27 @@ async def agregar_producto_callback(update: Update, context: ContextTypes.DEFAUL
         await reply_html(
             update,
             f"📦 <b>Agregar Producto</b>\n\n"
-            f"Contenedor: <code>{contenedor['nombre']}</code>\n"
+            f"Container: <code>{container['nombre']}</code>\n"
             f"Producto: <code>{producto['nombre']}</code> ({producto_codigo})\n\n"
             f"Send la <b>cantidad</b> a agregar:"
         )
         return AGREGAR_CANTIDAD
     
     if data == "agr:back":
-        return await agregar_producto_contenedor_entry(update, context)
+        return await agregar_producto_container_entry(update, context)
     
     if data == "agr:cancel":
         keys_to_remove = ["agr_cont_id", "agr_prod_codigo", "agr_cantidad"]
         for key in keys_to_remove:
             context.user_data.pop(key, None)
-        await reply_text(update, "✅ Operation cancelada.")
+        await reply_text(update, "✅ Operation canceled.")
         return ConversationHandler.END
     
     return AGREGAR_SEL_CONTENEDOR
 
 
 async def agregar_cantidad_receive(update: Update, context: ContextTypes.DEFAULT_TYPE) -> int:
-    """Recibe la cantidad y agrega el producto al contenedor."""
+    """Recibe la cantidad y agrega el producto al container."""
     if not update.message:
         return AGREGAR_CANTIDAD
     
@@ -545,16 +545,16 @@ async def agregar_cantidad_receive(update: Update, context: ContextTypes.DEFAULT
             await reply_text(update, "❌ Error: datos incompletos. Empieza de nuevo.")
             return ConversationHandler.END
         
-        resultado = agregar_producto_a_contenedor(cont_id, prod_codigo, cantidad)
+        resultado = agregar_producto_a_container(cont_id, prod_codigo, cantidad)
         
-        contenedor = ContenedorService.obtener_por_id(cont_id)
+        container = ContainerService.obtener_por_id(cont_id)
         with get_db_connection() as conn:
             producto = ProductoRepository.obtener_por_codigo(conn, prod_codigo)
         
         await reply_html(
             update,
             f"✅ <b>Producto Agregado</b>\n\n"
-            f"Contenedor: <code>{contenedor['nombre']}</code>\n"
+            f"Container: <code>{container['nombre']}</code>\n"
             f"Producto: <code>{producto['nombre']}</code>\n"
             f"Cantidad: <b>{cantidad}</b>"
         )
@@ -574,7 +574,7 @@ async def agregar_cantidad_receive(update: Update, context: ContextTypes.DEFAULT
 
 
 agregar_producto_conv_handler = ConversationHandler(
-    entry_points=[CommandHandler("agregar_producto_contenedor", agregar_producto_contenedor_entry)],
+    entry_points=[CommandHandler("agregar_producto_container", agregar_producto_container_entry)],
     states={
         AGREGAR_SEL_CONTENEDOR: [CallbackQueryHandler(agregar_producto_callback, pattern=r"^agr:(cont:|cancel)")],
         AGREGAR_SEL_PRODUCTO: [CallbackQueryHandler(agregar_producto_callback, pattern=r"^agr:(prod:|back)")],
@@ -589,21 +589,21 @@ agregar_producto_conv_handler = ConversationHandler(
 )
 
 
-# ========== REPORTES DE LOGISTICA ==========
+# ========== LOGISTICS REPORTS ==========
 
 @admin_only
-async def resumen_logistica_command(update: Update, context: ContextTypes.DEFAULT_TYPE) -> None:
-    """Muestra un resumen general de la logistica."""
+async def resumen_logistics_command(update: Update, context: ContextTypes.DEFAULT_TYPE) -> None:
+    """Show un resumen general de la logistics."""
     try:
-        resumen = obtener_resumen_logistica()
+        resumen = obtener_resumen_logistics()
         
-        text = "📊 <b>Resumen de Logistica</b>\n\n"
-        text += f"📦 <b>Contenedores:</b>\n"
-        text += f"  • Total: {resumen['total_contenedores']}\n"
-        text += f"  • Productos unicos: {resumen['total_productos_contenedores']}\n\n"
-        text += f"🏢 <b>Almacenes:</b>\n"
-        text += f"  • Total: {resumen['total_almacenes']}\n"
-        text += f"  • Productos unicos: {resumen['total_productos_almacenes']}\n"
+        text = "📊 <b>Logistics Summary</b>\n\n"
+        text += f"📦 <b>Containeres:</b>\n"
+        text += f"  • Total: {resumen['total_containeres']}\n"
+        text += f"  • Productos unicos: {resumen['total_productos_containeres']}\n\n"
+        text += f"🏢 <b>Warehousees:</b>\n"
+        text += f"  • Total: {resumen['total_warehousees']}\n"
+        text += f"  • Productos unicos: {resumen['total_productos_warehousees']}\n"
         
         await reply_html(update, text)
     except Exception as e:
@@ -614,26 +614,26 @@ async def resumen_logistica_command(update: Update, context: ContextTypes.DEFAUL
 # ========== MOVER PRODUCTOS ENTRE ALMACENES ==========
 
 @admin_only
-async def mover_almacen_entry(update: Update, context: ContextTypes.DEFAULT_TYPE) -> int:
-    """Punto de entrada para mover productos entre almacenes."""
+async def mover_warehouse_entry(update: Update, context: ContextTypes.DEFAULT_TYPE) -> int:
+    """Punto de entrada para mover productos entre warehousees."""
     keys_to_remove = [
-        "mover_alm_origen_id", "mover_alm_destino_id", "mover_alm_prod_codigo", "mover_alm_cantidad"
+        "mover_alm_source_id", "mover_alm_destination_id", "mover_alm_prod_codigo", "mover_alm_cantidad"
     ]
     for key in keys_to_remove:
         context.user_data.pop(key, None)
     
-    almacenes = listar_almacenes()
-    if len(almacenes) < 2:
-        await reply_text(update, "❌ Necesitas al menos 2 almacenes para mover productos entre ellos.")
+    warehousees = listar_warehousees()
+    if len(warehousees) < 2:
+        await reply_text(update, "❌ Necesitas al menos 2 warehousees para mover productos entre ellos.")
         return ConversationHandler.END
     
-    text = "🏢 <b>Mover Producto: Almacen → Almacen</b>\n\nSelect el almacen <b>origen</b>:"
+    text = "🏢 <b>Mover Producto: Warehouse → Warehouse</b>\n\nSelect the warehouse <b>source</b>:"
     keyboard: List[List[InlineKeyboardButton]] = []
-    for alm in almacenes:
+    for alm in warehousees:
         keyboard.append([
             InlineKeyboardButton(
                 f"🏢 {alm['nombre']}",
-                callback_data=f"mover_alm:origen:{alm['id']}"
+                callback_data=f"mover_alm:source:{alm['id']}"
             )
         ])
     keyboard.append([InlineKeyboardButton("❌ Cancel", callback_data="mover_alm:cancel")])
@@ -643,33 +643,33 @@ async def mover_almacen_entry(update: Update, context: ContextTypes.DEFAULT_TYPE
     return MOVER_ALM_SEL_ORIGEN
 
 
-async def mover_almacen_callback(update: Update, context: ContextTypes.DEFAULT_TYPE) -> int:
-    """Maneja los callbacks del flujo de mover productos entre almacenes."""
+async def mover_warehouse_callback(update: Update, context: ContextTypes.DEFAULT_TYPE) -> int:
+    """Handle callbacks del flujo de mover productos entre warehousees."""
     q = update.callback_query
     if q:
         await q.answer()
     data = (q.data if q else "") or ""
     
-    if data.startswith("mover_alm:origen:"):
-        almacen_id = int(data.split(":")[-1])
-        context.user_data["mover_alm_origen_id"] = almacen_id
+    if data.startswith("mover_alm:source:"):
+        warehouse_id = int(data.split(":")[-1])
+        context.user_data["mover_alm_source_id"] = warehouse_id
         
-        # Listar almacenes destino (excluyendo el origen)
-        almacenes = listar_almacenes()
-        almacenes_destino = [a for a in almacenes if a["id"] != almacen_id]
+        # Listar warehousees destination (excluyendo el source)
+        warehousees = listar_warehousees()
+        warehousees_destination = [a for a in warehousees if a["id"] != warehouse_id]
         
-        if not almacenes_destino:
-            await reply_text(update, "❌ No otros almacenes disponibles como destino.")
+        if not warehousees_destination:
+            await reply_text(update, "❌ No otros warehousees disponibles como destination.")
             return ConversationHandler.END
         
-        almacen_origen = obtener_por_id(almacen_id)
-        text = f"🏢 <b>Origen: {almacen_origen['nombre']}</b>\n\nSelect el almacen <b>destino</b>:"
+        warehouse_source = obtener_por_id(warehouse_id)
+        text = f"🏢 <b>Origen: {warehouse_source['nombre']}</b>\n\nSelect the warehouse <b>destination</b>:"
         keyboard: List[List[InlineKeyboardButton]] = []
-        for alm in almacenes_destino:
+        for alm in warehousees_destination:
             keyboard.append([
                 InlineKeyboardButton(
                     f"🏢 {alm['nombre']}",
-                    callback_data=f"mover_alm:destino:{alm['id']}"
+                    callback_data=f"mover_alm:destination:{alm['id']}"
                 )
             ])
         keyboard.append([InlineKeyboardButton("⬅️ Back", callback_data="mover_alm:back")])
@@ -677,30 +677,30 @@ async def mover_almacen_callback(update: Update, context: ContextTypes.DEFAULT_T
         await reply_html(update, text, reply_markup=kb)
         return MOVER_ALM_SEL_DESTINO
     
-    if data.startswith("mover_alm:destino:"):
-        almacen_id = int(data.split(":")[-1])
-        context.user_data["mover_alm_destino_id"] = almacen_id
+    if data.startswith("mover_alm:destination:"):
+        warehouse_id = int(data.split(":")[-1])
+        context.user_data["mover_alm_destination_id"] = warehouse_id
         
-        origen_id = context.user_data.get("mover_alm_origen_id")
-        if not origen_id:
+        source_id = context.user_data.get("mover_alm_source_id")
+        if not source_id:
             await reply_text(update, "❌ Error: datos incompletos. Empieza de nuevo.")
             return ConversationHandler.END
         
-        # Obtener productos del almacen origen
+        # Obtener productos del warehouse source
         try:
-            inventario = obtener_inventario_almacen(origen_id)
+            inventario = obtener_inventario_warehouse(source_id)
             if not inventario:
-                await reply_text(update, "❌ El almacen origen no tiene productos en inventario.")
+                await reply_text(update, "❌ El warehouse source no tiene productos en inventario.")
                 return ConversationHandler.END
             
-            almacen_origen = obtener_por_id(origen_id)
-            almacen_destino = obtener_por_id(almacen_id)
+            warehouse_source = obtener_por_id(source_id)
+            warehouse_destination = obtener_por_id(warehouse_id)
             
             text = (
                 f"🏢 <b>Mover Producto</b>\n\n"
-                f"Origen: <code>{almacen_origen['nombre']}</code>\n"
-                f"Destino: <code>{almacen_destino['nombre']}</code>\n\n"
-                f"Select el producto:"
+                f"Origen: <code>{warehouse_source['nombre']}</code>\n"
+                f"Destino: <code>{warehouse_destination['nombre']}</code>\n\n"
+                f"Select the producto:"
             )
             keyboard: List[List[InlineKeyboardButton]] = []
             for item in inventario:
@@ -723,23 +723,23 @@ async def mover_almacen_callback(update: Update, context: ContextTypes.DEFAULT_T
         producto_codigo = data.split(":")[-1]
         context.user_data["mover_alm_prod_codigo"] = producto_codigo
         
-        origen_id = context.user_data.get("mover_alm_origen_id")
-        destino_id = context.user_data.get("mover_alm_destino_id")
+        source_id = context.user_data.get("mover_alm_source_id")
+        destination_id = context.user_data.get("mover_alm_destination_id")
         
-        if not origen_id or not destino_id:
+        if not source_id or not destination_id:
             await reply_text(update, "❌ Error: datos incompletos. Empieza de nuevo.")
             return ConversationHandler.END
         
         # Obtener cantidad disponible
-        inventario = obtener_inventario_almacen(origen_id)
+        inventario = obtener_inventario_warehouse(source_id)
         producto = next((p for p in inventario if p["producto_codigo"] == producto_codigo), None)
         
         if not producto:
-            await reply_text(update, "❌ Producto not found en el almacen origen.")
+            await reply_text(update, "❌ Producto not found en el warehouse source.")
             return ConversationHandler.END
         
-        almacen_origen = obtener_por_id(origen_id)
-        almacen_destino = obtener_por_id(destino_id)
+        warehouse_source = obtener_por_id(source_id)
+        warehouse_destination = obtener_por_id(destination_id)
         
         with get_db_connection() as conn:
             prod = ProductoRepository.obtener_por_codigo(conn, producto_codigo)
@@ -747,8 +747,8 @@ async def mover_almacen_callback(update: Update, context: ContextTypes.DEFAULT_T
         await reply_html(
             update,
             f"🏢 <b>Mover Producto</b>\n\n"
-            f"Origen: <code>{almacen_origen['nombre']}</code>\n"
-            f"Destino: <code>{almacen_destino['nombre']}</code>\n"
+            f"Origen: <code>{warehouse_source['nombre']}</code>\n"
+            f"Destino: <code>{warehouse_destination['nombre']}</code>\n"
             f"Producto: <code>{prod['nombre']}</code>\n\n"
             f"Cantidad disponible: <b>{producto['cantidad']}</b>\n\n"
             f"Send la <b>cantidad</b> a mover:"
@@ -756,22 +756,22 @@ async def mover_almacen_callback(update: Update, context: ContextTypes.DEFAULT_T
         return MOVER_ALM_CANTIDAD
     
     if data == "mover_alm:back":
-        return await mover_almacen_entry(update, context)
+        return await mover_warehouse_entry(update, context)
     
     if data == "mover_alm:cancel":
         keys_to_remove = [
-            "mover_alm_origen_id", "mover_alm_destino_id", "mover_alm_prod_codigo", "mover_alm_cantidad"
+            "mover_alm_source_id", "mover_alm_destination_id", "mover_alm_prod_codigo", "mover_alm_cantidad"
         ]
         for key in keys_to_remove:
             context.user_data.pop(key, None)
-        await reply_text(update, "✅ Operation cancelada.")
+        await reply_text(update, "✅ Operation canceled.")
         return ConversationHandler.END
     
     return MOVER_ALM_SEL_ORIGEN
 
 
-async def mover_almacen_cantidad_receive(update: Update, context: ContextTypes.DEFAULT_TYPE) -> int:
-    """Recibe la cantidad y realiza el movimiento entre almacenes."""
+async def mover_warehouse_cantidad_receive(update: Update, context: ContextTypes.DEFAULT_TYPE) -> int:
+    """Recibe la cantidad y realiza el movimiento entre warehousees."""
     if not update.message:
         return MOVER_ALM_CANTIDAD
     
@@ -781,34 +781,34 @@ async def mover_almacen_cantidad_receive(update: Update, context: ContextTypes.D
             await reply_text(update, "❌ La cantidad debe ser mayor a 0.")
             return MOVER_ALM_CANTIDAD
         
-        origen_id = context.user_data.get("mover_alm_origen_id")
-        destino_id = context.user_data.get("mover_alm_destino_id")
+        source_id = context.user_data.get("mover_alm_source_id")
+        destination_id = context.user_data.get("mover_alm_destination_id")
         prod_codigo = context.user_data.get("mover_alm_prod_codigo")
         user_id = update.effective_user.id
         
-        if not all([origen_id, destino_id, prod_codigo]):
+        if not all([source_id, destination_id, prod_codigo]):
             await reply_text(update, "❌ Error: datos incompletos. Empieza de nuevo.")
             return ConversationHandler.END
         
         # Realizar el movimiento
-        resultado = mover_producto_almacen_a_almacen(
-            origen_id, destino_id, prod_codigo, cantidad, user_id
+        resultado = mover_producto_warehouse_a_warehouse(
+            source_id, destination_id, prod_codigo, cantidad, user_id
         )
         
-        almacen_origen = obtener_por_id(origen_id)
-        almacen_destino = obtener_por_id(destino_id)
+        warehouse_source = obtener_por_id(source_id)
+        warehouse_destination = obtener_por_id(destination_id)
         
         await reply_html(
             update,
             f"✅ <b>Producto Movido</b>\n\n"
-            f"De: <code>{almacen_origen['nombre']}</code>\n"
-            f"A: <code>{almacen_destino['nombre']}</code>\n"
+            f"De: <code>{warehouse_source['nombre']}</code>\n"
+            f"A: <code>{warehouse_destination['nombre']}</code>\n"
             f"Cantidad: <b>{cantidad}</b>"
         )
         
         # Limpiar datos
         keys_to_remove = [
-            "mover_alm_origen_id", "mover_alm_destino_id", "mover_alm_prod_codigo", "mover_alm_cantidad"
+            "mover_alm_source_id", "mover_alm_destination_id", "mover_alm_prod_codigo", "mover_alm_cantidad"
         ]
         for key in keys_to_remove:
             context.user_data.pop(key, None)
@@ -818,32 +818,32 @@ async def mover_almacen_cantidad_receive(update: Update, context: ContextTypes.D
         await reply_text(update, f"❌ {str(e)}")
         return MOVER_ALM_CANTIDAD
     except Exception as e:
-        logger.error(f"Error moviendo producto entre almacenes: {e}", exc_info=True)
+        logger.error(f"Error moviendo producto entre warehousees: {e}", exc_info=True)
         await reply_text(update, f"❌ Error: {str(e)}")
         return MOVER_ALM_CANTIDAD
 
 
-mover_almacen_conv_handler = ConversationHandler(
+mover_warehouse_conv_handler = ConversationHandler(
     entry_points=[
-        CommandHandler("mover_almacen", mover_almacen_entry),
+        CommandHandler("mover_warehouse", mover_warehouse_entry),
     ],
     states={
         MOVER_ALM_SEL_ORIGEN: [
-            CallbackQueryHandler(mover_almacen_callback, pattern=r"^mover_alm:(origen:|cancel)"),
+            CallbackQueryHandler(mover_warehouse_callback, pattern=r"^mover_alm:(source:|cancel)"),
         ],
         MOVER_ALM_SEL_DESTINO: [
-            CallbackQueryHandler(mover_almacen_callback, pattern=r"^mover_alm:(destino:|back)"),
+            CallbackQueryHandler(mover_warehouse_callback, pattern=r"^mover_alm:(destination:|back)"),
         ],
         MOVER_ALM_SEL_PRODUCTO: [
-            CallbackQueryHandler(mover_almacen_callback, pattern=r"^mover_alm:(prod:|back)"),
+            CallbackQueryHandler(mover_warehouse_callback, pattern=r"^mover_alm:(prod:|back)"),
         ],
         MOVER_ALM_CANTIDAD: [
-            MessageHandler(filters.TEXT & ~filters.COMMAND, mover_almacen_cantidad_receive),
-            CallbackQueryHandler(mover_almacen_callback, pattern=r"^mover_alm:.*"),
+            MessageHandler(filters.TEXT & ~filters.COMMAND, mover_warehouse_cantidad_receive),
+            CallbackQueryHandler(mover_warehouse_callback, pattern=r"^mover_alm:.*"),
         ],
     },
     fallbacks=[CommandHandler("cancel", mover_cancel_command)],
-    name="mover_almacen_conversation",
+    name="mover_warehouse_conversation",
     persistent=False,
 )
 
@@ -851,22 +851,22 @@ mover_almacen_conv_handler = ConversationHandler(
 # ========== CONSIGNAR DESDE ALMACENES ==========
 
 @admin_only
-async def consignar_almacen_entry(update: Update, context: ContextTypes.DEFAULT_TYPE) -> int:
-    """Punto de entrada para consignar productos desde almacenes."""
+async def consignar_warehouse_entry(update: Update, context: ContextTypes.DEFAULT_TYPE) -> int:
+    """Punto de entrada para consignar productos desde warehousees."""
     keys_to_remove = [
         "cons_alm_id", "cons_prod_codigo", "cons_vendedor_id", "cons_precio", "cons_moneda", "cons_cantidad"
     ]
     for key in keys_to_remove:
         context.user_data.pop(key, None)
     
-    almacenes = listar_almacenes()
-    if not almacenes:
-        await reply_text(update, "❌ No almacenes disponibles. Crea uno primero.")
+    warehousees = listar_warehousees()
+    if not warehousees:
+        await reply_text(update, "❌ No warehousees disponibles. Crea uno primero.")
         return ConversationHandler.END
     
-    text = "📦 <b>Consignar Producto desde Almacen</b>\n\nSelect el almacen:"
+    text = "📦 <b>Consignar Producto desde Warehouse</b>\n\nSelect the warehouse:"
     keyboard: List[List[InlineKeyboardButton]] = []
-    for alm in almacenes:
+    for alm in warehousees:
         keyboard.append([
             InlineKeyboardButton(
                 f"🏢 {alm['nombre']}",
@@ -880,26 +880,26 @@ async def consignar_almacen_entry(update: Update, context: ContextTypes.DEFAULT_
     return CONSIGNAR_SEL_ALMACEN
 
 
-async def consignar_almacen_callback(update: Update, context: ContextTypes.DEFAULT_TYPE) -> int:
-    """Maneja los callbacks del flujo de consignacion."""
+async def consignar_warehouse_callback(update: Update, context: ContextTypes.DEFAULT_TYPE) -> int:
+    """Handle callbacks del flujo de consignment."""
     q = update.callback_query
     if q:
         await q.answer()
     data = (q.data if q else "") or ""
     
     if data.startswith("cons:alm:"):
-        almacen_id = int(data.split(":")[-1])
-        context.user_data["cons_alm_id"] = almacen_id
+        warehouse_id = int(data.split(":")[-1])
+        context.user_data["cons_alm_id"] = warehouse_id
         
-        # Obtener productos del almacen
+        # Obtener productos del warehouse
         try:
-            inventario = obtener_inventario_almacen(almacen_id)
+            inventario = obtener_inventario_warehouse(warehouse_id)
             if not inventario:
-                await reply_text(update, "❌ Este almacen no tiene productos en inventario.")
+                await reply_text(update, "❌ Este warehouse no tiene productos en inventario.")
                 return ConversationHandler.END
             
-            almacen = obtener_por_id(almacen_id)
-            text = f"🏢 <b>Almacen: {almacen['nombre']}</b>\n\nSelect el producto:"
+            warehouse = obtener_por_id(warehouse_id)
+            text = f"🏢 <b>Warehouse: {warehouse['nombre']}</b>\n\nSelect the producto:"
             keyboard: List[List[InlineKeyboardButton]] = []
             for item in inventario:
                 keyboard.append([
@@ -927,7 +927,7 @@ async def consignar_almacen_callback(update: Update, context: ContextTypes.DEFAU
             await reply_text(update, "❌ No vendedores disponibles. Crea uno primero.")
             return ConversationHandler.END
         
-        text = "👤 <b>Select el vendedor:</b>"
+        text = "👤 <b>Select the vendedor:</b>"
         keyboard: List[List[InlineKeyboardButton]] = []
         for vend in vendedores:
             keyboard.append([
@@ -945,14 +945,14 @@ async def consignar_almacen_callback(update: Update, context: ContextTypes.DEFAU
         vendedor_id = int(data.split(":")[-1])
         context.user_data["cons_vendedor_id"] = vendedor_id
         
-        almacen_id = context.user_data.get("cons_alm_id")
+        warehouse_id = context.user_data.get("cons_alm_id")
         prod_codigo = context.user_data.get("cons_prod_codigo")
         
-        if not almacen_id or not prod_codigo:
+        if not warehouse_id or not prod_codigo:
             await reply_text(update, "❌ Error: datos incompletos. Empieza de nuevo.")
             return ConversationHandler.END
         
-        almacen = obtener_por_id(almacen_id)
+        warehouse = obtener_por_id(warehouse_id)
         vendedor = VendedorService.obtener_por_id(vendedor_id)
         
         with get_db_connection() as conn:
@@ -961,15 +961,15 @@ async def consignar_almacen_callback(update: Update, context: ContextTypes.DEFAU
         await reply_html(
             update,
             f"📦 <b>Consignar Producto</b>\n\n"
-            f"Almacen: <code>{almacen['nombre']}</code>\n"
+            f"Warehouse: <code>{warehouse['nombre']}</code>\n"
             f"Producto: <code>{producto['nombre']}</code> ({prod_codigo})\n"
-            f"Vendedor: <code>{vendedor['name']}</code>\n\n"
+            f"Seller: <code>{vendedor['name']}</code>\n\n"
             f"Send el <b>precio unitario</b> de venta:"
         )
         return CONSIGNAR_PRECIO
     
     if data == "cons:back":
-        return await consignar_almacen_entry(update, context)
+        return await consignar_warehouse_entry(update, context)
     
     if data == "cons:cancel":
         keys_to_remove = [
@@ -977,7 +977,7 @@ async def consignar_almacen_callback(update: Update, context: ContextTypes.DEFAU
         ]
         for key in keys_to_remove:
             context.user_data.pop(key, None)
-        await reply_text(update, "✅ Operation cancelada.")
+        await reply_text(update, "✅ Operation canceled.")
         return ConversationHandler.END
     
     return CONSIGNAR_SEL_ALMACEN
@@ -997,7 +997,7 @@ async def consignar_precio_receive(update: Update, context: ContextTypes.DEFAULT
         context.user_data["cons_precio"] = precio
         
         # Mostrar opciones de moneda
-        text = f"✅ Precio: <b>{precio}</b>\n\nSelect la <b>moneda</b>:"
+        text = f"✅ Precio: <b>{precio}</b>\n\nSelect the <b>moneda</b>:"
         keyboard: List[List[InlineKeyboardButton]] = []
         for moneda in VALID_MONEDAS:
             keyboard.append([
@@ -1016,7 +1016,7 @@ async def consignar_precio_receive(update: Update, context: ContextTypes.DEFAULT
 
 
 async def consignar_moneda_callback(update: Update, context: ContextTypes.DEFAULT_TYPE) -> int:
-    """Maneja la selection de moneda."""
+    """Handle la selection de moneda."""
     q = update.callback_query
     if q:
         await q.answer()
@@ -1026,28 +1026,28 @@ async def consignar_moneda_callback(update: Update, context: ContextTypes.DEFAUL
         moneda = data.split(":")[-1]
         context.user_data["cons_moneda"] = moneda
         
-        almacen_id = context.user_data.get("cons_alm_id")
+        warehouse_id = context.user_data.get("cons_alm_id")
         prod_codigo = context.user_data.get("cons_prod_codigo")
         
-        if not almacen_id or not prod_codigo:
+        if not warehouse_id or not prod_codigo:
             await reply_text(update, "❌ Error: datos incompletos. Empieza de nuevo.")
             return ConversationHandler.END
         
         # Obtener cantidad disponible
-        inventario = obtener_inventario_almacen(almacen_id)
+        inventario = obtener_inventario_warehouse(warehouse_id)
         producto = next((p for p in inventario if p["producto_codigo"] == prod_codigo), None)
         
         if not producto:
-            await reply_text(update, "❌ Producto not found en el almacen.")
+            await reply_text(update, "❌ Producto not found en el warehouse.")
             return ConversationHandler.END
         
-        almacen = obtener_por_id(almacen_id)
+        warehouse = obtener_por_id(warehouse_id)
         precio = context.user_data.get("cons_precio")
         
         await reply_html(
             update,
             f"📦 <b>Consignar Producto</b>\n\n"
-            f"Almacen: <code>{almacen['nombre']}</code>\n"
+            f"Warehouse: <code>{warehouse['nombre']}</code>\n"
             f"Producto: <code>{producto['producto_nombre']}</code>\n"
             f"Precio: <b>{precio} {moneda.upper()}</b>\n\n"
             f"Cantidad disponible: <b>{producto['cantidad']}</b>\n\n"
@@ -1057,14 +1057,14 @@ async def consignar_moneda_callback(update: Update, context: ContextTypes.DEFAUL
     
     if data == "cons:back":
         # Back a pedir precio
-        almacen_id = context.user_data.get("cons_alm_id")
+        warehouse_id = context.user_data.get("cons_alm_id")
         prod_codigo = context.user_data.get("cons_prod_codigo")
         vendedor_id = context.user_data.get("cons_vendedor_id")
         
-        if not all([almacen_id, prod_codigo, vendedor_id]):
-            return await consignar_almacen_entry(update, context)
+        if not all([warehouse_id, prod_codigo, vendedor_id]):
+            return await consignar_warehouse_entry(update, context)
         
-        almacen = obtener_por_id(almacen_id)
+        warehouse = obtener_por_id(warehouse_id)
         vendedor = VendedorService.obtener_por_id(vendedor_id)
         
         with get_db_connection() as conn:
@@ -1073,9 +1073,9 @@ async def consignar_moneda_callback(update: Update, context: ContextTypes.DEFAUL
         await reply_html(
             update,
             f"📦 <b>Consignar Producto</b>\n\n"
-            f"Almacen: <code>{almacen['nombre']}</code>\n"
+            f"Warehouse: <code>{warehouse['nombre']}</code>\n"
             f"Producto: <code>{producto['nombre']}</code> ({prod_codigo})\n"
-            f"Vendedor: <code>{vendedor['name']}</code>\n\n"
+            f"Seller: <code>{vendedor['name']}</code>\n\n"
             f"Send el <b>precio unitario</b> de venta:"
         )
         return CONSIGNAR_PRECIO
@@ -1084,7 +1084,7 @@ async def consignar_moneda_callback(update: Update, context: ContextTypes.DEFAUL
 
 
 async def consignar_cantidad_receive(update: Update, context: ContextTypes.DEFAULT_TYPE) -> int:
-    """Recibe la cantidad y realiza la consignacion."""
+    """Recibe la cantidad y realiza la consignment."""
     if not update.message:
         return CONSIGNAR_CANTIDAD
     
@@ -1094,31 +1094,31 @@ async def consignar_cantidad_receive(update: Update, context: ContextTypes.DEFAU
             await reply_text(update, "❌ La cantidad debe ser mayor a 0.")
             return CONSIGNAR_CANTIDAD
         
-        almacen_id = context.user_data.get("cons_alm_id")
+        warehouse_id = context.user_data.get("cons_alm_id")
         prod_codigo = context.user_data.get("cons_prod_codigo")
         vendedor_id = context.user_data.get("cons_vendedor_id")
         precio = context.user_data.get("cons_precio")
         moneda = context.user_data.get("cons_moneda")
         user_id = update.effective_user.id
         
-        if not all([almacen_id, prod_codigo, vendedor_id, precio, moneda]):
+        if not all([warehouse_id, prod_codigo, vendedor_id, precio, moneda]):
             await reply_text(update, "❌ Error: datos incompletos. Empieza de nuevo.")
             return ConversationHandler.END
         
-        # Realizar la consignacion
-        resultado = consignar_desde_almacen(
-            almacen_id, prod_codigo, cantidad, vendedor_id, precio, moneda, user_id
+        # Realizar la consignment
+        resultado = consignar_desde_warehouse(
+            warehouse_id, prod_codigo, cantidad, vendedor_id, precio, moneda, user_id
         )
         
-        almacen = obtener_por_id(almacen_id)
+        warehouse = obtener_por_id(warehouse_id)
         vendedor = VendedorService.obtener_por_id(vendedor_id)
         
         await reply_html(
             update,
-            f"✅ <b>Consignacion Realizada</b>\n\n"
-            f"Almacen: <code>{almacen['nombre']}</code>\n"
+            f"✅ <b>Consignment Completed</b>\n\n"
+            f"Warehouse: <code>{warehouse['nombre']}</code>\n"
             f"Producto: <code>{prod_codigo}</code>\n"
-            f"Vendedor: <code>{vendedor['name']}</code>\n"
+            f"Seller: <code>{vendedor['name']}</code>\n"
             f"Cantidad: <b>{cantidad}</b>\n"
             f"Precio: <b>{precio} {moneda.upper()}</b>\n\n"
             f"💰 <b>Deuda generada: {resultado['monto_deuda']:.2f} {moneda.upper()}</b>"
@@ -1141,34 +1141,34 @@ async def consignar_cantidad_receive(update: Update, context: ContextTypes.DEFAU
         return CONSIGNAR_CANTIDAD
 
 
-consignar_almacen_conv_handler = ConversationHandler(
+consignar_warehouse_conv_handler = ConversationHandler(
     entry_points=[
-        CommandHandler("consignar_almacen", consignar_almacen_entry),
+        CommandHandler("consignar_warehouse", consignar_warehouse_entry),
     ],
     states={
         CONSIGNAR_SEL_ALMACEN: [
-            CallbackQueryHandler(consignar_almacen_callback, pattern=r"^cons:(alm:|cancel)"),
+            CallbackQueryHandler(consignar_warehouse_callback, pattern=r"^cons:(alm:|cancel)"),
         ],
         CONSIGNAR_SEL_PRODUCTO: [
-            CallbackQueryHandler(consignar_almacen_callback, pattern=r"^cons:(prod:|back)"),
+            CallbackQueryHandler(consignar_warehouse_callback, pattern=r"^cons:(prod:|back)"),
         ],
         CONSIGNAR_SEL_VENDEDOR: [
-            CallbackQueryHandler(consignar_almacen_callback, pattern=r"^cons:(vend:|back)"),
+            CallbackQueryHandler(consignar_warehouse_callback, pattern=r"^cons:(vend:|back)"),
         ],
         CONSIGNAR_PRECIO: [
             MessageHandler(filters.TEXT & ~filters.COMMAND, consignar_precio_receive),
-            CallbackQueryHandler(consignar_almacen_callback, pattern=r"^cons:.*"),
+            CallbackQueryHandler(consignar_warehouse_callback, pattern=r"^cons:.*"),
         ],
         CONSIGNAR_MONEDA: [
             CallbackQueryHandler(consignar_moneda_callback, pattern=r"^cons:(moneda:|back)"),
         ],
         CONSIGNAR_CANTIDAD: [
             MessageHandler(filters.TEXT & ~filters.COMMAND, consignar_cantidad_receive),
-            CallbackQueryHandler(consignar_almacen_callback, pattern=r"^cons:.*"),
+            CallbackQueryHandler(consignar_warehouse_callback, pattern=r"^cons:.*"),
         ],
     },
     fallbacks=[CommandHandler("cancel", mover_cancel_command)],
-    name="consignar_almacen_conversation",
+    name="consignar_warehouse_conversation",
     persistent=False,
 )
 
@@ -1176,10 +1176,10 @@ consignar_almacen_conv_handler = ConversationHandler(
 # ========== MOVER CONSIGNACIONES ENTRE VENDEDORES ==========
 
 @admin_only
-async def mover_consignacion_entry(update: Update, context: ContextTypes.DEFAULT_TYPE) -> int:
+async def mover_consignment_entry(update: Update, context: ContextTypes.DEFAULT_TYPE) -> int:
     """Punto de entrada para mover consignaciones entre vendedores."""
     keys_to_remove = [
-        "mover_cons_origen_id", "mover_cons_destino_id", "mover_cons_prod_codigo", "mover_cons_cantidad"
+        "mover_cons_source_id", "mover_cons_destination_id", "mover_cons_prod_codigo", "mover_cons_cantidad"
     ]
     for key in keys_to_remove:
         context.user_data.pop(key, None)
@@ -1189,13 +1189,13 @@ async def mover_consignacion_entry(update: Update, context: ContextTypes.DEFAULT
         await reply_text(update, "❌ Necesitas al menos 2 vendedores para mover consignaciones.")
         return ConversationHandler.END
     
-    text = "🔄 <b>Mover Consignacion: Vendedor → Vendedor</b>\n\nSelect el vendedor <b>origen</b>:"
+    text = "🔄 <b>Move Consignment: Seller → Seller</b>\n\nSelect the vendedor <b>source</b>:"
     keyboard: List[List[InlineKeyboardButton]] = []
     for vend in vendedores:
         keyboard.append([
             InlineKeyboardButton(
                 f"👤 {vend['name']}",
-                callback_data=f"mover_cons:origen:{vend['id']}"
+                callback_data=f"mover_cons:source:{vend['id']}"
             )
         ])
     keyboard.append([InlineKeyboardButton("❌ Cancel", callback_data="mover_cons:cancel")])
@@ -1205,29 +1205,29 @@ async def mover_consignacion_entry(update: Update, context: ContextTypes.DEFAULT
     return MOVER_CONS_SEL_ORIGEN
 
 
-async def mover_consignacion_callback(update: Update, context: ContextTypes.DEFAULT_TYPE) -> int:
-    """Maneja los callbacks del flujo de mover consignaciones."""
+async def mover_consignment_callback(update: Update, context: ContextTypes.DEFAULT_TYPE) -> int:
+    """Handle callbacks del flujo de mover consignaciones."""
     q = update.callback_query
     if q:
         await q.answer()
     data = (q.data if q else "") or ""
     
-    if data.startswith("mover_cons:origen:"):
+    if data.startswith("mover_cons:source:"):
         vendedor_id = int(data.split(":")[-1])
-        context.user_data["mover_cons_origen_id"] = vendedor_id
+        context.user_data["mover_cons_source_id"] = vendedor_id
         
-        # Obtener consignaciones del vendedor origen
+        # Obtener consignaciones del vendedor source
         try:
             vendedor = VendedorService.obtener_por_id(vendedor_id)
             with get_db_connection() as conn:
-                from database.repositories import ConsignacionRepository
-                consignaciones = ConsignacionRepository.obtener_por_vendedor(conn, vendedor['name'])
+                from database.repositories import ConsignmentRepository
+                consignaciones = ConsignmentRepository.obtener_por_vendedor(conn, vendedor['name'])
             
             if not consignaciones:
-                await reply_text(update, "❌ Este vendedor no tiene productos consignados.")
+                await reply_text(update, "❌ This seller has no consigned products.")
                 return ConversationHandler.END
             
-            text = f"👤 <b>Vendedor Origen: {vendedor['name']}</b>\n\nSelect el producto:"
+            text = f"👤 <b>Source Seller: {vendedor['name']}</b>\n\nSelect the product:"
             keyboard: List[List[InlineKeyboardButton]] = []
             for cons in consignaciones:
                 with get_db_connection() as conn:
@@ -1251,40 +1251,40 @@ async def mover_consignacion_callback(update: Update, context: ContextTypes.DEFA
         producto_codigo = data.split(":")[-1]
         context.user_data["mover_cons_prod_codigo"] = producto_codigo
         
-        origen_id = context.user_data.get("mover_cons_origen_id")
-        if not origen_id:
+        source_id = context.user_data.get("mover_cons_source_id")
+        if not source_id:
             await reply_text(update, "❌ Error: datos incompletos. Empieza de nuevo.")
             return ConversationHandler.END
         
-        # Listar vendedores destino (excluyendo el origen)
+        # Listar vendedores destination (excluyendo el source)
         vendedores = VendedorService.listar()
-        vendedores_destino = [v for v in vendedores if v["id"] != origen_id]
+        vendedores_destination = [v for v in vendedores if v["id"] != source_id]
         
-        if not vendedores_destino:
-            await reply_text(update, "❌ No otros vendedores disponibles como destino.")
+        if not vendedores_destination:
+            await reply_text(update, "❌ No otros vendedores disponibles como destination.")
             return ConversationHandler.END
         
-        vendedor_origen = VendedorService.obtener_por_id(origen_id)
+        vendedor_source = VendedorService.obtener_por_id(source_id)
         with get_db_connection() as conn:
             producto = ProductoRepository.obtener_por_codigo(conn, producto_codigo)
-            from database.repositories import ConsignacionRepository
-            consignacion = ConsignacionRepository.obtener_por_vendedor_codigo(
-                conn, vendedor_origen['name'], producto_codigo
+            from database.repositories import ConsignmentRepository
+            consignment = ConsignmentRepository.obtener_por_vendedor_codigo(
+                conn, vendedor_source['name'], producto_codigo
             )
         
         text = (
-            f"🔄 <b>Mover Consignacion</b>\n\n"
-            f"Origen: <code>{vendedor_origen['name']}</code>\n"
+            f"🔄 <b>Move Consignment</b>\n\n"
+            f"Origen: <code>{vendedor_source['name']}</code>\n"
             f"Producto: <code>{producto['nombre']}</code> ({producto_codigo})\n"
-            f"Stock disponible: <b>{consignacion['stock']}</b>\n\n"
-            f"Select el vendedor <b>destino</b>:"
+            f"Stock disponible: <b>{consignment['stock']}</b>\n\n"
+            f"Select the vendedor <b>destination</b>:"
         )
         keyboard: List[List[InlineKeyboardButton]] = []
-        for vend in vendedores_destino:
+        for vend in vendedores_destination:
             keyboard.append([
                 InlineKeyboardButton(
                     f"👤 {vend['name']}",
-                    callback_data=f"mover_cons:destino:{vend['id']}"
+                    callback_data=f"mover_cons:destination:{vend['id']}"
                 )
             ])
         keyboard.append([InlineKeyboardButton("⬅️ Back", callback_data="mover_cons:back")])
@@ -1292,55 +1292,55 @@ async def mover_consignacion_callback(update: Update, context: ContextTypes.DEFA
         await reply_html(update, text, reply_markup=kb)
         return MOVER_CONS_SEL_DESTINO
     
-    if data.startswith("mover_cons:destino:"):
+    if data.startswith("mover_cons:destination:"):
         vendedor_id = int(data.split(":")[-1])
-        context.user_data["mover_cons_destino_id"] = vendedor_id
+        context.user_data["mover_cons_destination_id"] = vendedor_id
         
-        origen_id = context.user_data.get("mover_cons_origen_id")
+        source_id = context.user_data.get("mover_cons_source_id")
         prod_codigo = context.user_data.get("mover_cons_prod_codigo")
         
-        if not origen_id or not prod_codigo:
+        if not source_id or not prod_codigo:
             await reply_text(update, "❌ Error: datos incompletos. Empieza de nuevo.")
             return ConversationHandler.END
         
-        vendedor_origen = VendedorService.obtener_por_id(origen_id)
-        vendedor_destino = VendedorService.obtener_por_id(vendedor_id)
+        vendedor_source = VendedorService.obtener_por_id(source_id)
+        vendedor_destination = VendedorService.obtener_por_id(vendedor_id)
         
         with get_db_connection() as conn:
             producto = ProductoRepository.obtener_por_codigo(conn, prod_codigo)
-            from database.repositories import ConsignacionRepository
-            consignacion = ConsignacionRepository.obtener_por_vendedor_codigo(
-                conn, vendedor_origen['name'], prod_codigo
+            from database.repositories import ConsignmentRepository
+            consignment = ConsignmentRepository.obtener_por_vendedor_codigo(
+                conn, vendedor_source['name'], prod_codigo
             )
         
         await reply_html(
             update,
-            f"🔄 <b>Mover Consignacion</b>\n\n"
-            f"De: <code>{vendedor_origen['name']}</code>\n"
-            f"A: <code>{vendedor_destino['name']}</code>\n"
+            f"🔄 <b>Move Consignment</b>\n\n"
+            f"De: <code>{vendedor_source['name']}</code>\n"
+            f"A: <code>{vendedor_destination['name']}</code>\n"
             f"Producto: <code>{producto['nombre']}</code>\n\n"
-            f"Cantidad disponible: <b>{consignacion['stock']}</b>\n\n"
+            f"Cantidad disponible: <b>{consignment['stock']}</b>\n\n"
             f"Send la <b>cantidad</b> a mover:"
         )
         return MOVER_CONS_CANTIDAD
     
     if data == "mover_cons:back":
-        return await mover_consignacion_entry(update, context)
+        return await mover_consignment_entry(update, context)
     
     if data == "mover_cons:cancel":
         keys_to_remove = [
-            "mover_cons_origen_id", "mover_cons_destino_id", "mover_cons_prod_codigo", "mover_cons_cantidad"
+            "mover_cons_source_id", "mover_cons_destination_id", "mover_cons_prod_codigo", "mover_cons_cantidad"
         ]
         for key in keys_to_remove:
             context.user_data.pop(key, None)
-        await reply_text(update, "✅ Operation cancelada.")
+        await reply_text(update, "✅ Operation canceled.")
         return ConversationHandler.END
     
     return MOVER_CONS_SEL_ORIGEN
 
 
-async def mover_consignacion_cantidad_receive(update: Update, context: ContextTypes.DEFAULT_TYPE) -> int:
-    """Recibe la cantidad y realiza el movimiento de consignacion."""
+async def mover_consignment_cantidad_receive(update: Update, context: ContextTypes.DEFAULT_TYPE) -> int:
+    """Recibe la cantidad y realiza el movimiento de consignment."""
     if not update.message:
         return MOVER_CONS_CANTIDAD
     
@@ -1350,28 +1350,28 @@ async def mover_consignacion_cantidad_receive(update: Update, context: ContextTy
             await reply_text(update, "❌ La cantidad debe ser mayor a 0.")
             return MOVER_CONS_CANTIDAD
         
-        origen_id = context.user_data.get("mover_cons_origen_id")
-        destino_id = context.user_data.get("mover_cons_destino_id")
+        source_id = context.user_data.get("mover_cons_source_id")
+        destination_id = context.user_data.get("mover_cons_destination_id")
         prod_codigo = context.user_data.get("mover_cons_prod_codigo")
         user_id = update.effective_user.id
         
-        if not all([origen_id, destino_id, prod_codigo]):
+        if not all([source_id, destination_id, prod_codigo]):
             await reply_text(update, "❌ Error: datos incompletos. Empieza de nuevo.")
             return ConversationHandler.END
         
         # Realizar el movimiento
-        resultado = mover_consignacion_vendedor(
-            origen_id, destino_id, prod_codigo, cantidad, user_id
+        resultado = mover_consignment_vendedor(
+            source_id, destination_id, prod_codigo, cantidad, user_id
         )
         
-        vendedor_origen = VendedorService.obtener_por_id(origen_id)
-        vendedor_destino = VendedorService.obtener_por_id(destino_id)
+        vendedor_source = VendedorService.obtener_por_id(source_id)
+        vendedor_destination = VendedorService.obtener_por_id(destination_id)
         
         await reply_html(
             update,
-            f"✅ <b>Consignacion Movida</b>\n\n"
-            f"De: <code>{vendedor_origen['name']}</code>\n"
-            f"A: <code>{vendedor_destino['name']}</code>\n"
+            f"✅ <b>Consignment Moved</b>\n\n"
+            f"De: <code>{vendedor_source['name']}</code>\n"
+            f"A: <code>{vendedor_destination['name']}</code>\n"
             f"Producto: <code>{prod_codigo}</code>\n"
             f"Cantidad: <b>{cantidad}</b>\n\n"
             f"💰 Deuda transferida: <b>{resultado['monto_movimiento']:.2f} {resultado['moneda'].upper()}</b>"
@@ -1379,7 +1379,7 @@ async def mover_consignacion_cantidad_receive(update: Update, context: ContextTy
         
         # Limpiar datos
         keys_to_remove = [
-            "mover_cons_origen_id", "mover_cons_destino_id", "mover_cons_prod_codigo", "mover_cons_cantidad"
+            "mover_cons_source_id", "mover_cons_destination_id", "mover_cons_prod_codigo", "mover_cons_cantidad"
         ]
         for key in keys_to_remove:
             context.user_data.pop(key, None)
@@ -1389,32 +1389,32 @@ async def mover_consignacion_cantidad_receive(update: Update, context: ContextTy
         await reply_text(update, f"❌ {str(e)}")
         return MOVER_CONS_CANTIDAD
     except Exception as e:
-        logger.error(f"Error moviendo consignacion: {e}", exc_info=True)
+        logger.error(f"Error moviendo consignment: {e}", exc_info=True)
         await reply_text(update, f"❌ Error: {str(e)}")
         return MOVER_CONS_CANTIDAD
 
 
-mover_consignacion_conv_handler = ConversationHandler(
+mover_consignment_conv_handler = ConversationHandler(
     entry_points=[
-        CommandHandler("mover_consignacion", mover_consignacion_entry),
+        CommandHandler("mover_consignment", mover_consignment_entry),
     ],
     states={
         MOVER_CONS_SEL_ORIGEN: [
-            CallbackQueryHandler(mover_consignacion_callback, pattern=r"^mover_cons:(origen:|cancel)"),
+            CallbackQueryHandler(mover_consignment_callback, pattern=r"^mover_cons:(source:|cancel)"),
         ],
         MOVER_CONS_SEL_PRODUCTO: [
-            CallbackQueryHandler(mover_consignacion_callback, pattern=r"^mover_cons:(prod:|back)"),
+            CallbackQueryHandler(mover_consignment_callback, pattern=r"^mover_cons:(prod:|back)"),
         ],
         MOVER_CONS_SEL_DESTINO: [
-            CallbackQueryHandler(mover_consignacion_callback, pattern=r"^mover_cons:(destino:|back)"),
+            CallbackQueryHandler(mover_consignment_callback, pattern=r"^mover_cons:(destination:|back)"),
         ],
         MOVER_CONS_CANTIDAD: [
-            MessageHandler(filters.TEXT & ~filters.COMMAND, mover_consignacion_cantidad_receive),
-            CallbackQueryHandler(mover_consignacion_callback, pattern=r"^mover_cons:.*"),
+            MessageHandler(filters.TEXT & ~filters.COMMAND, mover_consignment_cantidad_receive),
+            CallbackQueryHandler(mover_consignment_callback, pattern=r"^mover_cons:.*"),
         ],
     },
     fallbacks=[CommandHandler("cancel", mover_cancel_command)],
-    name="mover_consignacion_conversation",
+    name="mover_consignment_conversation",
     persistent=False,
 )
 
@@ -1422,7 +1422,7 @@ mover_consignacion_conv_handler = ConversationHandler(
 # ========== PAGAR CONSIGNACIONES ==========
 
 @admin_only
-async def pagar_consignacion_entry(update: Update, context: ContextTypes.DEFAULT_TYPE) -> int:
+async def pagar_consignment_entry(update: Update, context: ContextTypes.DEFAULT_TYPE) -> int:
     """Punto de entrada para pagar consignaciones."""
     keys_to_remove = [
         "pagar_cons_vendedor_id", "pagar_cons_moneda_deuda", "pagar_cons_monto", "pagar_cons_moneda_pago", "pagar_cons_caja_id"
@@ -1435,7 +1435,7 @@ async def pagar_consignacion_entry(update: Update, context: ContextTypes.DEFAULT
         await reply_text(update, "❌ No vendedores disponibles. Crea uno primero.")
         return ConversationHandler.END
     
-    text = "💰 <b>Pagar Consignacion</b>\n\nSelect el vendedor:"
+    text = "💰 <b>Pay Consignment</b>\n\nSelect the vendedor:"
     keyboard: List[List[InlineKeyboardButton]] = []
     for vend in vendedores:
         keyboard.append([
@@ -1451,8 +1451,8 @@ async def pagar_consignacion_entry(update: Update, context: ContextTypes.DEFAULT
     return PAGAR_CONS_SEL_VENDEDOR
 
 
-async def pagar_consignacion_callback(update: Update, context: ContextTypes.DEFAULT_TYPE) -> int:
-    """Maneja los callbacks del flujo de pago de consignaciones."""
+async def pagar_consignment_callback(update: Update, context: ContextTypes.DEFAULT_TYPE) -> int:
+    """Handle callbacks del flujo de pago de consignaciones."""
     q = update.callback_query
     if q:
         await q.answer()
@@ -1476,13 +1476,13 @@ async def pagar_consignacion_callback(update: Update, context: ContextTypes.DEFA
             ]
             
             if not deudas_vendedor:
-                await reply_text(update, f"❌ El vendedor {vendedor['name']} no tiene deudas POR_COBRAR.")
+                await reply_text(update, f"❌ The seller {vendedor['name']} has no debts POR_COBRAR.")
                 return ConversationHandler.END
             
-            text = f"👤 <b>Vendedor: {vendedor['name']}</b>\n\n<b>Deudas:</b>\n"
+            text = f"👤 <b>Seller: {vendedor['name']}</b>\n\n<b>Deudas:</b>\n"
             for deuda in deudas_vendedor:
                 text += f"• {deuda['monto_pendiente']:.2f} {deuda['moneda'].upper()}\n"
-            text += "\nSelect la <b>moneda de la deuda</b> a pagar:"
+            text += "\nSelect the <b>moneda de la deuda</b> a pagar:"
             
             keyboard: List[List[InlineKeyboardButton]] = []
             monedas_deuda = list(set([d['moneda'] for d in deudas_vendedor]))
@@ -1519,8 +1519,8 @@ async def pagar_consignacion_callback(update: Update, context: ContextTypes.DEFA
         
         await reply_html(
             update,
-            f"💰 <b>Pagar Consignacion</b>\n\n"
-            f"Vendedor: <code>{vendedor['name']}</code>\n"
+            f"💰 <b>Pay Consignment</b>\n\n"
+            f"Seller: <code>{vendedor['name']}</code>\n"
             f"Deuda: <b>{deuda['monto_pendiente']:.2f} {moneda_deuda.upper()}</b>\n\n"
             f"Send el <b>monto</b> a pagar:"
         )
@@ -1540,10 +1540,10 @@ async def pagar_consignacion_callback(update: Update, context: ContextTypes.DEFA
         vendedor = VendedorService.obtener_por_id(vendedor_id)
         moneda_deuda = context.user_data.get("pagar_cons_moneda_deuda")
         
-        text = f"💰 <b>Pagar Consignacion</b>\n\n"
-        text += f"Vendedor: <code>{vendedor['name']}</code>\n"
+        text = f"💰 <b>Pay Consignment</b>\n\n"
+        text += f"Seller: <code>{vendedor['name']}</code>\n"
         text += f"Monto: <b>{monto} {moneda_pago.upper()}</b>\n\n"
-        text += f"Select la <b>caja</b> donde se recibe el pago:"
+        text += f"Select the <b>caja</b> donde se recibe el pago:"
         
         cajas = CajaService.listar()
         if not cajas:
@@ -1579,7 +1579,7 @@ async def pagar_consignacion_callback(update: Update, context: ContextTypes.DEFA
         
         try:
             # Realizar el pago
-            resultado = pagar_consignacion(
+            resultado = pagar_consignment(
                 vendedor_id, moneda_deuda, monto, moneda_pago, caja_id, user_id
             )
             
@@ -1589,7 +1589,7 @@ async def pagar_consignacion_callback(update: Update, context: ContextTypes.DEFA
             vendedor = VendedorService.obtener_por_id(vendedor_id)
             
             text = f"✅ <b>Pago Registrado</b>\n\n"
-            text += f"Vendedor: <code>{vendedor['name']}</code>\n"
+            text += f"Seller: <code>{vendedor['name']}</code>\n"
             text += f"Monto recibido: <b>{monto} {moneda_pago.upper()}</b>\n"
             text += f"Caja: <code>{caja_nombre.upper()}</code>\n"
             text += f"Deuda reducida: <b>{resultado['monto_descontado']:.2f} {moneda_deuda.upper()}</b>\n"
@@ -1618,7 +1618,7 @@ async def pagar_consignacion_callback(update: Update, context: ContextTypes.DEFA
             return PAGAR_CONS_SEL_CAJA
     
     if data == "pagar_cons:back":
-        return await pagar_consignacion_entry(update, context)
+        return await pagar_consignment_entry(update, context)
     
     if data == "pagar_cons:cancel":
         keys_to_remove = [
@@ -1627,13 +1627,13 @@ async def pagar_consignacion_callback(update: Update, context: ContextTypes.DEFA
         ]
         for key in keys_to_remove:
             context.user_data.pop(key, None)
-        await reply_text(update, "✅ Operation cancelada.")
+        await reply_text(update, "✅ Operation canceled.")
         return ConversationHandler.END
     
     return PAGAR_CONS_SEL_VENDEDOR
 
 
-async def pagar_consignacion_monto_receive(update: Update, context: ContextTypes.DEFAULT_TYPE) -> int:
+async def pagar_consignment_monto_receive(update: Update, context: ContextTypes.DEFAULT_TYPE) -> int:
     """Recibe el monto a pagar."""
     if not update.message:
         return PAGAR_CONS_MONTO
@@ -1659,9 +1659,9 @@ async def pagar_consignacion_monto_receive(update: Update, context: ContextTypes
             deuda = DeudaRepository.obtener_por_actor(conn, vendedor['name'], moneda_deuda, 'POR_COBRAR')
         
         text = f"✅ Monto: <b>{monto}</b>\n\n"
-        text += f"Vendedor: <code>{vendedor['name']}</code>\n"
+        text += f"Seller: <code>{vendedor['name']}</code>\n"
         text += f"Deuda: <b>{deuda['monto_pendiente']:.2f} {moneda_deuda.upper()}</b>\n\n"
-        text += f"Select la <b>moneda del pago</b>:"
+        text += f"Select the <b>moneda del pago</b>:"
         
         keyboard: List[List[InlineKeyboardButton]] = []
         for moneda in VALID_MONEDAS:
@@ -1680,27 +1680,27 @@ async def pagar_consignacion_monto_receive(update: Update, context: ContextTypes
         return PAGAR_CONS_MONTO
 
 
-pagar_consignacion_conv_handler = ConversationHandler(
+pagar_consignment_conv_handler = ConversationHandler(
     entry_points=[
-        CommandHandler("pagar_consignacion", pagar_consignacion_entry),
+        CommandHandler("pagar_consignment", pagar_consignment_entry),
     ],
     states={
         PAGAR_CONS_SEL_VENDEDOR: [
-            CallbackQueryHandler(pagar_consignacion_callback, pattern=r"^pagar_cons:(vend:|cancel)"),
+            CallbackQueryHandler(pagar_consignment_callback, pattern=r"^pagar_cons:(vend:|cancel)"),
         ],
         PAGAR_CONS_SEL_MONEDA: [
-            CallbackQueryHandler(pagar_consignacion_callback, pattern=r"^pagar_cons:(moneda_deuda:|back)"),
+            CallbackQueryHandler(pagar_consignment_callback, pattern=r"^pagar_cons:(moneda_deuda:|back)"),
         ],
         PAGAR_CONS_MONTO: [
-            MessageHandler(filters.TEXT & ~filters.COMMAND, pagar_consignacion_monto_receive),
-            CallbackQueryHandler(pagar_consignacion_callback, pattern=r"^pagar_cons:.*"),
+            MessageHandler(filters.TEXT & ~filters.COMMAND, pagar_consignment_monto_receive),
+            CallbackQueryHandler(pagar_consignment_callback, pattern=r"^pagar_cons:.*"),
         ],
         PAGAR_CONS_SEL_CAJA: [
-            CallbackQueryHandler(pagar_consignacion_callback, pattern=r"^pagar_cons:(moneda_pago:|caja:|back)"),
+            CallbackQueryHandler(pagar_consignment_callback, pattern=r"^pagar_cons:(moneda_pago:|caja:|back)"),
         ],
     },
     fallbacks=[CommandHandler("cancel", mover_cancel_command)],
-    name="pagar_consignacion_conversation",
+    name="pagar_consignment_conversation",
     persistent=False,
 )
 

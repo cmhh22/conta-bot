@@ -1,5 +1,5 @@
 """
-Handlers para el menu principal y navegacion.
+Handlers para el main menu y navigation.
 """
 import logging
 from telegram import Update
@@ -22,7 +22,7 @@ logger = logging.getLogger(__name__)
 
 
 async def start_command(update: Update, context: ContextTypes.DEFAULT_TYPE) -> None:
-    """Comando /start - Muestra el menu principal."""
+    """Comando /start - Show el main menu."""
     # Verificar permisos pero no bloquear, solo mostrar mensaje diferente
     user_id = update.effective_user.id
     from core.config import ADMIN_USER_IDS
@@ -38,22 +38,22 @@ async def start_command(update: Update, context: ContextTypes.DEFAULT_TYPE) -> N
     
     msg = (
         "👋 <b>Bienvenido al Sistema de Management Financiera</b>\n\n"
-        "Select una opcion del menu para comenzar:"
+        "Select aa opcion del menu para comenzar:"
     )
     await update.message.reply_html(msg, reply_markup=create_main_menu_keyboard())
 
 
 @admin_only
 async def menu_callback(update: Update, context: ContextTypes.DEFAULT_TYPE) -> None:
-    """Maneja los callbacks del menu principal."""
+    """Handle callbacks del main menu."""
     query = update.callback_query
     await query.answer()
     data = query.data or ""
     
     if data == "menu:main":
         msg = (
-            "👋 <b>Menu Principal</b>\n\n"
-            "Select una opcion:"
+            "👋 <b>Main Menu</b>\n\n"
+            "Select aa opcion:"
         )
         await query.edit_message_text(msg, parse_mode="HTML", reply_markup=create_main_menu_keyboard())
     
@@ -82,8 +82,8 @@ async def menu_callback(update: Update, context: ContextTypes.DEFAULT_TYPE) -> N
         # Redirigir al comando de deudas
         await deudas_command(update, context)
     
-    elif data == "menu:contenedores":
-        # Este callback es manejado por el ConversationHandler de contenedores
+    elif data == "menu:containeres":
+        # Este callback es manejado por el ConversationHandler de containeres
         # que se registra antes de este handler, ayes que no deberia llegar aqui
         # pero por si acaso, respondemos al callback
         pass
@@ -94,7 +94,7 @@ async def menu_callback(update: Update, context: ContextTypes.DEFAULT_TYPE) -> N
             "Opciones de configuration:\n\n"
             "• <code>/set_tasa 1 [tasa]</code> - Establecer tasa USD-CUP\n"
             "• <code>/balance</code> - Ver balance\n"
-            "• <code>/historial [dias]</code> - Ver historial"
+            "• <code>/historial [days]</code> - Ver historial"
         )
         kb = create_main_menu_keyboard()
         await query.edit_message_text(msg, parse_mode="HTML", reply_markup=kb)
@@ -134,7 +134,7 @@ async def menu_callback(update: Update, context: ContextTypes.DEFAULT_TYPE) -> N
 
 
 # Handlers exportables
-# Excluir menu:contenedores porque lo maneja el ConversationHandler
-menu_query_handler = CallbackQueryHandler(menu_callback, pattern=r"^menu:(?!contenedores$)")
+# Excluir menu:containeres porque lo maneja el ConversationHandler
+menu_query_handler = CallbackQueryHandler(menu_callback, pattern=r"^menu:(?!containeres$)")
 contabilidad_query_handler = CallbackQueryHandler(menu_callback, pattern=r"^(cont|inv|rep|export):")
 

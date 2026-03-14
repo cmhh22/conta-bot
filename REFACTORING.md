@@ -35,11 +35,11 @@ ContaBot-main/
 ├── services/                # Logica de negocio
 │   ├── contabilidad_service.py
 │   ├── inventario_service.py
-│   └── contenedores_service.py
+│   └── containeres_service.py
 ├── handlers/                # Handlers de Telegram (refactorizados)
 │   ├── contabilidad_handlers.py
 │   ├── inventario_handlers.py
-│   └── contenedores_handlers.py
+│   └── containeres_handlers.py
 ├── utils/                   # Utilidades compartidas
 │   ├── validators.py
 │   ├── decorators.py

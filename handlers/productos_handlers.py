@@ -20,12 +20,12 @@ from core.config import VALID_MONEDAS
 
 logger = logging.getLogger(__name__)
 
-# Estados de la conversacion
+# Estados de la conversation
 MENU, CREAR_CODIGO, CREAR_NOMBRE, CREAR_COSTO, CREAR_MONEDA, CREAR_STOCK, EDIT_MENU, EDIT_CODIGO, EDIT_NOMBRE, EDIT_COSTO, EDIT_MONEDA, CONFIRM_DELETE = range(12)
 
 
 def _main_menu_kb() -> InlineKeyboardMarkup:
-    """Genera el teclado del menu principal."""
+    """Genera el teclado del main menu."""
     keyboard = [
         [
             InlineKeyboardButton("➕ Create", callback_data="prod:create"),
@@ -42,7 +42,7 @@ async def _render_list(update: Update, context: ContextTypes.DEFAULT_TYPE) -> No
         productos = ProductoRepository.obtener_todos(conn)
     
     if not productos:
-        text = "📦 <b>Productos</b>\n\nStill no hay productos registrados."
+        text = "📦 <b>Productos</b>\n\nStill no hay productos recordeds."
         kb = InlineKeyboardMarkup([
             [InlineKeyboardButton("➕ Create", callback_data="prod:create")],
             [InlineKeyboardButton("⬅️ Back", callback_data="prod:back")]
@@ -50,7 +50,7 @@ async def _render_list(update: Update, context: ContextTypes.DEFAULT_TYPE) -> No
         await reply_html(update, text, reply_markup=kb)
         return
     
-    text = "📦 <b>Productos</b>\n\nSelect una action para cada item:"
+    text = "📦 <b>Productos</b>\n\nSelect aa action para cada item:"
     keyboard: List[List[InlineKeyboardButton]] = []
     for prod in productos:
         prod_codigo = prod["codigo"]
@@ -76,7 +76,7 @@ async def productos_entry(update: Update, context: ContextTypes.DEFAULT_TYPE) ->
     """Punto de entrada para la management de productos."""
     logger.info(f"productos_entry called by user {update.effective_user.id}")
     
-    # Limpiar cualquier dato residual de conversaciones anteriores
+    # Limpiar cualquier dato residual de conversationes anteriores
     keys_to_remove = [
         "prod_codigo", "prod_nombre", "prod_costo", "prod_moneda", "prod_stock",
         "prod_edit_codigo", "prod_del_codigo"
@@ -94,7 +94,7 @@ async def productos_entry(update: Update, context: ContextTypes.DEFAULT_TYPE) ->
 
 @admin_only
 async def menu_callback(update: Update, context: ContextTypes.DEFAULT_TYPE) -> int:
-    """Maneja los callbacks del menu."""
+    """Handle callbacks del menu."""
     q = update.callback_query
     if q:
         await q.answer()
@@ -225,7 +225,7 @@ async def menu_callback(update: Update, context: ContextTypes.DEFAULT_TYPE) -> i
             update,
             f"💵 <b>Cambiar Moneda</b>\n\n"
             f"Actual: <code>{producto['moneda_costo']}</code>\n"
-            f"Select la nueva moneda:",
+            f"Select the nueva moneda:",
             reply_markup=kb
         )
         return EDIT_MONEDA
@@ -297,7 +297,7 @@ async def menu_callback(update: Update, context: ContextTypes.DEFAULT_TYPE) -> i
             await _render_list(update, context)
         except Exception as e:
             logger.error(f"Error eliminando producto: {e}", exc_info=True)
-            await reply_text(update, "❌ No se pudo delete. Intenta de nuevo.")
+            await reply_text(update, "❌ Could not delete. Intenta de nuevo.")
             await _render_list(update, context)
         return MENU
     
@@ -382,7 +382,7 @@ async def create_costo_receive(update: Update, context: ContextTypes.DEFAULT_TYP
         await reply_html(
             update,
             f"✅ Costo: <code>{costo}</code>\n\n"
-            f"Select la <b>moneda</b>:",
+            f"Select the <b>moneda</b>:",
             reply_markup=kb
         )
         return CREAR_MONEDA
@@ -392,7 +392,7 @@ async def create_costo_receive(update: Update, context: ContextTypes.DEFAULT_TYP
 
 
 async def create_moneda_callback(update: Update, context: ContextTypes.DEFAULT_TYPE) -> int:
-    """Maneja la selection de moneda."""
+    """Handle la selection de moneda."""
     q = update.callback_query
     if q:
         await q.answer()
@@ -547,7 +547,7 @@ async def cancel_command(update: Update, context: ContextTypes.DEFAULT_TYPE) -> 
     for key in keys_to_remove:
         context.user_data.pop(key, None)
     
-    await reply_text(update, "✅ Operation cancelada.")
+    await reply_text(update, "✅ Operation canceled.")
     return ConversationHandler.END
 
 
