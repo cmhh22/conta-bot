@@ -75,7 +75,7 @@ def setup_database(conn: sqlite3.Connection) -> None:
         )
     """)
     
-    # Tabla Deudas_Productos (relación de deudas con productos específicos)
+    # Tabla Deudas_Productos (relacion de deudas con productos especificos)
     cursor.execute("""
         CREATE TABLE IF NOT EXISTS Deudas_Productos (
             id INTEGER PRIMARY KEY AUTOINCREMENT,
@@ -145,7 +145,7 @@ def setup_database(conn: sqlite3.Connection) -> None:
         )
     """)
     
-    # Tabla Contenedor_Productos (relación muchos a muchos)
+    # Tabla Contenedor_Productos (relacion muchos a muchos)
     cursor.execute("""
         CREATE TABLE IF NOT EXISTS Contenedor_Productos (
             id INTEGER PRIMARY KEY AUTOINCREMENT,
@@ -159,7 +159,7 @@ def setup_database(conn: sqlite3.Connection) -> None:
         )
     """)
     
-    # Tabla Inventario_Almacen (inventario por almacén)
+    # Tabla Inventario_Almacen (inventario por almacen)
     cursor.execute("""
         CREATE TABLE IF NOT EXISTS Inventario_Almacen (
             id INTEGER PRIMARY KEY AUTOINCREMENT,
@@ -191,7 +191,7 @@ def setup_database(conn: sqlite3.Connection) -> None:
         )
     """)
     
-    # Tabla Transferencias_Externas (transferencias a cajas externas con producto específico)
+    # Tabla Transferencias_Externas (transferencias a cajas externas con producto especifico)
     cursor.execute("""
         CREATE TABLE IF NOT EXISTS Transferencias_Externas (
             id INTEGER PRIMARY KEY AUTOINCREMENT,

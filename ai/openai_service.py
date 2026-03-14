@@ -1,7 +1,7 @@
 """
 Servicio de OpenAI para procesamiento de lenguaje natural avanzado.
-Utiliza Function Calling para detección precisa de intenciones y
-memoria conversacional para diálogos multi-turno.
+Utiliza Function Calling para deteccion precisa de intenciones y
+memoria conversacional para dialogos multi-turno.
 """
 import json
 import logging
@@ -16,7 +16,7 @@ try:
     OPENAI_AVAILABLE = True
 except ImportError:
     OPENAI_AVAILABLE = False
-    logger.warning("OpenAI no está instalado. Ejecuta: pip install openai")
+    logger.warning("OpenAI no esta instalado. Ejecuta: pip install openai")
 
 
 class OpenAIService:
@@ -46,7 +46,7 @@ class OpenAIService:
         return cls._client is not None
 
     # ------------------------------------------------------------------
-    # Function Calling – detección de intenciones
+    # Function Calling – deteccion de intenciones
     # ------------------------------------------------------------------
     @classmethod
     async def parse_intent(
@@ -56,7 +56,7 @@ class OpenAIService:
         context_summary: str = "",
     ) -> Optional[Dict[str, Any]]:
         """
-        Usa OpenAI Function Calling para detectar la intención del usuario.
+        Usa OpenAI Function Calling para detectar la intencion del usuario.
 
         Returns:
             Dict con 'intent', 'params' y opcionalmente 'ai_message'
@@ -76,7 +76,7 @@ class OpenAIService:
                     "content": f"Contexto del usuario:\n{context_summary}",
                 })
 
-            # Añadir historial de conversación (últimos mensajes)
+            # Anadir historial de conversacion (ultimos mensajes)
             if conversation_history:
                 messages.extend(conversation_history[-8:])
 
@@ -105,10 +105,10 @@ class OpenAIService:
                 if function_name == "gestionar_contenedor":
                     accion = arguments.pop("accion", "listar")
                     accion_map = {
-                        "crear": "contenedor_crear",
+                        "create": "contenedor_create",
                         "listar": "contenedor_listar",
                         "editar": "contenedor_editar",
-                        "eliminar": "contenedor_eliminar",
+                        "delete": "contenedor_delete",
                     }
                     intent = accion_map.get(accion, "contenedores")
 
@@ -139,13 +139,13 @@ class OpenAIService:
             return None
 
     # ------------------------------------------------------------------
-    # Generación de respuestas enriquecidas con IA
+    # Generacion de respuestas enriquecidas con IA
     # ------------------------------------------------------------------
     @classmethod
     async def enrich_response(cls, raw_data: str, user_question: str) -> Optional[str]:
         """
         Toma datos crudos del sistema y genera una respuesta natural enriquecida.
-        Usado para el asesor financiero para dar insights más profundos.
+        Usado para el asesor financiero para dar insights mas profundos.
         """
         if not cls._client:
             return None
@@ -158,9 +158,9 @@ class OpenAIService:
                         "role": "system",
                         "content": (
                             "Eres un asesor financiero experto. Analiza los datos proporcionados "
-                            "y genera insights accionables en español. "
+                            "y genera insights accionables en espanol. "
                             "Usa formato HTML compatible con Telegram (solo <b>, <i>, <code>). "
-                            "Sé conciso y directo. Máximo 500 caracteres."
+                            "Se conciso y directo. Maximo 500 caracteres."
                         ),
                     },
                     {

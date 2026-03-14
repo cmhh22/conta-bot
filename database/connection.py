@@ -1,5 +1,5 @@
 """
-Gestión centralizada de conexiones a la base de datos.
+Management centralizada de conexiones a la base de datos.
 """
 import sqlite3
 import logging
@@ -14,7 +14,7 @@ logger = logging.getLogger(__name__)
 def get_db_connection() -> Generator[sqlite3.Connection, None, None]:
     """
     Context manager para manejar conexiones a la base de datos de forma segura.
-    Garantiza commit en éxito y rollback en error.
+    Garantiza commit en exito y rollback en error.
     """
     conn = None
     try:
@@ -28,7 +28,7 @@ def get_db_connection() -> Generator[sqlite3.Connection, None, None]:
     except Exception as e:
         if conn:
             conn.rollback()
-        logger.error(f"Error en transacción de base de datos: {e}", exc_info=True)
+        logger.error(f"Error en transaction de base de datos: {e}", exc_info=True)
         raise
     finally:
         if conn:

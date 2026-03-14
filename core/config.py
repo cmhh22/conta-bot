@@ -1,5 +1,5 @@
 """
-Configuración centralizada del proyecto.
+Configuration centralizada del proyecto.
 Lee desde: 1) variables de entorno  2) archivo .env  3) config_secret.py (desarrollo local)
 """
 from __future__ import annotations
@@ -17,16 +17,16 @@ except ImportError:
 VALID_MONEDAS = ['usd', 'cup', 'cup-t', 'eur']
 VALID_CAJAS = ['cfg', 'sc', 'trd']
 
-# Tasa de cambio USD a CUP (puede ser actualizada dinámicamente)
+# Tasa de cambio USD a CUP (puede ser updated dinamicamente)
 # Nota: Para persistencia, considerar guardar en BD
 TASA_USD_CUP = 410.0
-# Tasa de cambio USD a EUR (puede ser actualizada dinámicamente)
+# Tasa de cambio USD a EUR (puede ser updated dinamicamente)
 TASA_USD_EUR = 0.92  # Aproximadamente 1 USD = 0.92 EUR
 
 # Nombre de la base de datos
 DB_NAME = "contabilidad.db"
 
-# Configuración de IA (opcional)
+# Configuration de IA (opcional)
 # Lee desde variable de entorno
 _OPENAI_API_KEY = os.getenv("OPENAI_API_KEY", "")
 
@@ -39,7 +39,7 @@ except Exception:
 
 USE_OPENAI = bool(OPENAI_API_KEY and OPENAI_API_KEY.strip())
 
-# ==================== CONFIGURACIÓN DE TELEGRAM ====================
+# ==================== CONFIGURACION DE TELEGRAM ====================
 # Lee desde variables de entorno
 _TOKEN = os.getenv("TELEGRAM_BOT_TOKEN", "")
 _admin_ids_env = os.getenv("ADMIN_USER_IDS", "")
@@ -54,15 +54,15 @@ if _admin_ids_env.strip():
 # Override opcional desde archivo local (para desarrollo)
 try:
     from config_secret import TOKEN as _TOKEN_LOCAL, ADMIN_USER_IDS as _ADMIN_USER_IDS_LOCAL  # type: ignore
-    # Usar el token local solo si existe y no está vacío, sino usar el de entorno
+    # Usar el token local solo si existe y no esta empty, sino usar el de entorno
     TOKEN: str = _TOKEN_LOCAL if (_TOKEN_LOCAL and _TOKEN_LOCAL.strip()) else _TOKEN
     ADMIN_USER_IDS: List[int] = _ADMIN_USER_IDS_LOCAL if _ADMIN_USER_IDS_LOCAL else _ADMIN_USER_IDS
 except (ImportError, AttributeError, Exception):
-    # Si no existe config_secret.py o hay algún error, usar solo variables de entorno
+    # Si no existe config_secret.py o hay algun error, usar solo variables de entorno
     TOKEN = _TOKEN
     ADMIN_USER_IDS = _ADMIN_USER_IDS
 
-# Validación final
+# Validacion final
 if not isinstance(ADMIN_USER_IDS, list):
     ADMIN_USER_IDS = []
 

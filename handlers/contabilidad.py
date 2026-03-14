@@ -19,58 +19,58 @@ from .db_utils import (
 logger = logging.getLogger(__name__)
 
 
-# handlers/contabilidad.py (Añadir al final)
+# handlers/contabilidad.py (Add at the end)
 
 async def set_tasa_command(update: Update, context: ContextTypes.DEFAULT_TYPE) -> None:
     """
-    Establece la tasa de cambio USD a CUP.
-    Uso: /set_tasa 1 [tasa_cup]
+    Set the USD to CUP exchange rate.
+    Usage: /set_tasa 1 [cup_rate]
     """
-    # Usamos config_vars (cfg) como fuente de verdad para la tasa de cambio
+    # Use config_vars (cfg) as the source of truth for the exchange rate
 
     user_id = update.effective_user.id
     if user_id not in ADMIN_USER_IDS:
-        await update.message.reply_text("⛔ No tienes permiso.")
+        await update.message.reply_text("⛔ You don't have permission.")
         return
 
     try:
         if len(context.args) != 2 or context.args[0] != '1':
-            raise ValueError("Faltan argumentos o formato incorrecto. Uso: /set_tasa 1 [tasa_cup] (ej: /set_tasa 1 410)")
+            raise ValueError("Missing arguments or invalid format. Usage: /set_tasa 1 [cup_rate] (e.g., /set_tasa 1 410)")
         
         tasa_str = context.args[1]
         try:
             nueva_tasa = float(tasa_str)
             if nueva_tasa <= 0: raise ValueError()
         except ValueError:
-            await update.message.reply_text("Error: La tasa debe ser un número positivo.")
+            await update.message.reply_text("Error: The rate must be a positive number.")
             return
 
-        # 1. Actualizar la tasa centralizada en config_vars
+        # 1. Update the centralized rate in config_vars
         cfg.TASA_USD_CUP = nueva_tasa
 
-        # 2. Notificar al usuario
+        # 2. Notify the user
         await update.message.reply_html(
-            f"✅ <b>Tasa de Cambio Actualizada</b>\n\n"
-            f"Nueva Tasa: <b>1 USD = {cfg.TASA_USD_CUP:.2f} CUP</b>"
+            f"✅ <b>Exchange Rate Updated</b>\n\n"
+            f"New Rate: <b>1 USD = {cfg.TASA_USD_CUP:.2f} CUP</b>"
         )
-        logger.info(f"Tasa de cambio actualizada a 1 USD = {cfg.TASA_USD_CUP} CUP por {user_id}")
+        logger.info(f"Exchange rate updated to 1 USD = {cfg.TASA_USD_CUP} CUP by {user_id}")
 
     except ValueError as e:
         await update.message.reply_html(
-            f"<b>Error de formato:</b> {e}\n"
-            "Uso correcto: <code>/set_tasa 1 [tasa_cup]</code>"
+            f"<b>Format error:</b> {e}\n"
+            "Correct usage: <code>/set_tasa 1 [cup_rate]</code>"
         )
     except Exception as e:
-        logger.error(f"Error inesperado en /set_tasa: {e}")
-        await update.message.reply_text("Ocurrió un error inesperado al establecer la tasa.")
+        logger.error(f"Unexpected error in /set_tasa: {e}")
+        await update.message.reply_text("An unexpected error occurred while setting the rate.")
         
 
 async def ingreso_command(update: Update, context: ContextTypes.DEFAULT_TYPE) -> None:
-    """Manejador para el comando /ingreso."""
+    """Handler for the /ingreso command."""
     user_id = update.effective_user.id
 
     if user_id not in ADMIN_USER_IDS:
-        await update.message.reply_text("⛔ No tienes permiso.")
+        await update.message.reply_text("⛔ You don't have permission.")
         return
 
     try:
@@ -85,15 +85,15 @@ async def ingreso_command(update: Update, context: ContextTypes.DEFAULT_TYPE) ->
             monto = float(monto_str)
             if monto <= 0: raise ValueError()
         except ValueError:
-            await update.message.reply_text("Error: El monto debe ser un número positivo.")
+            await update.message.reply_text("Error: The amount must be a positive number.")
             return
 
         if moneda not in VALID_MONEDAS:
-            await update.message.reply_text(f"Error: Moneda '{moneda}' no válida. Usa: {', '.join(VALID_MONEDAS)}")
+            await update.message.reply_text(f"Error: Invalid currency '{moneda}'. Use: {', '.join(VALID_MONEDAS)}")
             return
             
         if caja not in VALID_CAJAS:
-            await update.message.reply_text(f"Error: Caja '{caja}' no válida. Usa: {', '.join(VALID_CAJAS)}")
+            await update.message.reply_text(f"Error: Invalid cash box '{caja}'. Use: {', '.join(VALID_CAJAS)}")
             return
 
         conn = sqlite3.connect("contabilidad.db")
@@ -102,48 +102,48 @@ async def ingreso_command(update: Update, context: ContextTypes.DEFAULT_TYPE) ->
         
         cursor.execute(
             "INSERT INTO Movimientos (fecha, tipo, monto, moneda, caja, user_id, descripcion) VALUES (?, ?, ?, ?, ?, ?, ?)",
-            (fecha_actual, 'ingreso', monto, moneda, caja, user_id, "Ingreso") # Añadimos "Ingreso" como descripción
+            (fecha_actual, 'ingreso', monto, moneda, caja, user_id, "Income") # Add "Income" as description
         )
         
         conn.commit()
         conn.close()
 
         await update.message.reply_html(
-            f"✅ <b>¡Ingreso registrado!</b>\n\n"
-            f"<b>Monto:</b> {monto:.2f} {moneda.upper()}\n"
-            f"<b>Caja:</b> {caja.upper()}"
+            f"✅ <b>Income recorded!</b>\n\n"
+            f"<b>Amount:</b> {monto:.2f} {moneda.upper()}\n"
+            f"<b>Cash Box:</b> {caja.upper()}"
         )
-        logger.info(f"Ingreso registrado: {monto} {moneda} en {caja} por {user_id}")
+        logger.info(f"Income recorded: {monto} {moneda} in {caja} by {user_id}")
 
     except ValueError:
         await update.message.reply_html(
-            "<b>Error de formato.</b>\n"
-            "Uso correcto: <code>/ingreso [monto] [moneda] [caja]</code>\n"
-            "Ejemplo: <code>/ingreso 100 usd cfg</code>"
+            "<b>Format error.</b>\n"
+            "Correct usage: <code>/ingreso [amount] [currency] [cash_box]</code>\n"
+            "Example: <code>/ingreso 100 usd cfg</code>"
         )
     except Exception as e:
-        logger.error(f"Error inesperado en /ingreso: {e}")
-        await update.message.reply_text("Ocurrió un error inesperado.")
+        logger.error(f"Unexpected error in /ingreso: {e}")
+        await update.message.reply_text("An unexpected error occurred.")
 # ----------------------------------------------  
         
-# --- FASE 5: NUEVA FUNCIÓN PARA /gasto ---
-# handlers/contabilidad.py (Reemplazar la función gasto_command completa)
+# --- PHASE 5: NEW FUNCTION FOR /gasto ---
+# handlers/contabilidad.py (Replace full gasto_command function)
 
-# --- FASE 6 (CORREGIDA): FUNCIÓN PARA /gasto (Movimiento de Egreso) ---
+# --- PHASE 6 (FIXED): FUNCTION FOR /gasto (Expense movement) ---
 async def gasto_command(update: Update, context: ContextTypes.DEFAULT_TYPE) -> None:
     """
-    Registra un gasto y valida que haya saldo suficiente en la caja.
-    Uso: /gasto [monto] [moneda] [caja] [descripcion...]
+    Record an expense and validate enough balance in the cash box.
+    Usage: /gasto [amount] [currency] [cash_box] [description...]
     """
     user_id = update.effective_user.id
     if user_id not in ADMIN_USER_IDS:
-        await update.message.reply_text("⛔ No tienes permiso.")
+        await update.message.reply_text("⛔ You don't have permission.")
         return
 
     try:
-        # 1. Capturar y validar argumentos (DENTRO del try)
+        # 1. Capture and validate arguments (INSIDE try)
         if len(context.args) < 4:
-            raise ValueError("Faltan argumentos. Uso: /gasto [monto] [moneda] [caja] [descripcion...]")
+            raise ValueError("Missing arguments. Usage: /gasto [amount] [currency] [cash_box] [description...]")
 
         monto_str = context.args[0]
         moneda = context.args[1].lower()
@@ -154,71 +154,71 @@ async def gasto_command(update: Update, context: ContextTypes.DEFAULT_TYPE) -> N
             monto = float(monto_str)
             if monto <= 0: raise ValueError()
         except ValueError:
-            await update.message.reply_text("Error: El monto debe ser un número positivo.")
+            await update.message.reply_text("Error: The amount must be a positive number.")
             return
 
         if moneda not in VALID_MONEDAS:
-            await update.message.reply_text(f"Error: Moneda no válida ({moneda}).")
+            await update.message.reply_text(f"Error: Invalid currency ({moneda}).")
             return
         
         if caja not in VALID_CAJAS:
-            await update.message.reply_text(f"Error: Caja no válida ({caja}).")
+            await update.message.reply_text(f"Error: Invalid cash box ({caja}).")
             return
 
-        # 2. Abrir conexión y realizar operaciones
+        # 2. Open connection and run operations
         with get_db_connection() as conn:
             
-            # 🌟 CORRECCIÓN CLAVE: Chequeo de Saldo Negativo 🌟
-            # 'caja' y 'moneda' están ahora definidas aquí
+            # 🌟 KEY FIX: Negative balance check 🌟
+            # 'caja' and 'moneda' are now defined here
             saldo_actual = MovimientoManager.get_saldo_caja(conn, caja, moneda)
             
             if saldo_actual < monto:
                 await update.message.reply_html(
-                    f"⛔ <b>Saldo insuficiente</b> en caja {caja.upper()} ({moneda.upper()}). "
-                    f"Disponible: {saldo_actual:.2f} {moneda.upper()}."
+                    f"⛔ <b>Insufficient balance</b> in cash box {caja.upper()} ({moneda.upper()}). "
+                    f"Available: {saldo_actual:.2f} {moneda.upper()}."
                 )
                 return
 
-            # 3. Registrar Movimiento (Gasto)
+            # 3. Record movement (Expense)
             MovimientoManager.registrar_movimiento(
                 conn, 'gasto', monto, moneda, caja, user_id, descripcion
             )
         
         await update.message.reply_html(
-            f"💸 <b>Gasto Registrado!</b>\n\n"
-            f"<b>Monto:</b> -{monto:.2f} {moneda.upper()} de {caja.upper()}\n"
-            f"<b>Descripción:</b> {descripcion}"
+            f"💸 <b>Expense Recorded!</b>\n\n"
+            f"<b>Amount:</b> -{monto:.2f} {moneda.upper()} from {caja.upper()}\n"
+            f"<b>Description:</b> {descripcion}"
         )
-        logger.info(f"Gasto de {monto} {moneda} en {caja} registrado por {user_id}")
+        logger.info(f"Expense of {monto} {moneda} in {caja} recorded by {user_id}")
 
     except ValueError as e:
-        # Este catch ahora solo maneja errores de formato de argumentos
-        # Se asegura de que el mensaje de error de formato muestre las variables relevantes
+        # This catch now only handles argument format errors
+        # Ensures format error message shows relevant variables
         await update.message.reply_html(
-            f"<b>Error de formato:</b> {e}\n"
-            "Uso correcto: <code>/gasto [monto] [moneda] [caja] [descripcion...]</code>"
+            f"<b>Format error:</b> {e}\n"
+            "Correct usage: <code>/gasto [amount] [currency] [cash_box] [description...]</code>"
         )
     except Exception as e:
-        logger.error(f"Error inesperado en /gasto: {e}", exc_info=True)
-        await update.message.reply_text("Ocurrió un error inesperado al registrar el gasto.")
+        logger.error(f"Unexpected error in /gasto: {e}", exc_info=True)
+        await update.message.reply_text("An unexpected error occurred while recording the expense.")
         
         
-# --- FASE 6: NUEVA FUNCIÓN PARA /balance ---
+# --- PHASE 6: NEW FUNCTION FOR /balance ---
 async def balance_command(update: Update, context: ContextTypes.DEFAULT_TYPE) -> None:
-    """Manejador para el comando /balance."""
+    """Handler for the /balance command."""
     user_id = update.effective_user.id
 
     if user_id not in ADMIN_USER_IDS:
-        await update.message.reply_text("⛔ No tienes permiso.")
+        await update.message.reply_text("⛔ You don't have permission.")
         return
     
     try:
         conn = sqlite3.connect("contabilidad.db")
         cursor = conn.cursor()
 
-        # 1. La consulta SQL "Mágica"
-        # Suma todos los 'ingreso' y resta (ELSE -monto) todos los 'gasto'
-        # Agrupados por caja y moneda
+        # 1. The "magic" SQL query
+        # Add all 'ingreso' and subtract (ELSE -monto) all 'gasto'
+        # Grouped by cash box and currency
         cursor.execute("""
             SELECT caja, moneda, SUM(CASE WHEN tipo = 'ingreso' THEN monto ELSE -monto END) as total
             FROM Movimientos
@@ -226,55 +226,55 @@ async def balance_command(update: Update, context: ContextTypes.DEFAULT_TYPE) ->
             ORDER BY caja, moneda
         """)
         
-        resultados = cursor.fetchall() # Obtiene todas las filas (ej: [('cfg', 'usd', 100.0), ('cfg', 'cup', 5000.0)])
+        resultados = cursor.fetchall() # Gets all rows (e.g., [('cfg', 'usd', 100.0), ('cfg', 'cup', 5000.0)])
         conn.close()
 
         if not resultados:
-            await update.message.reply_text("No hay ningún movimiento registrado todavía.")
+            await update.message.reply_text("There are no recorded movements yet.")
             return
 
-        # 2. Formatear la respuesta
-        respuesta = "--- 📊 Balance General ---\n\n"
+        # 2. Format response
+        respuesta = "--- 📊 Overall Balance ---\n\n"
         
-        balances_por_caja = {} # Usamos un diccionario para agrupar
+        balances_por_caja = {} # Use a dictionary for grouping
         
-        # Agrupamos los resultados por caja
+        # Group results by cash box
         for caja, moneda, total in resultados:
             if caja not in balances_por_caja:
                 balances_por_caja[caja] = []
             
-            # Guardamos el texto formateado de la moneda
+            # Save formatted currency text
             balances_por_caja[caja].append(f"  • {total:,.2f} {moneda.upper()}")
 
-        # 3. Construimos el texto final
+        # 3. Build final text
         for caja, lineas in balances_por_caja.items():
-            respuesta += f"<b>CAJA: {caja.upper()}</b>\n"
-            respuesta += "\n".join(lineas) # Unimos todas las líneas de esa caja
-            respuesta += "\n\n" # Añadimos un espacio antes de la siguiente caja
+            respuesta += f"<b>CASH BOX: {caja.upper()}</b>\n"
+            respuesta += "\n".join(lineas) # Join all lines for this cash box
+            respuesta += "\n\n" # Add spacing before the next cash box
 
         await update.message.reply_html(respuesta)
 
     except Exception as e:
-        logger.error(f"Error inesperado en /balance: {e}")
-        await update.message.reply_text("Ocurrió un error inesperado al calcular el balance.")
+        logger.error(f"Unexpected error in /balance: {e}")
+        await update.message.reply_text("An unexpected error occurred while calculating the balance.")
 # ----------------------------------------------
 
-# --- FASE 7 (REFACTORIZADA): FUNCIÓN PARA /cambio (Conversión Automática) ---
-# --- FASE 7 (CORREGIDA): FUNCIÓN PARA /cambio (Traspaso entre Cajas) ---
+# --- PHASE 7 (REFACTORED): FUNCTION FOR /cambio (Automatic conversion) ---
+# --- PHASE 7 (FIXED): FUNCTION FOR /cambio (Transfer between cash boxes) ---
 async def cambio_command(update: Update, context: ContextTypes.DEFAULT_TYPE) -> None:
     """
-    Registra un traspaso de efectivo entre cajas, actuando como gasto en origen e ingreso en destino.
-    Uso: /cambio [monto] [moneda_origen] [caja_origen] [moneda_destino] [caja_destino] [motivo...]
+    Record a cash transfer between cash boxes, acting as origin expense and destination income.
+    Usage: /cambio [amount] [origin_currency] [origin_cash_box] [destination_currency] [destination_cash_box] [reason...]
     """
     user_id = update.effective_user.id
     if user_id not in ADMIN_USER_IDS:
-        await update.message.reply_text("⛔ No tienes permiso.")
+        await update.message.reply_text("⛔ You don't have permission.")
         return
 
     try:
-        # 1. Capturar y validar argumentos (DENTRO del try)
+        # 1. Capture and validate arguments (INSIDE try)
         if len(context.args) < 6:
-            raise ValueError("Faltan argumentos. Uso: /cambio [monto] [moneda_origen] [caja_origen] [moneda_destino] [caja_destino] [motivo...]")
+            raise ValueError("Missing arguments. Usage: /cambio [amount] [origin_currency] [origin_cash_box] [destination_currency] [destination_cash_box] [reason...]")
 
         monto_str = context.args[0]
         moneda_origen = context.args[1].lower()
@@ -283,103 +283,103 @@ async def cambio_command(update: Update, context: ContextTypes.DEFAULT_TYPE) -> 
         caja_destino = context.args[4].lower()
         motivo = " ".join(context.args[5:])
 
-        # Validaciones de variables
+        # Variable validations
         try:
             monto = float(monto_str)
             if monto <= 0: raise ValueError()
         except ValueError:
-            await update.message.reply_text("Error: El monto debe ser un número positivo.")
+            await update.message.reply_text("Error: The amount must be a positive number.")
             return
 
         if moneda_origen not in VALID_MONEDAS:
-            await update.message.reply_text(f"Error: Moneda de origen no válida ({moneda_origen}).")
+            await update.message.reply_text(f"Error: Invalid origin currency ({moneda_origen}).")
             return
         
         if caja_origen not in VALID_CAJAS:
-            await update.message.reply_text(f"Error: Caja de origen no válida ({caja_origen}).")
+            await update.message.reply_text(f"Error: Invalid origin cash box ({caja_origen}).")
             return
 
         if moneda_destino not in VALID_MONEDAS:
-            await update.message.reply_text(f"Error: Moneda de destino no válida ({moneda_destino}).")
+            await update.message.reply_text(f"Error: Invalid destination currency ({moneda_destino}).")
             return
 
         if caja_destino not in VALID_CAJAS:
-            await update.message.reply_text(f"Error: Caja de destino no válida ({caja_destino}).")
+            await update.message.reply_text(f"Error: Invalid destination cash box ({caja_destino}).")
             return
         
         if caja_origen == caja_destino and moneda_origen == moneda_destino:
-            await update.message.reply_html("⛔ Error: Las cajas y monedas de origen y destino no pueden ser iguales para un traspaso.")
+            await update.message.reply_html("⛔ Error: Origin and destination cash box/currency cannot be the same for a transfer.")
             return
 
-        # 2. Abrir conexión y realizar operaciones
+        # 2. Open connection and run operations
         with get_db_connection() as conn:
             
-            # 🌟 CORRECCIÓN CLAVE: Chequeo de Saldo Negativo 🌟
+            # 🌟 KEY FIX: Negative balance check 🌟
             saldo_actual = MovimientoManager.get_saldo_caja(conn, caja_origen, moneda_origen)
             
             if saldo_actual < monto:
                 await update.message.reply_html(
-                    f"⛔ <b>Saldo insuficiente</b> en caja de origen {caja_origen.upper()} ({moneda_origen.upper()}). "
-                    f"Disponible: {saldo_actual:.2f} {moneda_origen.upper()}. No se pudo realizar el traspaso."
+                    f"⛔ <b>Insufficient balance</b> in origin cash box {caja_origen.upper()} ({moneda_origen.upper()}). "
+                    f"Available: {saldo_actual:.2f} {moneda_origen.upper()}. Transfer could not be completed."
                 )
                 return
 
-            # 3. Registrar Movimiento de Egreso (tipo='traspaso', gasto de origen)
+            # 3. Record expense movement (type='traspaso', origin expense)
             MovimientoManager.registrar_movimiento(
                 conn, 'traspaso', monto, moneda_origen, caja_origen, user_id, 
-                f"TRASPASO (Egreso): A {caja_destino.upper()}/{moneda_destino.upper()} - Motivo: {motivo}"
+                f"TRANSFER (Expense): To {caja_destino.upper()}/{moneda_destino.upper()} - Reason: {motivo}"
             )
 
-            # 4. Calcular el monto en la moneda de destino
+            # 4. Calculate amount in destination currency
             if moneda_origen == moneda_destino:
                 monto_destino = monto
             else:
-                tasa = cfg.TASA_USD_CUP # Tasa centralizada en config_vars.py
+                tasa = cfg.TASA_USD_CUP # Centralized rate in config_vars.py
 
                 if moneda_origen == 'usd' and moneda_destino in ['cup', 'cup-t']:
                     monto_destino = monto * tasa
                 elif moneda_destino == 'usd' and moneda_origen in ['cup', 'cup-t']:
                     monto_destino = monto / tasa
-                else: # Conversión entre CUP y CUP-T es 1:1, pero se registra si hay cambio de caja
+                else: # Conversion between CUP and CUP-T is 1:1, but register if cash box changes
                     monto_destino = monto
 
-            # 5. Registrar Movimiento de Ingreso (tipo='traspaso', ingreso en destino)
+            # 5. Record income movement (type='traspaso', destination income)
             MovimientoManager.registrar_movimiento(
                 conn, 'traspaso', monto_destino, moneda_destino, caja_destino, user_id, 
-                f"TRASPASO (Ingreso): Desde {caja_origen.upper()}/{moneda_origen.upper()} - Motivo: {motivo}"
+                f"TRANSFER (Income): From {caja_origen.upper()}/{moneda_origen.upper()} - Reason: {motivo}"
             )
         
-        # 6. Mensaje de confirmación
+        # 6. Confirmation message
         await update.message.reply_html(
-            f"✅ <b>Traspaso Registrado!</b>\n\n"
-            f"<b>Origen:</b> -{monto:.2f} {moneda_origen.upper()} de {caja_origen.upper()}\n"
-            f"<b>Destino:</b> +{monto_destino:.2f} {moneda_destino.upper()} a {caja_destino.upper()}\n"
-            f"<b>Motivo:</b> {motivo}"
+            f"✅ <b>Transfer Recorded!</b>\n\n"
+            f"<b>Origin:</b> -{monto:.2f} {moneda_origen.upper()} from {caja_origen.upper()}\n"
+            f"<b>Destination:</b> +{monto_destino:.2f} {moneda_destino.upper()} to {caja_destino.upper()}\n"
+            f"<b>Reason:</b> {motivo}"
         )
-        logger.info(f"Traspaso de {monto} {moneda_origen} a {monto_destino} {moneda_destino} registrado por {user_id}")
+        logger.info(f"Transfer from {monto} {moneda_origen} to {monto_destino} {moneda_destino} recorded by {user_id}")
 
     except ValueError as e:
         await update.message.reply_html(
-            f"<b>Error de formato o validación:</b> {e}\n"
-            "Uso correcto: <code>/cambio [monto] [moneda_origen] [caja_origen] [moneda_destino] [caja_destino] [motivo...]</code>"
+            f"<b>Format or validation error:</b> {e}\n"
+            "Correct usage: <code>/cambio [amount] [origin_currency] [origin_cash_box] [destination_currency] [destination_cash_box] [reason...]</code>"
         )
     except Exception as e:
-        logger.error(f"Error inesperado en /cambio: {e}", exc_info=True)
-        await update.message.reply_text("Ocurrió un error inesperado al registrar el traspaso.")
+        logger.error(f"Unexpected error in /cambio: {e}", exc_info=True)
+        await update.message.reply_text("An unexpected error occurred while recording the transfer.")
         
 async def pago_vendedor_command(update: Update, context: ContextTypes.DEFAULT_TYPE) -> None:
     """
-    Registra el pago de un vendedor (liquidando una deuda POR COBRAR) e ingresa el monto en caja.
-    Uso: /pago_vendedor [vendedor] [monto] [moneda] [caja] [nota...]
+    Record a seller payment (settling an ACCOUNTS RECEIVABLE debt) and add amount to cash box.
+    Usage: /pago_vendedor [seller] [amount] [currency] [cash_box] [note...]
     """
     user_id = update.effective_user.id
     if user_id not in ADMIN_USER_IDS:
-        await update.message.reply_text("⛔ No tienes permiso.")
+        await update.message.reply_text("⛔ You don't have permission.")
         return
 
     try:
         if len(context.args) < 4:
-            raise ValueError("Faltan argumentos. Uso: /pago_vendedor [vendedor] [monto] [moneda] [caja] [nota...]")
+            raise ValueError("Missing arguments. Usage: /pago_vendedor [seller] [amount] [currency] [cash_box] [note...]")
 
         vendedor = context.args[0].upper()
         monto_str = context.args[1]
@@ -391,19 +391,19 @@ async def pago_vendedor_command(update: Update, context: ContextTypes.DEFAULT_TY
             monto = float(monto_str)
             if monto <= 0: raise ValueError()
         except ValueError:
-            await update.message.reply_text("Error: El monto debe ser un número positivo.")
+            await update.message.reply_text("Error: The amount must be a positive number.")
             return
 
         if moneda not in VALID_MONEDAS:
-            raise ValueError(f"Moneda no válida: {moneda}. Use una de: {', '.join(VALID_MONEDAS)}")
+            raise ValueError(f"Invalid currency: {moneda}. Use one of: {', '.join(VALID_MONEDAS)}")
         if caja not in VALID_CAJAS:
-            raise ValueError(f"Caja no válida: {caja.upper()}. Use una de: {', '.join(VALID_CAJAS).upper()}")
+            raise ValueError(f"Invalid cash box: {caja.upper()}. Use one of: {', '.join(VALID_CAJAS).upper()}")
 
-        # ⭐️ USO CRÍTICO DEL CONTEXT MANAGER ⭐️
+        # ⭐️ CRITICAL USE OF CONTEXT MANAGER ⭐️
         with get_db_connection() as conn:
             
-            # 1. Reducir la deuda del vendedor (POR_COBRAR)
-            # El manager se encarga de la conversión de moneda a USD para el cálculo de la liquidación.
+            # 1. Reduce seller debt (POR_COBRAR)
+            # The manager handles currency conversion to USD for settlement calculation.
             monto_liquidado_usd = DeudaManager.liquidar_deuda_con_pago(
                 conn=conn, 
                 actor_id=vendedor, 
@@ -412,7 +412,7 @@ async def pago_vendedor_command(update: Update, context: ContextTypes.DEFAULT_TY
                 tasa_cambio=cfg.TASA_USD_CUP
             )
             
-            # 2. Registrar el Ingreso en caja
+            # 2. Record income in cash box
             MovimientoManager.registrar_movimiento(
                 conn=conn,
                 tipo='ingreso',
@@ -420,49 +420,49 @@ async def pago_vendedor_command(update: Update, context: ContextTypes.DEFAULT_TY
                 moneda=moneda,
                 caja=caja,
                 user_id=user_id,
-                descripcion=f"PAGO VENDEDOR: {vendedor}. Liquidó deuda por {monto_liquidado_usd:.2f} USD. Nota: {nota}"
+                descripcion=f"SELLER PAYMENT: {vendedor}. Settled debt for {monto_liquidado_usd:.2f} USD. Note: {nota}"
             )
             
         await update.message.reply_html(
-            f"✅ <b>Pago Registrado!</b>\n\n"
-            f"<b>Vendedor:</b> {vendedor}\n"
-            f"<b>Ingreso en caja {caja.upper()}:</b> +{monto:.2f} {moneda.upper()}\n"
-            f"<b>Deuda POR COBRAR liquidada (USD):</b> {monto_liquidado_usd:.2f} USD"
+            f"✅ <b>Payment Recorded!</b>\n\n"
+            f"<b>Seller:</b> {vendedor}\n"
+            f"<b>Income in cash box {caja.upper()}:</b> +{monto:.2f} {moneda.upper()}\n"
+            f"<b>ACCOUNTS RECEIVABLE debt settled (USD):</b> {monto_liquidado_usd:.2f} USD"
         )
 
-        logger.info(f"Pago de {vendedor} registrado por {user_id}")
+        logger.info(f"Payment from {vendedor} recorded by {user_id}")
 
     except ValueError as e:
         await update.message.reply_html(
-            f"<b>Error de formato o validación:</b> {e}\n"
-            "Uso correcto: <code>/pago_vendedor [vendedor] [monto] [moneda] [caja] [nota...]</code>"
+            f"<b>Format or validation error:</b> {e}\n"
+            "Correct usage: <code>/pago_vendedor [seller] [amount] [currency] [cash_box] [note...]</code>"
         )
     except Exception as e:
-        logger.error(f"Error inesperado en /pago_vendedor: {e}")
-        await update.message.reply_text("Ocurrió un error inesperado al registrar el pago.")
+        logger.error(f"Unexpected error in /pago_vendedor: {e}")
+        await update.message.reply_text("An unexpected error occurred while recording the payment.")
         
             
-# --- FASE 12 (CORREGIDA): FUNCIÓN PARA /pago_proveedor (Pago a Proveedor) ---
-# handlers/contabilidad.py (Reemplazar la función completa)
+# --- PHASE 12 (FIXED): FUNCTION FOR /pago_proveedor (Supplier payment) ---
+# handlers/contabilidad.py (Replace complete function)
 
-# --- FASE 12 (CORREGIDA): FUNCIÓN PARA /pago_proveedor (Pago a Proveedor) ---
+# --- PHASE 12 (FIXED): FUNCTION FOR /pago_proveedor (Supplier payment) ---
 async def pago_proveedor_command(update: Update, context: ContextTypes.DEFAULT_TYPE) -> None:
     """
-    Registra un pago a proveedor (gasto) y reduce la deuda POR PAGAR,
-    previniendo saldos negativos.
+    Record a supplier payment (expense) and reduce ACCOUNTS PAYABLE debt,
+    preventing negative balances.
     """
     user_id = update.effective_user.id
     if user_id not in ADMIN_USER_IDS:
-        await update.message.reply_text("⛔ No tienes permiso.")
+        await update.message.reply_text("⛔ You don't have permission.")
         return
 
-    # conn = None # Ya no es necesario inicializar conn=None
+    # conn = None # No longer necessary to initialize conn=None
 
     try:
         if len(context.args) < 5:
-            raise ValueError("Faltan argumentos. Uso: /pago_proveedor [proveedor] [monto] [moneda] [caja] [motivo...]")
+            raise ValueError("Missing arguments. Usage: /pago_proveedor [supplier] [amount] [currency] [cash_box] [reason...]")
 
-        # 1. Asignar y validar argumentos (fuera del bloque with)
+        # 1. Assign and validate arguments (outside with block)
         proveedor = context.args[0].upper()
         monto_str = context.args[1]
         moneda = context.args[2].lower()
@@ -470,76 +470,76 @@ async def pago_proveedor_command(update: Update, context: ContextTypes.DEFAULT_T
         motivo = " ".join(context.args[4:])
 
         monto = float(monto_str)
-        if monto <= 0: raise ValueError("El monto debe ser positivo.")
-        if moneda not in VALID_MONEDAS: raise ValueError(f"Moneda no válida: {moneda}")
-        if caja not in VALID_CAJAS: raise ValueError(f"Caja no válida: {caja}")
+        if monto <= 0: raise ValueError("Amount must be positive.")
+        if moneda not in VALID_MONEDAS: raise ValueError(f"Invalid currency: {moneda}")
+        if caja not in VALID_CAJAS: raise ValueError(f"Invalid cash box: {caja}")
 
         fecha_actual = datetime.now()
-        descripcion = f"PAGO a Proveedor: {proveedor} - Motivo: {motivo}"
+        descripcion = f"PAYMENT to Supplier: {proveedor} - Reason: {motivo}"
 
-        # 2. Utilizar el manejador de contexto para la conexión (incluye commit/rollback)
+        # 2. Use context manager for connection (includes commit/rollback)
         with get_db_connection() as conn:
             
-            # 🌟 2a. CHEQUEO DE SALDO NEGATIVO (CORRECCIÓN CLAVE) 🌟
-            # Aquí MovimientoManager.get_saldo_caja tiene acceso a 'conn', 'caja' y 'moneda'
+            # 🌟 2a. NEGATIVE BALANCE CHECK (KEY FIX) 🌟
+            # Here MovimientoManager.get_saldo_caja has access to 'conn', 'caja' and 'moneda'
             saldo_actual = MovimientoManager.get_saldo_caja(conn, caja, moneda)
             
             if saldo_actual < monto:
                 await update.message.reply_html(
-                    f"⛔ <b>Saldo insuficiente</b> en caja {caja.upper()} ({moneda.upper()}). "
-                    f"Disponible: {saldo_actual:.2f} {moneda.upper()}. No se pudo realizar el pago."
+                    f"⛔ <b>Insufficient balance</b> in cash box {caja.upper()} ({moneda.upper()}). "
+                    f"Available: {saldo_actual:.2f} {moneda.upper()}. Payment could not be completed."
                 )
-                # El return sale de la función, sin hacer commit.
+                # Return exits function without commit.
                 return
             
-            # 2b. Registro del GASTO (Movimientos)
-            # Usamos el método estático de MovimientoManager para mayor claridad y consistencia.
+            # 2b. Record EXPENSE (Movements)
+            # Use static method from MovimientoManager for clarity and consistency.
             MovimientoManager.registrar_movimiento(
                 conn, 'gasto', monto, moneda, caja, user_id, descripcion
             )
             
-            # 2c. AJUSTE DE LA DEUDA (Lógica Mejorada)
-            rows_updated = DeudaManager.actualizar_deuda(
+            # 2c. DEBT ADJUSTMENT (Improved logic)
+            rows_updated = DeudaManager.update_deuda(
                 conn, proveedor, monto, moneda, 'POR_PAGAR', es_incremento=False
             )
 
-        # 3. Confirmación mejorada (fuera del bloque with)
+        # 3. Improved confirmation (outside with block)
         if rows_updated > 0:
-            mensaje_deuda = f"<b>Deuda Actualizada:</b> Monto {monto:.2f} {moneda.upper()} restado de POR PAGAR."
+            mensaje_deuda = f"<b>Debt Updated:</b> Amount {monto:.2f} {moneda.upper()} subtracted from ACCOUNTS PAYABLE."
         else:
-            mensaje_deuda = "<b>Aviso:</b> No se encontró deuda 'POR PAGAR' para este proveedor."
+            mensaje_deuda = "<b>Notice:</b> No 'POR_PAGAR' debt found for this supplier."
 
         await update.message.reply_html(
-            f"💸 <b>Pago a Proveedor Registrado!</b>\n\n"
-            f"<b>Proveedor:</b> {proveedor}\n"
-            f"<b>Monto:</b> -{monto:.2f} {moneda.upper()} de {caja.upper()}\n"
-            f"<b>Motivo:</b> {motivo}\n"
+            f"💸 <b>Supplier Payment Recorded!</b>\n\n"
+            f"<b>Supplier:</b> {proveedor}\n"
+            f"<b>Amount:</b> -{monto:.2f} {moneda.upper()} from {caja.upper()}\n"
+            f"<b>Reason:</b> {motivo}\n"
             f"{mensaje_deuda}"
         )
-        logger.info(f"Pago a Proveedor {proveedor} registrado. Filas de deuda actualizadas: {rows_updated}")
+        logger.info(f"Supplier payment {proveedor} recorded. Debt rows updated: {rows_updated}")
 
     except ValueError as e:
-        # Se asegura que el mensaje de error de formato muestre las variables relevantes
-        # Solo mostrará e si es una de las excepciones de validación (ej. "El monto debe ser positivo.")
+        # Ensure format error message shows relevant variables
+        # It only shows e for validation exceptions (e.g., "Amount must be positive.")
         await update.message.reply_html(
-            f"<b>Error de formato o validación:</b> {e}\n"
-            "Uso correcto: <code>/pago_proveedor [proveedor] [monto] [moneda] [caja] [motivo...]</code>"
+            f"<b>Format or validation error:</b> {e}\n"
+            "Correct usage: <code>/pago_proveedor [supplier] [amount] [currency] [cash_box] [reason...]</code>"
         )
     except Exception as e:
-        # Esto captura cualquier otro error inesperado, incluyendo si conn falla en conectarse
-        logger.error(f"Error inesperado en /pago_proveedor: {e}", exc_info=True)
-        await update.message.reply_text("Ocurrió un error inesperado al registrar el pago.")
-    # finally ya no es necesario si se usa get_db_connection
+        # This captures any other unexpected error, including connection failures
+        logger.error(f"Unexpected error in /pago_proveedor: {e}", exc_info=True)
+        await update.message.reply_text("An unexpected error occurred while recording the payment.")
+    # finally is no longer required when using get_db_connection
             
 
-# --- FASE 13 : FUNCIÓN PARA /deudas_command (Consulta de Deudas) ---
+# --- PHASE 13 : FUNCTION FOR /deudas_command (Debt query) ---
 async def deudas_command(update: Update, context: ContextTypes.DEFAULT_TYPE) -> None:
     """
-    Muestra el saldo actual de las cuentas por pagar (proveedores) y por cobrar (vendedores).
+    Display current balance of accounts payable (suppliers) and accounts receivable (sellers).
     """
     user_id = update.effective_user.id
     if user_id not in ADMIN_USER_IDS:
-        await update.message.reply_text("⛔ No tienes permiso.")
+        await update.message.reply_text("⛔ You don't have permission.")
         return
 
     conn = None
@@ -547,7 +547,7 @@ async def deudas_command(update: Update, context: ContextTypes.DEFAULT_TYPE) -> 
         conn = sqlite3.connect("contabilidad.db")
         cursor = conn.cursor()
 
-        # 1. Seleccionar todas las deudas activas (monto_pendiente > 0)
+        # 1. Select all active debts (monto_pendiente > 0)
         cursor.execute("""
             SELECT actor_id, tipo, monto_pendiente, moneda
             FROM Deudas
@@ -558,10 +558,10 @@ async def deudas_command(update: Update, context: ContextTypes.DEFAULT_TYPE) -> 
         resultados = cursor.fetchall()
         
         if not resultados:
-            await update.message.reply_text("✅ No hay deudas pendientes (por pagar o por cobrar).")
+            await update.message.reply_text("✅ There are no pending debts (accounts payable or receivable).")
             return
 
-        # 2. Estructurar el reporte
+        # 2. Structure report
         reporte_por_pagar = ""
         reporte_por_cobrar = ""
         total_por_pagar = {}
@@ -578,72 +578,72 @@ async def deudas_command(update: Update, context: ContextTypes.DEFAULT_TYPE) -> 
                 reporte_por_cobrar += f"  • {actor_id}: +{monto:,.2f} {moneda_upper}\n"
                 total_por_cobrar[moneda] = total_por_cobrar.get(moneda, 0) + monto
 
-        # 3. Construir el mensaje final
-        respuesta = "📊 <b>ESTADO DE DEUDAS PENDIENTES</b> 📊\n\n"
+        # 3. Build final message
+        respuesta = "📊 <b>PENDING DEBT STATUS</b> 📊\n\n"
         
-        # --- A. Cuentas POR PAGAR (Proveedores) ---
-        respuesta += "❌ <b>CUENTAS POR PAGAR (Proveedores)</b>\n"
+        # --- A. ACCOUNTS PAYABLE (Suppliers) ---
+        respuesta += "❌ <b>ACCOUNTS PAYABLE (Suppliers)</b>\n"
         if reporte_por_pagar:
             respuesta += reporte_por_pagar
-            respuesta += "  --- TOTALES POR PAGAR ---\n"
+            respuesta += "  --- TOTAL ACCOUNTS PAYABLE ---\n"
             for moneda, total in total_por_pagar.items():
                 respuesta += f"  Total {moneda.upper()}: -{total:,.2f} {moneda.upper()}\n"
         else:
-            respuesta += "  <i>No hay deudas con proveedores pendientes.</i>\n"
+            respuesta += "  <i>There are no pending supplier debts.</i>\n"
             
         respuesta += "\n"
         
-        # --- B. Cuentas POR COBRAR (Vendedores) ---
-        respuesta += "✅ <b>CUENTAS POR COBRAR (Vendedores)</b>\n"
+        # --- B. ACCOUNTS RECEIVABLE (Sellers) ---
+        respuesta += "✅ <b>ACCOUNTS RECEIVABLE (Sellers)</b>\n"
         if reporte_por_cobrar:
             respuesta += reporte_por_cobrar
-            respuesta += "  --- TOTALES POR COBRAR ---\n"
+            respuesta += "  --- TOTAL ACCOUNTS RECEIVABLE ---\n"
             for moneda, total in total_por_cobrar.items():
                 respuesta += f"  Total {moneda.upper()}: +{total:,.2f} {moneda.upper()}\n"
         else:
-            respuesta += "  <i>No hay deudas de vendedores pendientes.</i>\n"
+            respuesta += "  <i>There are no pending seller debts.</i>\n"
 
         await update.message.reply_html(respuesta)
 
     except Exception as e:
-        logger.error(f"Error inesperado en /deudas: {e}")
-        await update.message.reply_text("Ocurrió un error inesperado al generar el reporte de deudas.")
+        logger.error(f"Unexpected error in /deudas: {e}")
+        await update.message.reply_text("An unexpected error occurred while generating the debt report.")
     finally:
         if conn:
             conn.close()
 
 
-# --- FASE 13: FUNCIÓN PARA /historial_command ( Historial de Movimientos ) ---
+# --- PHASE 13: FUNCTION FOR /historial_command (Movement history) ---
 async def historial_command(update: Update, context: ContextTypes.DEFAULT_TYPE) -> None:
     """
-    Muestra el historial de movimientos de la base de datos de los últimos N días.
-    Uso: /historial [dias] (ej: /historial 30)
+    Show movement history from the database for the last N days.
+    Usage: /historial [days] (e.g., /historial 30)
     """
     user_id = update.effective_user.id
     if user_id not in ADMIN_USER_IDS:
-        await update.message.reply_text("⛔ No tienes permiso.")
+        await update.message.reply_text("⛔ You don't have permission.")
         return
 
     conn = None
-    dias = 7  # Valor por defecto: últimos 7 días
+    dias = 7  # Default value: last 7 days
     
     try:
-        # 1. Parsear el número de días
+        # 1. Parse number of days
         if context.args:
             try:
                 dias = int(context.args[0])
                 if dias <= 0: raise ValueError
             except ValueError:
-                await update.message.reply_text("El número de días debe ser un entero positivo.")
+                await update.message.reply_text("The number of days must be a positive integer.")
                 return
 
-        # 2. Calcular la fecha de inicio
+        # 2. Calculate start date
         fecha_limite = datetime.now() - timedelta(days=dias)
         
         conn = sqlite3.connect("contabilidad.db")
         cursor = conn.cursor()
 
-        # 3. Consultar los movimientos dentro del rango de fechas
+        # 3. Query movements within date range
         cursor.execute("""
             SELECT fecha, tipo, monto, moneda, caja, descripcion
             FROM Movimientos
@@ -654,56 +654,56 @@ async def historial_command(update: Update, context: ContextTypes.DEFAULT_TYPE) 
         movimientos = cursor.fetchall()
         
         if not movimientos:
-            await update.message.reply_text(f"✅ No se encontraron movimientos registrados en los últimos {dias} días.")
+            await update.message.reply_text(f"✅ No recorded movements were found in the last {dias} days.")
             return
 
-        # 4. Construir el reporte
-        reporte = f"⏳ <b>HISTORIAL DE MOVIMIENTOS ({dias} días)</b> 📜\n\n"
+        # 4. Build report
+        reporte = f"⏳ <b>MOVEMENT HISTORY ({dias} days)</b> 📜\n\n"
         
         for fecha_str, tipo, monto, moneda, caja, descripcion in movimientos:
             
-            # Formateo de monto (añadir signo y color)
+            # Amount formatting (add sign and color)
             simbolo = "+" if tipo in ('ingreso', 'pago') else "-"
             color = ""
             if tipo in ('ingreso', 'pago'):
                 color = "🟢"
             elif tipo in ('gasto', 'pago_proveedor'):
                 color = "🔴"
-            else: # Otros como 'traspaso'
+            else: # Others such as 'traspaso'
                 color = "🔵"
             
-            # Formateo de fecha
+            # Date formatting
             try:
                 fecha_dt = datetime.strptime(fecha_str.split('.')[0], '%Y-%m-%d %H:%M:%S')
                 fecha_formateada = fecha_dt.strftime('%d/%m %H:%M')
             except:
                 fecha_formateada = fecha_str[:10]
             
-            # Construir la línea del movimiento
+            # Build movement line
             reporte += (
                 f"{color} <code>{fecha_formateada}</code> | "
                 f"<b>{simbolo}{monto:,.2f} {moneda.upper()}</b> en {caja.upper()}\n"
-                f"  Tipo: {tipo.upper()} ({descripcion[:60]}...)\n"
+                f"  Type: {tipo.upper()} ({descripcion[:60]}...)\n"
             )
 
         await update.message.reply_html(reporte)
-        logger.info(f"Reporte histórico de {dias} días generado por {user_id}")
+        logger.info(f"Historical report for {dias} days generated by {user_id}")
 
     except Exception as e:
-        logger.error(f"Error inesperado en /historial: {e}")
-        await update.message.reply_text("Ocurrió un error inesperado al generar el historial.")
+        logger.error(f"Unexpected error in /historial: {e}")
+        await update.message.reply_text("An unexpected error occurred while generating history.")
     finally:
         if conn:
             conn.close()
             
-# --- FASE 15: FUNCIÓN PARA /exportar_command ( Exportar CSV ) ---
+# --- PHASE 15: FUNCTION FOR /exportar_command (Export CSV) ---
 async def exportar_command(update: Update, context: ContextTypes.DEFAULT_TYPE) -> None:
     """
-    Exporta todos los datos de la tabla Movimientos a un archivo CSV y lo envía. (RF11)
+    Export all rows from Movimientos table to a CSV file and send it. (RF11)
     """
     user_id = update.effective_user.id
     if user_id not in ADMIN_USER_IDS:
-        await update.message.reply_text("⛔ No tienes permiso.")
+        await update.message.reply_text("⛔ You don't have permission.")
         return
 
     conn = None
@@ -713,38 +713,38 @@ async def exportar_command(update: Update, context: ContextTypes.DEFAULT_TYPE) -
         conn = sqlite3.connect("contabilidad.db")
         cursor = conn.cursor()
 
-        # 1. Obtener todos los datos de la tabla Movimientos
+        # 1. Get all rows from Movimientos table
         cursor.execute("SELECT * FROM Movimientos ORDER BY fecha DESC")
         movimientos = cursor.fetchall()
         
         if not movimientos:
-            await update.message.reply_text("No hay movimientos registrados para exportar.")
+            await update.message.reply_text("There are no recorded movements to export.")
             return
 
-        # 2. Obtener los nombres de las columnas
+        # 2. Get column names
         column_names = [description[0] for description in cursor.description]
 
-        # 3. Escribir los datos en el archivo CSV
+        # 3. Write data to CSV file
         with open(csv_file_path, 'w', newline='', encoding='utf-8') as csvfile:
             csv_writer = csv.writer(csvfile)
-            csv_writer.writerow(column_names) # Escribir cabeceras
-            csv_writer.writerows(movimientos) # Escribir datos
+            csv_writer.writerow(column_names) # Write headers
+            csv_writer.writerows(movimientos) # Write data
 
-        # 4. Enviar el archivo al usuario
+        # 4. Send file to user
         with open(csv_file_path, 'rb') as f:
             await update.message.reply_document(
                 document=f,
                 filename=csv_file_path,
-                caption="✅ Exportación Completa: Todos los Movimientos Contables."
+                caption="✅ Export Complete: All Accounting Movements."
             )
         
-        logger.info(f"Exportación de movimientos completada y enviada a {user_id}")
+        logger.info(f"Movement export completed and sent to {user_id}")
 
     except Exception as e:
-        logger.error(f"Error inesperado en /exportar: {e}")
-        await update.message.reply_text("Ocurrió un error inesperado al exportar los datos.")
+        logger.error(f"Unexpected error in /exportar: {e}")
+        await update.message.reply_text("An unexpected error occurred while exporting data.")
     finally:
         if conn:
             conn.close()
-        # Opcional: limpiar el archivo local después de enviarlo (aunque para pruebas es mejor dejarlo)
+        # Optional: remove local file after sending (for testing it's better to keep it)
         # os.remove(csv_file_path)

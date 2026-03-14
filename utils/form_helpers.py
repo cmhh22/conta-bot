@@ -1,5 +1,5 @@
 """
-Utilidades para crear formularios interactivos con botones.
+Utilities to create interactive button-based forms.
 """
 from typing import List, Optional
 from telegram import InlineKeyboardButton, InlineKeyboardMarkup
@@ -9,11 +9,11 @@ from services.cajas_service import CajaService
 
 def create_keyboard(buttons: List[List[str]], callback_prefix: str = "") -> InlineKeyboardMarkup:
     """
-    Crea un teclado inline desde una lista de botones.
+    Create an inline keyboard from a list of buttons.
     
     Args:
-        buttons: Lista de listas con texto de botones
-        callback_prefix: Prefijo para los callback_data
+        buttons: List of lists containing button text
+        callback_prefix: Prefix for callback_data
     
     Returns:
         InlineKeyboardMarkup
@@ -22,7 +22,7 @@ def create_keyboard(buttons: List[List[str]], callback_prefix: str = "") -> Inli
     for row in buttons:
         keyboard_row = []
         for button_text in row:
-            # Normalizar el texto para callback
+            # Normalize text for callback
             callback_value = button_text.lower().replace(' ', '_').replace('-', '_')
             callback_data = f"{callback_prefix}:{callback_value}" if callback_prefix else callback_value
             keyboard_row.append(InlineKeyboardButton(button_text, callback_data=callback_data))
@@ -31,19 +31,19 @@ def create_keyboard(buttons: List[List[str]], callback_prefix: str = "") -> Inli
 
 
 def create_moneda_keyboard(callback_prefix: str) -> InlineKeyboardMarkup:
-    """Crea un teclado para seleccionar moneda."""
+    """Create a keyboard to select currency."""
     buttons = [
         [moneda.upper() for moneda in VALID_MONEDAS],
-        ["↩️ Cancelar"]
+        ["↩️ Cancel"]
     ]
     return create_keyboard(buttons, callback_prefix)
 
 
 def create_caja_keyboard(callback_prefix: str) -> InlineKeyboardMarkup:
-    """Crea un teclado para seleccionar caja."""
+    """Create a keyboard to select a cash box."""
     cajas = CajaService.listar()
     if cajas:
-        # Usar IDs en callback_data para identificar cajas
+        # Use IDs in callback_data to identify boxes
         keyboard = []
         for caja in cajas:
             keyboard.append([
@@ -52,103 +52,103 @@ def create_caja_keyboard(callback_prefix: str) -> InlineKeyboardMarkup:
                     callback_data=f"{callback_prefix}:{caja['id']}"
                 )
             ])
-        keyboard.append([InlineKeyboardButton("↩️ Cancelar", callback_data=f"{callback_prefix}:cancelar")])
+        keyboard.append([InlineKeyboardButton("↩️ Cancel", callback_data=f"{callback_prefix}:cancelar")])
         return InlineKeyboardMarkup(keyboard)
     else:
-        # Fallback si no hay cajas
-        keyboard = [[InlineKeyboardButton("↩️ Cancelar", callback_data=f"{callback_prefix}:cancelar")]]
+        # Fallback if there are no boxes
+        keyboard = [[InlineKeyboardButton("↩️ Cancel", callback_data=f"{callback_prefix}:cancelar")]]
         return InlineKeyboardMarkup(keyboard)
 
 
 def create_yes_no_keyboard(callback_prefix: str) -> InlineKeyboardMarkup:
-    """Crea un teclado de confirmación Sí/No."""
+    """Create a Yes/No confirmation keyboard."""
     keyboard = [
         [
-            InlineKeyboardButton("✅ Sí", callback_data=f"{callback_prefix}:yes"),
+            InlineKeyboardButton("✅ Yes", callback_data=f"{callback_prefix}:yes"),
             InlineKeyboardButton("❌ No", callback_data=f"{callback_prefix}:no")
         ],
-        [InlineKeyboardButton("↩️ Cancelar", callback_data=f"{callback_prefix}:cancel")]
+        [InlineKeyboardButton("↩️ Cancel", callback_data=f"{callback_prefix}:cancel")]
     ]
     return InlineKeyboardMarkup(keyboard)
 
 
 def create_back_keyboard(callback_prefix: str) -> InlineKeyboardMarkup:
-    """Crea un teclado con botón de volver."""
-    keyboard = [[InlineKeyboardButton("↩️ Volver", callback_data=f"{callback_prefix}:back")]]
+    """Create a keyboard with a back button."""
+    keyboard = [[InlineKeyboardButton("↩️ Back", callback_data=f"{callback_prefix}:back")]]
     return InlineKeyboardMarkup(keyboard)
 
 
 def create_main_menu_keyboard() -> InlineKeyboardMarkup:
-    """Crea el menú principal del bot."""
+    """Create the bot main menu."""
     keyboard = [
         [
-            InlineKeyboardButton("💰 Contabilidad", callback_data="menu:contabilidad"),
-            InlineKeyboardButton("📦 Inventario", callback_data="menu:inventario")
+            InlineKeyboardButton("💰 Accounting", callback_data="menu:contabilidad"),
+            InlineKeyboardButton("📦 Inventory", callback_data="menu:inventario")
         ],
         [
-            InlineKeyboardButton("📊 Reportes", callback_data="menu:reportes"),
-            InlineKeyboardButton("⚖️ Deudas", callback_data="menu:deudas")
+            InlineKeyboardButton("📊 Reports", callback_data="menu:reportes"),
+            InlineKeyboardButton("⚖️ Debts", callback_data="menu:deudas")
         ],
         [
-            InlineKeyboardButton("🧰 Contenedores", callback_data="menu:contenedores"),
-            InlineKeyboardButton("⚙️ Configuración", callback_data="menu:config")
+            InlineKeyboardButton("🧰 Containers", callback_data="menu:contenedores"),
+            InlineKeyboardButton("⚙️ Settings", callback_data="menu:config")
         ]
     ]
     return InlineKeyboardMarkup(keyboard)
 
 
 def create_contabilidad_menu_keyboard() -> InlineKeyboardMarkup:
-    """Crea el menú de contabilidad."""
+    """Create the accounting menu."""
     keyboard = [
         [
-            InlineKeyboardButton("➕ Ingreso", callback_data="cont:ingreso"),
-            InlineKeyboardButton("➖ Gasto", callback_data="cont:gasto")
+            InlineKeyboardButton("➕ Income", callback_data="cont:ingreso"),
+            InlineKeyboardButton("➖ Expense", callback_data="cont:gasto")
         ],
         [
-            InlineKeyboardButton("🔄 Traspaso", callback_data="cont:traspaso"),
+            InlineKeyboardButton("🔄 Transfer", callback_data="cont:traspaso"),
             InlineKeyboardButton("📊 Balance", callback_data="cont:balance")
         ],
         [
-            InlineKeyboardButton("💳 Pago Proveedor", callback_data="cont:pago_proveedor"),
-            InlineKeyboardButton("💵 Pago Vendedor", callback_data="cont:pago_vendedor")
+            InlineKeyboardButton("💳 Supplier Payment", callback_data="cont:pago_proveedor"),
+            InlineKeyboardButton("💵 Seller Payment", callback_data="cont:pago_vendedor")
         ],
-        [InlineKeyboardButton("↩️ Menú Principal", callback_data="menu:main")]
+        [InlineKeyboardButton("↩️ Main Menu", callback_data="menu:main")]
     ]
     return InlineKeyboardMarkup(keyboard)
 
 
 def create_inventario_menu_keyboard() -> InlineKeyboardMarkup:
-    """Crea el menú de inventario."""
+    """Create the inventory menu."""
     keyboard = [
         [
-            InlineKeyboardButton("📥 Entrada", callback_data="inv:entrada"),
-            InlineKeyboardButton("📤 Venta", callback_data="inv:venta")
+            InlineKeyboardButton("📥 Inbound", callback_data="inv:entrada"),
+            InlineKeyboardButton("📤 Sale", callback_data="inv:venta")
         ],
         [
             InlineKeyboardButton("📋 Stock", callback_data="inv:stock"),
-            InlineKeyboardButton("📦 Consignar", callback_data="inv:consignar")
+            InlineKeyboardButton("📦 Consign", callback_data="inv:consignar")
         ],
         [
-            InlineKeyboardButton("📊 Ganancia", callback_data="inv:ganancia"),
-            InlineKeyboardButton("👤 Stock Consignado", callback_data="inv:stock_consignado")
+            InlineKeyboardButton("📊 Profit", callback_data="inv:ganancia"),
+            InlineKeyboardButton("👤 Consigned Stock", callback_data="inv:stock_consignado")
         ],
-        [InlineKeyboardButton("↩️ Menú Principal", callback_data="menu:main")]
+        [InlineKeyboardButton("↩️ Main Menu", callback_data="menu:main")]
     ]
     return InlineKeyboardMarkup(keyboard)
 
 
 def create_reportes_menu_keyboard() -> InlineKeyboardMarkup:
-    """Crea el menú de reportes."""
+    """Create the reports menu."""
     keyboard = [
         [
             InlineKeyboardButton("📊 Balance", callback_data="rep:balance"),
-            InlineKeyboardButton("📜 Historial", callback_data="rep:historial")
+            InlineKeyboardButton("📜 History", callback_data="rep:historial")
         ],
         [
-            InlineKeyboardButton("📈 Ganancia", callback_data="rep:ganancia"),
-            InlineKeyboardButton("💾 Exportar", callback_data="rep:exportar")
+            InlineKeyboardButton("📈 Profit", callback_data="rep:ganancia"),
+            InlineKeyboardButton("💾 Export", callback_data="rep:exportar")
         ],
-        [InlineKeyboardButton("↩️ Menú Principal", callback_data="menu:main")]
+        [InlineKeyboardButton("↩️ Main Menu", callback_data="menu:main")]
     ]
     return InlineKeyboardMarkup(keyboard)
 

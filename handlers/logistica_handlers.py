@@ -1,5 +1,5 @@
 """
-Handlers para operaciones de logística (mover productos entre contenedores y almacenes).
+Handlers para operaciones de logistica (mover productos entre contenedores y almacenes).
 """
 import logging
 from typing import List
@@ -36,7 +36,7 @@ from database.repositories import ProductoRepository
 
 logger = logging.getLogger(__name__)
 
-# Estados para mover productos (contenedor → almacén)
+# Estados para mover productos (contenedor → almacen)
 MOVER_MENU, MOVER_SEL_CONTENEDOR, MOVER_SEL_ALMACEN, MOVER_SEL_PRODUCTO, MOVER_CANTIDAD = range(5)
 
 # Estados para agregar productos a contenedores
@@ -93,7 +93,7 @@ async def productos_contenedor_command(update: Update, context: ContextTypes.DEF
         
         await reply_html(update, text)
     except ValueError:
-        await reply_text(update, "❌ El ID debe ser un número válido.")
+        await reply_text(update, "❌ El ID debe ser un numero valid.")
     except Exception as e:
         logger.error(f"Error obteniendo productos del contenedor: {e}", exc_info=True)
         await reply_text(update, f"❌ Error: {str(e)}")
@@ -101,17 +101,17 @@ async def productos_contenedor_command(update: Update, context: ContextTypes.DEF
 
 @admin_only
 async def inventario_almacen_command(update: Update, context: ContextTypes.DEFAULT_TYPE) -> None:
-    """Muestra el inventario de un almacén."""
+    """Muestra el inventario de un almacen."""
     from services.almacenes_service import obtener_por_id
     
-    # Si no hay argumentos, mostrar lista de almacenes para seleccionar
+    # Si no hay argumentos, mostrar lista de almacenes para selectr
     if not context.args or len(context.args) < 1:
         almacenes = listar_almacenes()
         if not almacenes:
-            await reply_text(update, "❌ No hay almacenes disponibles. Crea uno primero.")
+            await reply_text(update, "❌ No almacenes disponibles. Crea uno primero.")
             return
         
-        text = "🏢 <b>Selecciona un almacén para ver su inventario:</b>"
+        text = "🏢 <b>Select un almacen para ver su inventario:</b>"
         keyboard: List[List[InlineKeyboardButton]] = []
         for alm in almacenes:
             keyboard.append([
@@ -131,14 +131,14 @@ async def inventario_almacen_command(update: Update, context: ContextTypes.DEFAU
         
         almacen = obtener_por_id(almacen_id)
         if not almacen:
-            await reply_text(update, f"❌ No existe un almacén con ID {almacen_id}")
+            await reply_text(update, f"❌ No existe un almacen con ID {almacen_id}")
             return
         
         if not inventario:
             await reply_html(
                 update,
-                f"🏢 <b>Almacén: {almacen['nombre']}</b>\n\n"
-                f"Este almacén no tiene productos en inventario."
+                f"🏢 <b>Almacen: {almacen['nombre']}</b>\n\n"
+                f"Este almacen no tiene productos en inventario."
             )
             return
         
@@ -151,15 +151,15 @@ async def inventario_almacen_command(update: Update, context: ContextTypes.DEFAU
         
         await reply_html(update, text)
     except ValueError:
-        await reply_text(update, "❌ El ID debe ser un número válido.")
+        await reply_text(update, "❌ El ID debe ser un numero valid.")
     except Exception as e:
-        logger.error(f"Error obteniendo inventario del almacén: {e}", exc_info=True)
+        logger.error(f"Error obteniendo inventario del almacen: {e}", exc_info=True)
         await reply_text(update, f"❌ Error: {str(e)}")
 
 
 @admin_only
 async def inventario_almacen_callback(update: Update, context: ContextTypes.DEFAULT_TYPE) -> None:
-    """Maneja el callback para mostrar inventario de almacén."""
+    """Maneja el callback para mostrar inventario de almacen."""
     from services.almacenes_service import obtener_por_id
     
     q = update.callback_query
@@ -176,11 +176,11 @@ async def inventario_almacen_callback(update: Update, context: ContextTypes.DEFA
             
             almacen = obtener_por_id(almacen_id)
             if not almacen:
-                await reply_text(update, f"❌ No existe un almacén con ID {almacen_id}")
+                await reply_text(update, f"❌ No existe un almacen con ID {almacen_id}")
                 return
             
             if not inventario:
-                text = f"📦 <b>Inventario: {almacen['nombre']}</b>\n\nEste almacén no tiene productos en inventario."
+                text = f"📦 <b>Inventario: {almacen['nombre']}</b>\n\nEste almacen no tiene productos en inventario."
             else:
                 text = f"📦 <b>Inventario: {almacen['nombre']}</b>\n\n"
                 for item in inventario:
@@ -194,15 +194,15 @@ async def inventario_almacen_callback(update: Update, context: ContextTypes.DEFA
             except Exception:
                 await reply_html(update, text)
         except ValueError:
-            await reply_text(update, "❌ El ID debe ser un número válido.")
+            await reply_text(update, "❌ El ID debe ser un numero valid.")
         except Exception as e:
-            logger.error(f"Error obteniendo inventario del almacén: {e}", exc_info=True)
+            logger.error(f"Error obteniendo inventario del almacen: {e}", exc_info=True)
             await reply_text(update, f"❌ Error: {str(e)}")
 
 
 @admin_only
 async def mover_producto_entry(update: Update, context: ContextTypes.DEFAULT_TYPE) -> int:
-    """Punto de entrada para mover productos de contenedor a almacén."""
+    """Punto de entrada para mover productos de contenedor a almacen."""
     # Limpiar datos previos
     keys_to_remove = [
         "log_cont_id", "log_alm_id", "log_prod_codigo", "log_cantidad"
@@ -213,10 +213,10 @@ async def mover_producto_entry(update: Update, context: ContextTypes.DEFAULT_TYP
     # Listar contenedores
     contenedores = ContenedorService.listar()
     if not contenedores:
-        await reply_text(update, "❌ No hay contenedores disponibles. Crea uno primero.")
+        await reply_text(update, "❌ No contenedores disponibles. Crea uno primero.")
         return ConversationHandler.END
     
-    text = "📦 <b>Mover Producto: Contenedor → Almacén</b>\n\nSelecciona el contenedor:"
+    text = "📦 <b>Mover Producto: Contenedor → Almacen</b>\n\nSelect el contenedor:"
     keyboard: List[List[InlineKeyboardButton]] = []
     for cont in contenedores:
         keyboard.append([
@@ -225,7 +225,7 @@ async def mover_producto_entry(update: Update, context: ContextTypes.DEFAULT_TYP
                 callback_data=f"log:cont:{cont['id']}"
             )
         ])
-    keyboard.append([InlineKeyboardButton("❌ Cancelar", callback_data="log:cancel")])
+    keyboard.append([InlineKeyboardButton("❌ Cancel", callback_data="log:cancel")])
     kb = InlineKeyboardMarkup(keyboard)
     
     await reply_html(update, text, reply_markup=kb)
@@ -251,7 +251,7 @@ async def mover_menu_callback(update: Update, context: ContextTypes.DEFAULT_TYPE
                 return ConversationHandler.END
             
             contenedor = ContenedorService.obtener_por_id(contenedor_id)
-            text = f"📦 <b>Contenedor: {contenedor['nombre']}</b>\n\nSelecciona el producto:"
+            text = f"📦 <b>Contenedor: {contenedor['nombre']}</b>\n\nSelect el producto:"
             keyboard: List[List[InlineKeyboardButton]] = []
             for prod in productos:
                 keyboard.append([
@@ -260,7 +260,7 @@ async def mover_menu_callback(update: Update, context: ContextTypes.DEFAULT_TYPE
                         callback_data=f"log:prod:{prod['producto_codigo']}"
                     )
                 ])
-            keyboard.append([InlineKeyboardButton("⬅️ Volver", callback_data="log:back")])
+            keyboard.append([InlineKeyboardButton("⬅️ Back", callback_data="log:back")])
             kb = InlineKeyboardMarkup(keyboard)
             await reply_html(update, text, reply_markup=kb)
             return MOVER_SEL_PRODUCTO
@@ -276,10 +276,10 @@ async def mover_menu_callback(update: Update, context: ContextTypes.DEFAULT_TYPE
         # Listar almacenes
         almacenes = listar_almacenes()
         if not almacenes:
-            await reply_text(update, "❌ No hay almacenes disponibles. Crea uno primero.")
+            await reply_text(update, "❌ No almacenes disponibles. Crea uno primero.")
             return ConversationHandler.END
         
-        text = "🏢 <b>Selecciona el almacén destino:</b>"
+        text = "🏢 <b>Select el almacen destino:</b>"
         keyboard: List[List[InlineKeyboardButton]] = []
         for alm in almacenes:
             keyboard.append([
@@ -288,7 +288,7 @@ async def mover_menu_callback(update: Update, context: ContextTypes.DEFAULT_TYPE
                     callback_data=f"log:alm:{alm['id']}"
                 )
             ])
-        keyboard.append([InlineKeyboardButton("⬅️ Volver", callback_data="log:back")])
+        keyboard.append([InlineKeyboardButton("⬅️ Back", callback_data="log:back")])
         kb = InlineKeyboardMarkup(keyboard)
         await reply_html(update, text, reply_markup=kb)
         return MOVER_SEL_ALMACEN
@@ -309,7 +309,7 @@ async def mover_menu_callback(update: Update, context: ContextTypes.DEFAULT_TYPE
         producto = next((p for p in productos if p["producto_codigo"] == prod_codigo), None)
         
         if not producto:
-            await reply_text(update, "❌ Producto no encontrado en el contenedor.")
+            await reply_text(update, "❌ Producto not found en el contenedor.")
             return ConversationHandler.END
         
         contenedor = ContenedorService.obtener_por_id(cont_id)
@@ -321,9 +321,9 @@ async def mover_menu_callback(update: Update, context: ContextTypes.DEFAULT_TYPE
             f"📦 <b>Mover Producto</b>\n\n"
             f"Contenedor: <code>{contenedor['nombre']}</code>\n"
             f"Producto: <code>{producto['producto_nombre']}</code>\n"
-            f"Almacén: <code>{almacen['nombre']}</code>\n\n"
+            f"Almacen: <code>{almacen['nombre']}</code>\n\n"
             f"Cantidad disponible: <b>{producto['cantidad']}</b>\n\n"
-            f"Envía la <b>cantidad</b> a mover:"
+            f"Send la <b>cantidad</b> a mover:"
         )
         return MOVER_CANTIDAD
     
@@ -336,7 +336,7 @@ async def mover_menu_callback(update: Update, context: ContextTypes.DEFAULT_TYPE
         ]
         for key in keys_to_remove:
             context.user_data.pop(key, None)
-        await reply_text(update, "✅ Operación cancelada.")
+        await reply_text(update, "✅ Operation cancelada.")
         return ConversationHandler.END
     
     return MOVER_MENU
@@ -396,13 +396,13 @@ async def mover_cantidad_receive(update: Update, context: ContextTypes.DEFAULT_T
 
 
 async def mover_cancel_command(update: Update, context: ContextTypes.DEFAULT_TYPE) -> int:
-    """Cancela la operación de mover producto."""
+    """Cancela la operation de mover producto."""
     keys_to_remove = [
         "log_cont_id", "log_alm_id", "log_prod_codigo", "log_cantidad"
     ]
     for key in keys_to_remove:
         context.user_data.pop(key, None)
-    await reply_text(update, "✅ Operación cancelada.")
+    await reply_text(update, "✅ Operation cancelada.")
     return ConversationHandler.END
 
 
@@ -443,10 +443,10 @@ async def agregar_producto_contenedor_entry(update: Update, context: ContextType
     
     contenedores = ContenedorService.listar()
     if not contenedores:
-        await reply_text(update, "❌ No hay contenedores disponibles. Crea uno primero.")
+        await reply_text(update, "❌ No contenedores disponibles. Crea uno primero.")
         return ConversationHandler.END
     
-    text = "📦 <b>Agregar Producto a Contenedor</b>\n\nSelecciona el contenedor:"
+    text = "📦 <b>Agregar Producto a Contenedor</b>\n\nSelect el contenedor:"
     keyboard: List[List[InlineKeyboardButton]] = []
     for cont in contenedores:
         keyboard.append([
@@ -455,7 +455,7 @@ async def agregar_producto_contenedor_entry(update: Update, context: ContextType
                 callback_data=f"agr:cont:{cont['id']}"
             )
         ])
-    keyboard.append([InlineKeyboardButton("❌ Cancelar", callback_data="agr:cancel")])
+    keyboard.append([InlineKeyboardButton("❌ Cancel", callback_data="agr:cancel")])
     kb = InlineKeyboardMarkup(keyboard)
     
     await reply_html(update, text, reply_markup=kb)
@@ -477,11 +477,11 @@ async def agregar_producto_callback(update: Update, context: ContextTypes.DEFAUL
             productos = ProductoRepository.obtener_todos(conn)
         
         if not productos:
-            await reply_text(update, "❌ No hay productos disponibles. Crea uno primero.")
+            await reply_text(update, "❌ No productos disponibles. Crea uno primero.")
             return ConversationHandler.END
         
         contenedor = ContenedorService.obtener_por_id(contenedor_id)
-        text = f"📦 <b>Contenedor: {contenedor['nombre']}</b>\n\nSelecciona el producto:"
+        text = f"📦 <b>Contenedor: {contenedor['nombre']}</b>\n\nSelect el producto:"
         keyboard: List[List[InlineKeyboardButton]] = []
         for prod in productos[:20]:
             keyboard.append([
@@ -490,7 +490,7 @@ async def agregar_producto_callback(update: Update, context: ContextTypes.DEFAUL
                     callback_data=f"agr:prod:{prod['codigo']}"
                 )
             ])
-        keyboard.append([InlineKeyboardButton("⬅️ Volver", callback_data="agr:back")])
+        keyboard.append([InlineKeyboardButton("⬅️ Back", callback_data="agr:back")])
         kb = InlineKeyboardMarkup(keyboard)
         await reply_html(update, text, reply_markup=kb)
         return AGREGAR_SEL_PRODUCTO
@@ -510,7 +510,7 @@ async def agregar_producto_callback(update: Update, context: ContextTypes.DEFAUL
             f"📦 <b>Agregar Producto</b>\n\n"
             f"Contenedor: <code>{contenedor['nombre']}</code>\n"
             f"Producto: <code>{producto['nombre']}</code> ({producto_codigo})\n\n"
-            f"Envía la <b>cantidad</b> a agregar:"
+            f"Send la <b>cantidad</b> a agregar:"
         )
         return AGREGAR_CANTIDAD
     
@@ -521,7 +521,7 @@ async def agregar_producto_callback(update: Update, context: ContextTypes.DEFAUL
         keys_to_remove = ["agr_cont_id", "agr_prod_codigo", "agr_cantidad"]
         for key in keys_to_remove:
             context.user_data.pop(key, None)
-        await reply_text(update, "✅ Operación cancelada.")
+        await reply_text(update, "✅ Operation cancelada.")
         return ConversationHandler.END
     
     return AGREGAR_SEL_CONTENEDOR
@@ -589,21 +589,21 @@ agregar_producto_conv_handler = ConversationHandler(
 )
 
 
-# ========== REPORTES DE LOGÍSTICA ==========
+# ========== REPORTES DE LOGISTICA ==========
 
 @admin_only
 async def resumen_logistica_command(update: Update, context: ContextTypes.DEFAULT_TYPE) -> None:
-    """Muestra un resumen general de la logística."""
+    """Muestra un resumen general de la logistica."""
     try:
         resumen = obtener_resumen_logistica()
         
-        text = "📊 <b>Resumen de Logística</b>\n\n"
+        text = "📊 <b>Resumen de Logistica</b>\n\n"
         text += f"📦 <b>Contenedores:</b>\n"
         text += f"  • Total: {resumen['total_contenedores']}\n"
-        text += f"  • Productos únicos: {resumen['total_productos_contenedores']}\n\n"
+        text += f"  • Productos unicos: {resumen['total_productos_contenedores']}\n\n"
         text += f"🏢 <b>Almacenes:</b>\n"
         text += f"  • Total: {resumen['total_almacenes']}\n"
-        text += f"  • Productos únicos: {resumen['total_productos_almacenes']}\n"
+        text += f"  • Productos unicos: {resumen['total_productos_almacenes']}\n"
         
         await reply_html(update, text)
     except Exception as e:
@@ -627,7 +627,7 @@ async def mover_almacen_entry(update: Update, context: ContextTypes.DEFAULT_TYPE
         await reply_text(update, "❌ Necesitas al menos 2 almacenes para mover productos entre ellos.")
         return ConversationHandler.END
     
-    text = "🏢 <b>Mover Producto: Almacén → Almacén</b>\n\nSelecciona el almacén <b>origen</b>:"
+    text = "🏢 <b>Mover Producto: Almacen → Almacen</b>\n\nSelect el almacen <b>origen</b>:"
     keyboard: List[List[InlineKeyboardButton]] = []
     for alm in almacenes:
         keyboard.append([
@@ -636,7 +636,7 @@ async def mover_almacen_entry(update: Update, context: ContextTypes.DEFAULT_TYPE
                 callback_data=f"mover_alm:origen:{alm['id']}"
             )
         ])
-    keyboard.append([InlineKeyboardButton("❌ Cancelar", callback_data="mover_alm:cancel")])
+    keyboard.append([InlineKeyboardButton("❌ Cancel", callback_data="mover_alm:cancel")])
     kb = InlineKeyboardMarkup(keyboard)
     
     await reply_html(update, text, reply_markup=kb)
@@ -659,11 +659,11 @@ async def mover_almacen_callback(update: Update, context: ContextTypes.DEFAULT_T
         almacenes_destino = [a for a in almacenes if a["id"] != almacen_id]
         
         if not almacenes_destino:
-            await reply_text(update, "❌ No hay otros almacenes disponibles como destino.")
+            await reply_text(update, "❌ No otros almacenes disponibles como destino.")
             return ConversationHandler.END
         
         almacen_origen = obtener_por_id(almacen_id)
-        text = f"🏢 <b>Origen: {almacen_origen['nombre']}</b>\n\nSelecciona el almacén <b>destino</b>:"
+        text = f"🏢 <b>Origen: {almacen_origen['nombre']}</b>\n\nSelect el almacen <b>destino</b>:"
         keyboard: List[List[InlineKeyboardButton]] = []
         for alm in almacenes_destino:
             keyboard.append([
@@ -672,7 +672,7 @@ async def mover_almacen_callback(update: Update, context: ContextTypes.DEFAULT_T
                     callback_data=f"mover_alm:destino:{alm['id']}"
                 )
             ])
-        keyboard.append([InlineKeyboardButton("⬅️ Volver", callback_data="mover_alm:back")])
+        keyboard.append([InlineKeyboardButton("⬅️ Back", callback_data="mover_alm:back")])
         kb = InlineKeyboardMarkup(keyboard)
         await reply_html(update, text, reply_markup=kb)
         return MOVER_ALM_SEL_DESTINO
@@ -686,11 +686,11 @@ async def mover_almacen_callback(update: Update, context: ContextTypes.DEFAULT_T
             await reply_text(update, "❌ Error: datos incompletos. Empieza de nuevo.")
             return ConversationHandler.END
         
-        # Obtener productos del almacén origen
+        # Obtener productos del almacen origen
         try:
             inventario = obtener_inventario_almacen(origen_id)
             if not inventario:
-                await reply_text(update, "❌ El almacén origen no tiene productos en inventario.")
+                await reply_text(update, "❌ El almacen origen no tiene productos en inventario.")
                 return ConversationHandler.END
             
             almacen_origen = obtener_por_id(origen_id)
@@ -700,7 +700,7 @@ async def mover_almacen_callback(update: Update, context: ContextTypes.DEFAULT_T
                 f"🏢 <b>Mover Producto</b>\n\n"
                 f"Origen: <code>{almacen_origen['nombre']}</code>\n"
                 f"Destino: <code>{almacen_destino['nombre']}</code>\n\n"
-                f"Selecciona el producto:"
+                f"Select el producto:"
             )
             keyboard: List[List[InlineKeyboardButton]] = []
             for item in inventario:
@@ -710,7 +710,7 @@ async def mover_almacen_callback(update: Update, context: ContextTypes.DEFAULT_T
                         callback_data=f"mover_alm:prod:{item['producto_codigo']}"
                     )
                 ])
-            keyboard.append([InlineKeyboardButton("⬅️ Volver", callback_data="mover_alm:back")])
+            keyboard.append([InlineKeyboardButton("⬅️ Back", callback_data="mover_alm:back")])
             kb = InlineKeyboardMarkup(keyboard)
             await reply_html(update, text, reply_markup=kb)
             return MOVER_ALM_SEL_PRODUCTO
@@ -735,7 +735,7 @@ async def mover_almacen_callback(update: Update, context: ContextTypes.DEFAULT_T
         producto = next((p for p in inventario if p["producto_codigo"] == producto_codigo), None)
         
         if not producto:
-            await reply_text(update, "❌ Producto no encontrado en el almacén origen.")
+            await reply_text(update, "❌ Producto not found en el almacen origen.")
             return ConversationHandler.END
         
         almacen_origen = obtener_por_id(origen_id)
@@ -751,7 +751,7 @@ async def mover_almacen_callback(update: Update, context: ContextTypes.DEFAULT_T
             f"Destino: <code>{almacen_destino['nombre']}</code>\n"
             f"Producto: <code>{prod['nombre']}</code>\n\n"
             f"Cantidad disponible: <b>{producto['cantidad']}</b>\n\n"
-            f"Envía la <b>cantidad</b> a mover:"
+            f"Send la <b>cantidad</b> a mover:"
         )
         return MOVER_ALM_CANTIDAD
     
@@ -764,7 +764,7 @@ async def mover_almacen_callback(update: Update, context: ContextTypes.DEFAULT_T
         ]
         for key in keys_to_remove:
             context.user_data.pop(key, None)
-        await reply_text(update, "✅ Operación cancelada.")
+        await reply_text(update, "✅ Operation cancelada.")
         return ConversationHandler.END
     
     return MOVER_ALM_SEL_ORIGEN
@@ -861,10 +861,10 @@ async def consignar_almacen_entry(update: Update, context: ContextTypes.DEFAULT_
     
     almacenes = listar_almacenes()
     if not almacenes:
-        await reply_text(update, "❌ No hay almacenes disponibles. Crea uno primero.")
+        await reply_text(update, "❌ No almacenes disponibles. Crea uno primero.")
         return ConversationHandler.END
     
-    text = "📦 <b>Consignar Producto desde Almacén</b>\n\nSelecciona el almacén:"
+    text = "📦 <b>Consignar Producto desde Almacen</b>\n\nSelect el almacen:"
     keyboard: List[List[InlineKeyboardButton]] = []
     for alm in almacenes:
         keyboard.append([
@@ -873,7 +873,7 @@ async def consignar_almacen_entry(update: Update, context: ContextTypes.DEFAULT_
                 callback_data=f"cons:alm:{alm['id']}"
             )
         ])
-    keyboard.append([InlineKeyboardButton("❌ Cancelar", callback_data="cons:cancel")])
+    keyboard.append([InlineKeyboardButton("❌ Cancel", callback_data="cons:cancel")])
     kb = InlineKeyboardMarkup(keyboard)
     
     await reply_html(update, text, reply_markup=kb)
@@ -881,7 +881,7 @@ async def consignar_almacen_entry(update: Update, context: ContextTypes.DEFAULT_
 
 
 async def consignar_almacen_callback(update: Update, context: ContextTypes.DEFAULT_TYPE) -> int:
-    """Maneja los callbacks del flujo de consignación."""
+    """Maneja los callbacks del flujo de consignacion."""
     q = update.callback_query
     if q:
         await q.answer()
@@ -891,15 +891,15 @@ async def consignar_almacen_callback(update: Update, context: ContextTypes.DEFAU
         almacen_id = int(data.split(":")[-1])
         context.user_data["cons_alm_id"] = almacen_id
         
-        # Obtener productos del almacén
+        # Obtener productos del almacen
         try:
             inventario = obtener_inventario_almacen(almacen_id)
             if not inventario:
-                await reply_text(update, "❌ Este almacén no tiene productos en inventario.")
+                await reply_text(update, "❌ Este almacen no tiene productos en inventario.")
                 return ConversationHandler.END
             
             almacen = obtener_por_id(almacen_id)
-            text = f"🏢 <b>Almacén: {almacen['nombre']}</b>\n\nSelecciona el producto:"
+            text = f"🏢 <b>Almacen: {almacen['nombre']}</b>\n\nSelect el producto:"
             keyboard: List[List[InlineKeyboardButton]] = []
             for item in inventario:
                 keyboard.append([
@@ -908,7 +908,7 @@ async def consignar_almacen_callback(update: Update, context: ContextTypes.DEFAU
                         callback_data=f"cons:prod:{item['producto_codigo']}"
                     )
                 ])
-            keyboard.append([InlineKeyboardButton("⬅️ Volver", callback_data="cons:back")])
+            keyboard.append([InlineKeyboardButton("⬅️ Back", callback_data="cons:back")])
             kb = InlineKeyboardMarkup(keyboard)
             await reply_html(update, text, reply_markup=kb)
             return CONSIGNAR_SEL_PRODUCTO
@@ -924,10 +924,10 @@ async def consignar_almacen_callback(update: Update, context: ContextTypes.DEFAU
         # Listar vendedores
         vendedores = VendedorService.listar()
         if not vendedores:
-            await reply_text(update, "❌ No hay vendedores disponibles. Crea uno primero.")
+            await reply_text(update, "❌ No vendedores disponibles. Crea uno primero.")
             return ConversationHandler.END
         
-        text = "👤 <b>Selecciona el vendedor:</b>"
+        text = "👤 <b>Select el vendedor:</b>"
         keyboard: List[List[InlineKeyboardButton]] = []
         for vend in vendedores:
             keyboard.append([
@@ -936,7 +936,7 @@ async def consignar_almacen_callback(update: Update, context: ContextTypes.DEFAU
                     callback_data=f"cons:vend:{vend['id']}"
                 )
             ])
-        keyboard.append([InlineKeyboardButton("⬅️ Volver", callback_data="cons:back")])
+        keyboard.append([InlineKeyboardButton("⬅️ Back", callback_data="cons:back")])
         kb = InlineKeyboardMarkup(keyboard)
         await reply_html(update, text, reply_markup=kb)
         return CONSIGNAR_SEL_VENDEDOR
@@ -961,10 +961,10 @@ async def consignar_almacen_callback(update: Update, context: ContextTypes.DEFAU
         await reply_html(
             update,
             f"📦 <b>Consignar Producto</b>\n\n"
-            f"Almacén: <code>{almacen['nombre']}</code>\n"
+            f"Almacen: <code>{almacen['nombre']}</code>\n"
             f"Producto: <code>{producto['nombre']}</code> ({prod_codigo})\n"
             f"Vendedor: <code>{vendedor['name']}</code>\n\n"
-            f"Envía el <b>precio unitario</b> de venta:"
+            f"Send el <b>precio unitario</b> de venta:"
         )
         return CONSIGNAR_PRECIO
     
@@ -977,7 +977,7 @@ async def consignar_almacen_callback(update: Update, context: ContextTypes.DEFAU
         ]
         for key in keys_to_remove:
             context.user_data.pop(key, None)
-        await reply_text(update, "✅ Operación cancelada.")
+        await reply_text(update, "✅ Operation cancelada.")
         return ConversationHandler.END
     
     return CONSIGNAR_SEL_ALMACEN
@@ -997,7 +997,7 @@ async def consignar_precio_receive(update: Update, context: ContextTypes.DEFAULT
         context.user_data["cons_precio"] = precio
         
         # Mostrar opciones de moneda
-        text = f"✅ Precio: <b>{precio}</b>\n\nSelecciona la <b>moneda</b>:"
+        text = f"✅ Precio: <b>{precio}</b>\n\nSelect la <b>moneda</b>:"
         keyboard: List[List[InlineKeyboardButton]] = []
         for moneda in VALID_MONEDAS:
             keyboard.append([
@@ -1006,17 +1006,17 @@ async def consignar_precio_receive(update: Update, context: ContextTypes.DEFAULT
                     callback_data=f"cons:moneda:{moneda}"
                 )
             ])
-        keyboard.append([InlineKeyboardButton("⬅️ Volver", callback_data="cons:back")])
+        keyboard.append([InlineKeyboardButton("⬅️ Back", callback_data="cons:back")])
         kb = InlineKeyboardMarkup(keyboard)
         await reply_html(update, text, reply_markup=kb)
         return CONSIGNAR_MONEDA
     except ValueError:
-        await reply_text(update, "❌ El precio debe ser un número válido.")
+        await reply_text(update, "❌ El precio debe ser un numero valid.")
         return CONSIGNAR_PRECIO
 
 
 async def consignar_moneda_callback(update: Update, context: ContextTypes.DEFAULT_TYPE) -> int:
-    """Maneja la selección de moneda."""
+    """Maneja la selection de moneda."""
     q = update.callback_query
     if q:
         await q.answer()
@@ -1038,7 +1038,7 @@ async def consignar_moneda_callback(update: Update, context: ContextTypes.DEFAUL
         producto = next((p for p in inventario if p["producto_codigo"] == prod_codigo), None)
         
         if not producto:
-            await reply_text(update, "❌ Producto no encontrado en el almacén.")
+            await reply_text(update, "❌ Producto not found en el almacen.")
             return ConversationHandler.END
         
         almacen = obtener_por_id(almacen_id)
@@ -1047,16 +1047,16 @@ async def consignar_moneda_callback(update: Update, context: ContextTypes.DEFAUL
         await reply_html(
             update,
             f"📦 <b>Consignar Producto</b>\n\n"
-            f"Almacén: <code>{almacen['nombre']}</code>\n"
+            f"Almacen: <code>{almacen['nombre']}</code>\n"
             f"Producto: <code>{producto['producto_nombre']}</code>\n"
             f"Precio: <b>{precio} {moneda.upper()}</b>\n\n"
             f"Cantidad disponible: <b>{producto['cantidad']}</b>\n\n"
-            f"Envía la <b>cantidad</b> a consignar:"
+            f"Send la <b>cantidad</b> a consignar:"
         )
         return CONSIGNAR_CANTIDAD
     
     if data == "cons:back":
-        # Volver a pedir precio
+        # Back a pedir precio
         almacen_id = context.user_data.get("cons_alm_id")
         prod_codigo = context.user_data.get("cons_prod_codigo")
         vendedor_id = context.user_data.get("cons_vendedor_id")
@@ -1073,10 +1073,10 @@ async def consignar_moneda_callback(update: Update, context: ContextTypes.DEFAUL
         await reply_html(
             update,
             f"📦 <b>Consignar Producto</b>\n\n"
-            f"Almacén: <code>{almacen['nombre']}</code>\n"
+            f"Almacen: <code>{almacen['nombre']}</code>\n"
             f"Producto: <code>{producto['nombre']}</code> ({prod_codigo})\n"
             f"Vendedor: <code>{vendedor['name']}</code>\n\n"
-            f"Envía el <b>precio unitario</b> de venta:"
+            f"Send el <b>precio unitario</b> de venta:"
         )
         return CONSIGNAR_PRECIO
     
@@ -1084,7 +1084,7 @@ async def consignar_moneda_callback(update: Update, context: ContextTypes.DEFAUL
 
 
 async def consignar_cantidad_receive(update: Update, context: ContextTypes.DEFAULT_TYPE) -> int:
-    """Recibe la cantidad y realiza la consignación."""
+    """Recibe la cantidad y realiza la consignacion."""
     if not update.message:
         return CONSIGNAR_CANTIDAD
     
@@ -1105,7 +1105,7 @@ async def consignar_cantidad_receive(update: Update, context: ContextTypes.DEFAU
             await reply_text(update, "❌ Error: datos incompletos. Empieza de nuevo.")
             return ConversationHandler.END
         
-        # Realizar la consignación
+        # Realizar la consignacion
         resultado = consignar_desde_almacen(
             almacen_id, prod_codigo, cantidad, vendedor_id, precio, moneda, user_id
         )
@@ -1115,8 +1115,8 @@ async def consignar_cantidad_receive(update: Update, context: ContextTypes.DEFAU
         
         await reply_html(
             update,
-            f"✅ <b>Consignación Realizada</b>\n\n"
-            f"Almacén: <code>{almacen['nombre']}</code>\n"
+            f"✅ <b>Consignacion Realizada</b>\n\n"
+            f"Almacen: <code>{almacen['nombre']}</code>\n"
             f"Producto: <code>{prod_codigo}</code>\n"
             f"Vendedor: <code>{vendedor['name']}</code>\n"
             f"Cantidad: <b>{cantidad}</b>\n"
@@ -1189,7 +1189,7 @@ async def mover_consignacion_entry(update: Update, context: ContextTypes.DEFAULT
         await reply_text(update, "❌ Necesitas al menos 2 vendedores para mover consignaciones.")
         return ConversationHandler.END
     
-    text = "🔄 <b>Mover Consignación: Vendedor → Vendedor</b>\n\nSelecciona el vendedor <b>origen</b>:"
+    text = "🔄 <b>Mover Consignacion: Vendedor → Vendedor</b>\n\nSelect el vendedor <b>origen</b>:"
     keyboard: List[List[InlineKeyboardButton]] = []
     for vend in vendedores:
         keyboard.append([
@@ -1198,7 +1198,7 @@ async def mover_consignacion_entry(update: Update, context: ContextTypes.DEFAULT
                 callback_data=f"mover_cons:origen:{vend['id']}"
             )
         ])
-    keyboard.append([InlineKeyboardButton("❌ Cancelar", callback_data="mover_cons:cancel")])
+    keyboard.append([InlineKeyboardButton("❌ Cancel", callback_data="mover_cons:cancel")])
     kb = InlineKeyboardMarkup(keyboard)
     
     await reply_html(update, text, reply_markup=kb)
@@ -1227,7 +1227,7 @@ async def mover_consignacion_callback(update: Update, context: ContextTypes.DEFA
                 await reply_text(update, "❌ Este vendedor no tiene productos consignados.")
                 return ConversationHandler.END
             
-            text = f"👤 <b>Vendedor Origen: {vendedor['name']}</b>\n\nSelecciona el producto:"
+            text = f"👤 <b>Vendedor Origen: {vendedor['name']}</b>\n\nSelect el producto:"
             keyboard: List[List[InlineKeyboardButton]] = []
             for cons in consignaciones:
                 with get_db_connection() as conn:
@@ -1238,7 +1238,7 @@ async def mover_consignacion_callback(update: Update, context: ContextTypes.DEFA
                         callback_data=f"mover_cons:prod:{cons['codigo']}"
                     )
                 ])
-            keyboard.append([InlineKeyboardButton("⬅️ Volver", callback_data="mover_cons:back")])
+            keyboard.append([InlineKeyboardButton("⬅️ Back", callback_data="mover_cons:back")])
             kb = InlineKeyboardMarkup(keyboard)
             await reply_html(update, text, reply_markup=kb)
             return MOVER_CONS_SEL_PRODUCTO
@@ -1261,7 +1261,7 @@ async def mover_consignacion_callback(update: Update, context: ContextTypes.DEFA
         vendedores_destino = [v for v in vendedores if v["id"] != origen_id]
         
         if not vendedores_destino:
-            await reply_text(update, "❌ No hay otros vendedores disponibles como destino.")
+            await reply_text(update, "❌ No otros vendedores disponibles como destino.")
             return ConversationHandler.END
         
         vendedor_origen = VendedorService.obtener_por_id(origen_id)
@@ -1273,11 +1273,11 @@ async def mover_consignacion_callback(update: Update, context: ContextTypes.DEFA
             )
         
         text = (
-            f"🔄 <b>Mover Consignación</b>\n\n"
+            f"🔄 <b>Mover Consignacion</b>\n\n"
             f"Origen: <code>{vendedor_origen['name']}</code>\n"
             f"Producto: <code>{producto['nombre']}</code> ({producto_codigo})\n"
             f"Stock disponible: <b>{consignacion['stock']}</b>\n\n"
-            f"Selecciona el vendedor <b>destino</b>:"
+            f"Select el vendedor <b>destino</b>:"
         )
         keyboard: List[List[InlineKeyboardButton]] = []
         for vend in vendedores_destino:
@@ -1287,7 +1287,7 @@ async def mover_consignacion_callback(update: Update, context: ContextTypes.DEFA
                     callback_data=f"mover_cons:destino:{vend['id']}"
                 )
             ])
-        keyboard.append([InlineKeyboardButton("⬅️ Volver", callback_data="mover_cons:back")])
+        keyboard.append([InlineKeyboardButton("⬅️ Back", callback_data="mover_cons:back")])
         kb = InlineKeyboardMarkup(keyboard)
         await reply_html(update, text, reply_markup=kb)
         return MOVER_CONS_SEL_DESTINO
@@ -1315,12 +1315,12 @@ async def mover_consignacion_callback(update: Update, context: ContextTypes.DEFA
         
         await reply_html(
             update,
-            f"🔄 <b>Mover Consignación</b>\n\n"
+            f"🔄 <b>Mover Consignacion</b>\n\n"
             f"De: <code>{vendedor_origen['name']}</code>\n"
             f"A: <code>{vendedor_destino['name']}</code>\n"
             f"Producto: <code>{producto['nombre']}</code>\n\n"
             f"Cantidad disponible: <b>{consignacion['stock']}</b>\n\n"
-            f"Envía la <b>cantidad</b> a mover:"
+            f"Send la <b>cantidad</b> a mover:"
         )
         return MOVER_CONS_CANTIDAD
     
@@ -1333,14 +1333,14 @@ async def mover_consignacion_callback(update: Update, context: ContextTypes.DEFA
         ]
         for key in keys_to_remove:
             context.user_data.pop(key, None)
-        await reply_text(update, "✅ Operación cancelada.")
+        await reply_text(update, "✅ Operation cancelada.")
         return ConversationHandler.END
     
     return MOVER_CONS_SEL_ORIGEN
 
 
 async def mover_consignacion_cantidad_receive(update: Update, context: ContextTypes.DEFAULT_TYPE) -> int:
-    """Recibe la cantidad y realiza el movimiento de consignación."""
+    """Recibe la cantidad y realiza el movimiento de consignacion."""
     if not update.message:
         return MOVER_CONS_CANTIDAD
     
@@ -1369,7 +1369,7 @@ async def mover_consignacion_cantidad_receive(update: Update, context: ContextTy
         
         await reply_html(
             update,
-            f"✅ <b>Consignación Movida</b>\n\n"
+            f"✅ <b>Consignacion Movida</b>\n\n"
             f"De: <code>{vendedor_origen['name']}</code>\n"
             f"A: <code>{vendedor_destino['name']}</code>\n"
             f"Producto: <code>{prod_codigo}</code>\n"
@@ -1389,7 +1389,7 @@ async def mover_consignacion_cantidad_receive(update: Update, context: ContextTy
         await reply_text(update, f"❌ {str(e)}")
         return MOVER_CONS_CANTIDAD
     except Exception as e:
-        logger.error(f"Error moviendo consignación: {e}", exc_info=True)
+        logger.error(f"Error moviendo consignacion: {e}", exc_info=True)
         await reply_text(update, f"❌ Error: {str(e)}")
         return MOVER_CONS_CANTIDAD
 
@@ -1432,10 +1432,10 @@ async def pagar_consignacion_entry(update: Update, context: ContextTypes.DEFAULT
     
     vendedores = VendedorService.listar()
     if not vendedores:
-        await reply_text(update, "❌ No hay vendedores disponibles. Crea uno primero.")
+        await reply_text(update, "❌ No vendedores disponibles. Crea uno primero.")
         return ConversationHandler.END
     
-    text = "💰 <b>Pagar Consignación</b>\n\nSelecciona el vendedor:"
+    text = "💰 <b>Pagar Consignacion</b>\n\nSelect el vendedor:"
     keyboard: List[List[InlineKeyboardButton]] = []
     for vend in vendedores:
         keyboard.append([
@@ -1444,7 +1444,7 @@ async def pagar_consignacion_entry(update: Update, context: ContextTypes.DEFAULT
                 callback_data=f"pagar_cons:vend:{vend['id']}"
             )
         ])
-    keyboard.append([InlineKeyboardButton("❌ Cancelar", callback_data="pagar_cons:cancel")])
+    keyboard.append([InlineKeyboardButton("❌ Cancel", callback_data="pagar_cons:cancel")])
     kb = InlineKeyboardMarkup(keyboard)
     
     await reply_html(update, text, reply_markup=kb)
@@ -1482,7 +1482,7 @@ async def pagar_consignacion_callback(update: Update, context: ContextTypes.DEFA
             text = f"👤 <b>Vendedor: {vendedor['name']}</b>\n\n<b>Deudas:</b>\n"
             for deuda in deudas_vendedor:
                 text += f"• {deuda['monto_pendiente']:.2f} {deuda['moneda'].upper()}\n"
-            text += "\nSelecciona la <b>moneda de la deuda</b> a pagar:"
+            text += "\nSelect la <b>moneda de la deuda</b> a pagar:"
             
             keyboard: List[List[InlineKeyboardButton]] = []
             monedas_deuda = list(set([d['moneda'] for d in deudas_vendedor]))
@@ -1494,7 +1494,7 @@ async def pagar_consignacion_callback(update: Update, context: ContextTypes.DEFA
                         callback_data=f"pagar_cons:moneda_deuda:{moneda}"
                     )
                 ])
-            keyboard.append([InlineKeyboardButton("⬅️ Volver", callback_data="pagar_cons:back")])
+            keyboard.append([InlineKeyboardButton("⬅️ Back", callback_data="pagar_cons:back")])
             kb = InlineKeyboardMarkup(keyboard)
             await reply_html(update, text, reply_markup=kb)
             return PAGAR_CONS_SEL_MONEDA
@@ -1519,10 +1519,10 @@ async def pagar_consignacion_callback(update: Update, context: ContextTypes.DEFA
         
         await reply_html(
             update,
-            f"💰 <b>Pagar Consignación</b>\n\n"
+            f"💰 <b>Pagar Consignacion</b>\n\n"
             f"Vendedor: <code>{vendedor['name']}</code>\n"
             f"Deuda: <b>{deuda['monto_pendiente']:.2f} {moneda_deuda.upper()}</b>\n\n"
-            f"Envía el <b>monto</b> a pagar:"
+            f"Send el <b>monto</b> a pagar:"
         )
         return PAGAR_CONS_MONTO
     
@@ -1540,14 +1540,14 @@ async def pagar_consignacion_callback(update: Update, context: ContextTypes.DEFA
         vendedor = VendedorService.obtener_por_id(vendedor_id)
         moneda_deuda = context.user_data.get("pagar_cons_moneda_deuda")
         
-        text = f"💰 <b>Pagar Consignación</b>\n\n"
+        text = f"💰 <b>Pagar Consignacion</b>\n\n"
         text += f"Vendedor: <code>{vendedor['name']}</code>\n"
         text += f"Monto: <b>{monto} {moneda_pago.upper()}</b>\n\n"
-        text += f"Selecciona la <b>caja</b> donde se recibe el pago:"
+        text += f"Select la <b>caja</b> donde se recibe el pago:"
         
         cajas = CajaService.listar()
         if not cajas:
-            await reply_text(update, "❌ No hay cajas disponibles. Crea una primero.")
+            await reply_text(update, "❌ No cajas disponibles. Crea una primero.")
             return ConversationHandler.END
         
         keyboard: List[List[InlineKeyboardButton]] = []
@@ -1558,7 +1558,7 @@ async def pagar_consignacion_callback(update: Update, context: ContextTypes.DEFA
                     callback_data=f"pagar_cons:caja:{caja['id']}"
                 )
             ])
-        keyboard.append([InlineKeyboardButton("⬅️ Volver", callback_data="pagar_cons:back")])
+        keyboard.append([InlineKeyboardButton("⬅️ Back", callback_data="pagar_cons:back")])
         kb = InlineKeyboardMarkup(keyboard)
         await reply_html(update, text, reply_markup=kb)
         return PAGAR_CONS_SEL_CAJA
@@ -1627,7 +1627,7 @@ async def pagar_consignacion_callback(update: Update, context: ContextTypes.DEFA
         ]
         for key in keys_to_remove:
             context.user_data.pop(key, None)
-        await reply_text(update, "✅ Operación cancelada.")
+        await reply_text(update, "✅ Operation cancelada.")
         return ConversationHandler.END
     
     return PAGAR_CONS_SEL_VENDEDOR
@@ -1661,7 +1661,7 @@ async def pagar_consignacion_monto_receive(update: Update, context: ContextTypes
         text = f"✅ Monto: <b>{monto}</b>\n\n"
         text += f"Vendedor: <code>{vendedor['name']}</code>\n"
         text += f"Deuda: <b>{deuda['monto_pendiente']:.2f} {moneda_deuda.upper()}</b>\n\n"
-        text += f"Selecciona la <b>moneda del pago</b>:"
+        text += f"Select la <b>moneda del pago</b>:"
         
         keyboard: List[List[InlineKeyboardButton]] = []
         for moneda in VALID_MONEDAS:
@@ -1671,12 +1671,12 @@ async def pagar_consignacion_monto_receive(update: Update, context: ContextTypes
                     callback_data=f"pagar_cons:moneda_pago:{moneda}"
                 )
             ])
-        keyboard.append([InlineKeyboardButton("⬅️ Volver", callback_data="pagar_cons:back")])
+        keyboard.append([InlineKeyboardButton("⬅️ Back", callback_data="pagar_cons:back")])
         kb = InlineKeyboardMarkup(keyboard)
         await reply_html(update, text, reply_markup=kb)
         return PAGAR_CONS_SEL_CAJA
     except ValueError:
-        await reply_text(update, "❌ El monto debe ser un número válido.")
+        await reply_text(update, "❌ El monto debe ser un numero valid.")
         return PAGAR_CONS_MONTO
 
 

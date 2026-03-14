@@ -28,7 +28,7 @@ def get_db_connection():
 
 class InventarioManager:
     @staticmethod
-    def actualizar_stock(
+    def update_stock(
         conn: sqlite3.Connection,
         codigo: str,
         cantidad: float,
@@ -56,7 +56,7 @@ class InventarioManager:
                 f"Disponible: {stock_actual}, Solicitado: {cantidad}"
             )
         
-        # Actualizar stock
+        # Update stock
         nuevo_stock = stock_actual + cantidad if es_entrada else stock_actual - cantidad
         cursor.execute(
             "UPDATE Productos SET stock = ? WHERE codigo = ?",
@@ -92,9 +92,9 @@ class DeudaManager:
         elif moneda_pago == 'usd':
             monto_liquidado_usd = monto_pagado
         else:
-            raise ValueError("Moneda de pago no soportada para liquidación.")
+            raise ValueError("Moneda de pago no soportada para liquidacion.")
             
-        # 2. Reducir la deuda POR_COBRAR (asumiendo que la deuda está en USD)
+        # 2. Reducir la deuda POR_COBRAR (asumiendo que la deuda esta en USD)
         tipo_deuda = 'POR_COBRAR'
         
         cursor.execute("""
@@ -120,11 +120,11 @@ class DeudaManager:
     ) -> float:
         """
         Liquida la deuda POR COBRAR del vendedor por la cantidad vendida.
-        Usa el precio unitario de consignación para calcular el monto a descontar.
+        Usa el precio unitario de consignacion para calcular el monto a descontar.
         """
         cursor = conn.cursor()
         
-        # 1. Obtener los detalles de la consignación (incluye el precio de consignación)
+        # 1. Obtener los detalles de la consignacion (incluye el precio de consignacion)
         cursor.execute("""
             SELECT precio_unitario, moneda FROM Consignaciones
             WHERE vendedor = ? AND codigo = ?
@@ -132,7 +132,7 @@ class DeudaManager:
         consignacion_data = cursor.fetchone()
 
         if not consignacion_data:
-            raise ValueError(f"Error: No se encontró el precio de consignación para {codigo} de {vendedor}.")
+            raise ValueError(f"Error: No se encontro el precio de consignacion para {codigo} de {vendedor}.")
         
         precio_unitario = consignacion_data['precio_unitario']
         moneda_deuda = consignacion_data['moneda'] # La moneda de la deuda original
@@ -147,7 +147,7 @@ class DeudaManager:
             WHERE actor_id = ? AND moneda = ? AND tipo = 'POR_COBRAR'
         """, (monto_a_liquidar, vendedor, moneda_deuda))
 
-        # 4. Verificar que se haya actualizado alguna fila
+        # 4. Verificar que se haya updated alguna fila
         if cursor.rowcount == 0:
             logger.warning(f"No se pudo liquidar la deuda por venta. Vendedor: {vendedor}, Monto: {monto_a_liquidar} {moneda_deuda}")
             return 0.0
@@ -156,7 +156,7 @@ class DeudaManager:
 
 
     @staticmethod
-    def actualizar_deuda(
+    def update_deuda(
         conn: sqlite3.Connection,
         actor_id: str,
         monto: float,
@@ -165,13 +165,13 @@ class DeudaManager:
         es_incremento: bool = True
     ) -> float:
         """
-        Actualiza el saldo de una deuda, creándola si no existe.
+        Actualiza el saldo de una deuda, creandola si no existe.
         """
         cursor = conn.cursor()
         
         # Validar tipo de deuda
         if tipo not in ('POR_PAGAR', 'POR_COBRAR'):
-            raise ValueError("Tipo de deuda inválido")
+            raise ValueError("Tipo de deuda invalid")
         
         # Buscar deuda existente
         cursor.execute("""
@@ -183,7 +183,7 @@ class DeudaManager:
         deuda = cursor.fetchone()
         
         if deuda:
-            # Actualizar deuda existente
+            # Update deuda existente
             nuevo_monto = deuda['monto_pendiente']
             if es_incremento:
                 nuevo_monto += monto
@@ -197,7 +197,7 @@ class DeudaManager:
                 WHERE actor_id = ? AND moneda = ? AND tipo = ?
             """, (nuevo_monto, actor_id, moneda, tipo))
         else:
-            # Crear nueva deuda
+            # Create nueva deuda
             if not es_incremento:
                 raise ValueError(f"No existe deuda {tipo} para {actor_id} en {moneda}")
             
@@ -210,10 +210,10 @@ class DeudaManager:
         return nuevo_monto
 
 class MovimientoManager:
-    # 🌟 NUEVO MÉTODO CRÍTICO: Obtener Saldo para evitar Negativos
+    # 🌟 NUEVO METODO CRITICO: Obtener Saldo para evitar Negativos
     @staticmethod
     def get_saldo_caja(conn: sqlite3.Connection, caja: str, moneda: str) -> float:
-        """Calcula el saldo actual de una caja en una moneda específica."""
+        """Calcula el saldo actual de una caja en una moneda especifica."""
         cursor = conn.cursor()
         # Nota: 'venta' y 'consignacion_finalizada' son tipos de 'ingreso' de efectivo en caja.
         # 'gasto', 'traspaso' (salida) y 'pago_proveedor' (que usa gasto) son salidas.
@@ -259,7 +259,7 @@ class MovimientoManager:
 
 class ConsignacionManager:
     @staticmethod
-    def actualizar_consignacion(
+    def update_consignacion(
         conn: sqlite3.Connection,
         codigo: str,
         vendedor: str,
@@ -269,11 +269,11 @@ class ConsignacionManager:
         es_incremento: bool = True
     ) -> Dict[str, Any]:
         """
-        Actualiza o crea una consignación.
+        Actualiza o crea una consignacion.
         """
         cursor = conn.cursor()
         
-        # Verificar consignación existente
+        # Verificar consignacion existente
         cursor.execute("""
             SELECT stock, precio_unitario, moneda
             FROM Consignaciones 
@@ -304,10 +304,10 @@ class ConsignacionManager:
             
         else:
             if not es_incremento:
-                raise ValueError(f"No existe consignación de {codigo} para {vendedor}")
+                raise ValueError(f"No existe consignacion de {codigo} para {vendedor}")
             
             if precio_unitario is None or moneda is None:
-                raise ValueError("Precio y moneda son requeridos para nueva consignación")
+                raise ValueError("Precio y moneda son requeridos para nueva consignacion")
             
             nuevo_stock = cantidad
             
@@ -325,7 +325,7 @@ class ConsignacionManager:
 
 class ContainerManager:
     @staticmethod
-    def crear(conn: sqlite3.Connection, nombre: str) -> int:
+    def create(conn: sqlite3.Connection, nombre: str) -> int:
         cursor = conn.cursor()
         cursor.execute(
             "INSERT INTO Contenedores (nombre) VALUES (?)",
@@ -346,15 +346,15 @@ class ContainerManager:
         return cursor.fetchone()
 
     @staticmethod
-    def actualizar(conn: sqlite3.Connection, cont_id: int, nuevo_nombre: str) -> None:
+    def update(conn: sqlite3.Connection, cont_id: int, nuevo_nombre: str) -> None:
         cursor = conn.cursor()
         cursor.execute("UPDATE Contenedores SET nombre = ? WHERE id = ?", (nuevo_nombre.strip(), cont_id))
         if cursor.rowcount == 0:
-            raise ValueError("Contenedor no encontrado")
+            raise ValueError("Contenedor not found")
 
     @staticmethod
-    def eliminar(conn: sqlite3.Connection, cont_id: int) -> None:
+    def delete(conn: sqlite3.Connection, cont_id: int) -> None:
         cursor = conn.cursor()
         cursor.execute("DELETE FROM Contenedores WHERE id = ?", (cont_id,))
         if cursor.rowcount == 0:
-            raise ValueError("Contenedor no encontrado")
+            raise ValueError("Contenedor not found")

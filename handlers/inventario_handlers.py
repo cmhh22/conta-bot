@@ -18,7 +18,7 @@ logger = logging.getLogger(__name__)
 
 @admin_only
 async def entrada_command(update: Update, context: ContextTypes.DEFAULT_TYPE) -> None:
-    """Registra una entrada de mercancía."""
+    """Registra una entrada de mercancia."""
     try:
         if len(context.args) < 7:
             raise ValueError(
@@ -33,7 +33,7 @@ async def entrada_command(update: Update, context: ContextTypes.DEFAULT_TYPE) ->
         caja_nombre = context.args[4].lower().strip()
         caja = CajaService.obtener_por_nombre(caja_nombre)
         if not caja:
-            raise ValueError(f"Caja '{caja_nombre}' no encontrada. Usa /cajas para ver las cajas disponibles.")
+            raise ValueError(f"Caja '{caja_nombre}' not found. Usa /cajas para ver las cajas disponibles.")
         # Nota: caja no se usa en registrar_entrada, solo se valida
         proveedor = context.args[5].upper()
         descripcion_extra = " ".join(context.args[6:])
@@ -44,13 +44,13 @@ async def entrada_command(update: Update, context: ContextTypes.DEFAULT_TYPE) ->
         
         await reply_html(
             update,
-            f"📦 <b>Entrada de Mercancía Registrada!</b>\n\n"
-            f"<b>Código:</b> {codigo}\n"
+            f"📦 <b>Entrada de Mercancia Registrada!</b>\n\n"
+            f"<b>Codigo:</b> {codigo}\n"
             f"<b>Cantidad:</b> +{cantidad} unidades\n"
             f"<b>Costo Unitario:</b> {costo_unitario:.2f} {moneda_costo.upper()}\n"
             f"<b>Proveedor:</b> {proveedor}\n\n"
             f"💰 <b>DEUDA GENERADA:</b> {resultado['costo_total']:.2f} {moneda_costo.upper()} "
-            f"añadidos a la Cuenta por Pagar con {proveedor}."
+            f"anadidos a la Cuenta por Pagar con {proveedor}."
         )
         logger.info(f"Entrada de {cantidad} de {codigo} registrada")
         
@@ -64,7 +64,7 @@ async def entrada_command(update: Update, context: ContextTypes.DEFAULT_TYPE) ->
         )
     except Exception as e:
         logger.error(f"Error inesperado en /entrada: {e}", exc_info=True)
-        await reply_text(update, "Ocurrió un error inesperado al registrar la entrada.")
+        await reply_text(update, "An error occurred inesperado al registrar la entrada.")
 
 
 @admin_only
@@ -74,7 +74,7 @@ async def stock_command(update: Update, context: ContextTypes.DEFAULT_TYPE) -> N
         productos = InventarioService.obtener_stock()
         
         if not productos:
-            await reply_text(update, "El inventario está actualmente vacío (stock = 0).")
+            await reply_text(update, "El inventario esta actualmente empty (stock = 0).")
             return
         
         respuesta = "--- 📋 Inventario Actual (Costo Original) ---\n\n"
@@ -104,7 +104,7 @@ async def stock_command(update: Update, context: ContextTypes.DEFAULT_TYPE) -> N
         
     except Exception as e:
         logger.error(f"Error inesperado en /stock: {e}", exc_info=True)
-        await reply_text(update, "Ocurrió un error inesperado al generar el reporte de stock.")
+        await reply_text(update, "An error occurred inesperado al generar el reporte de stock.")
 
 
 @admin_only
@@ -113,7 +113,7 @@ async def venta_command(update: Update, context: ContextTypes.DEFAULT_TYPE) -> N
     try:
         if len(context.args) < 5:
             raise ValueError(
-                "Faltan argumentos. Uso: /venta [código] [unidades] [monto_total] "
+                "Faltan argumentos. Uso: /venta [codigo] [unidades] [monto_total] "
                 "[moneda] [caja] [vendedor/nota...]"
             )
         
@@ -124,9 +124,9 @@ async def venta_command(update: Update, context: ContextTypes.DEFAULT_TYPE) -> N
         caja_nombre = context.args[4].lower().strip()
         caja = CajaService.obtener_por_nombre(caja_nombre)
         if not caja:
-            raise ValueError(f"Caja '{caja_nombre}' no encontrada. Usa /cajas para ver las cajas disponibles.")
+            raise ValueError(f"Caja '{caja_nombre}' not found. Usa /cajas para ver las cajas disponibles.")
         caja_id = caja['id']
-        nota = " ".join(context.args[5:]) if len(context.args) > 5 else "Venta estándar"
+        nota = " ".join(context.args[5:]) if len(context.args) > 5 else "Venta estandar"
         user_id = update.effective_user.id
         
         # Intentar detectar si es venta consignada
@@ -157,14 +157,14 @@ async def venta_command(update: Update, context: ContextTypes.DEFAULT_TYPE) -> N
                 f"{resultado['moneda_liquidacion'].upper()}"
             )
         else:
-            # Venta estándar
+            # Venta estandar
             resultado = InventarioService.registrar_venta_estandar(
                 codigo, unidades, monto_total, moneda, caja_id, user_id, nota
             )
             
             await reply_html(
                 update,
-                f"✅ <b>Venta Estándar Registrada!</b>\n\n"
+                f"✅ <b>Venta Estandar Registrada!</b>\n\n"
                 f"<b>Producto:</b> {codigo} ({unidades} u.)\n"
                 f"<b>Caja de Ingreso:</b> {caja['nombre'].upper()}\n"
                 f"<b>Ingreso Total:</b> {monto_total:.2f} {moneda.upper()}\n"
@@ -178,12 +178,12 @@ async def venta_command(update: Update, context: ContextTypes.DEFAULT_TYPE) -> N
         await reply_html(
             update,
             f"<b>Error:</b> {e}\n"
-            "Uso correcto: <code>/venta [código] [unidades] [monto_total] "
+            "Uso correcto: <code>/venta [codigo] [unidades] [monto_total] "
             "[moneda] [caja] [vendedor/nota...]</code>"
         )
     except Exception as e:
         logger.error(f"Error inesperado en /venta: {e}", exc_info=True)
-        await reply_text(update, f"Ocurrió un error inesperado al registrar la venta: {str(e)}")
+        await reply_text(update, f"An error occurred inesperado al registrar la venta: {str(e)}")
 
 
 @admin_only
@@ -205,7 +205,7 @@ async def ganancia_command(update: Update, context: ContextTypes.DEFAULT_TYPE) -
         
     except Exception as e:
         logger.error(f"Error inesperado en /ganancia: {e}", exc_info=True)
-        await reply_text(update, "Ocurrió un error inesperado al calcular la ganancia.")
+        await reply_text(update, "An error occurred inesperado al calcular la ganancia.")
 
 
 @admin_only
@@ -231,12 +231,12 @@ async def consignar_command(update: Update, context: ContextTypes.DEFAULT_TYPE) 
         
         await reply_html(
             update,
-            f"✅ <b>Consignación Registrada!</b>\n\n"
+            f"✅ <b>Consignacion Registrada!</b>\n\n"
             f"<b>Vendedor:</b> {vendedor}\n"
             f"<b>Producto:</b> {codigo} ({cantidad} u.)\n"
             f"<b>Deuda Por Cobrar:</b> +{resultado['monto_deuda']:.2f} {moneda.upper()}"
         )
-        logger.info(f"Consignación registrada: {codigo} para {vendedor}")
+        logger.info(f"Consignacion registrada: {codigo} para {vendedor}")
         
     except (ValueError, ValidationError) as e:
         await reply_html(
@@ -247,7 +247,7 @@ async def consignar_command(update: Update, context: ContextTypes.DEFAULT_TYPE) 
         )
     except Exception as e:
         logger.error(f"Error inesperado en /consignar: {e}", exc_info=True)
-        await reply_text(update, f"Error al registrar la consignación: {str(e)}")
+        await reply_text(update, f"Error while registrar la consignacion: {str(e)}")
 
 
 @admin_only
@@ -281,5 +281,5 @@ async def stock_consignado_command(update: Update, context: ContextTypes.DEFAULT
         
     except Exception as e:
         logger.error(f"Error inesperado en /stock_consignado: {e}", exc_info=True)
-        await reply_text(update, "Ocurrió un error inesperado al generar el reporte de consignación.")
+        await reply_text(update, "An error occurred inesperado al generar el reporte de consignacion.")
 

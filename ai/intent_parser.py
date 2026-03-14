@@ -1,5 +1,5 @@
 """
-Parser de intenciones - Convierte lenguaje natural en acciones del sistema.
+Parser de intenciones - Convierte lenguaje natural en actions del sistema.
 """
 import re
 import logging
@@ -25,10 +25,10 @@ class IntentType(Enum):
     STOCK_CONSIGNADO = "stock_consignado"
     EXPORTAR = "exportar"
     CONTENEDORES = "contenedores"
-    CONTENEDOR_CREAR = "contenedor_crear"
+    CONTENEDOR_CREAR = "contenedor_create"
     CONTENEDOR_LISTAR = "contenedor_listar"
     CONTENEDOR_EDITAR = "contenedor_editar"
-    CONTENEDOR_ELIMINAR = "contenedor_eliminar"
+    CONTENEDOR_ELIMINAR = "contenedor_delete"
     ANALISIS_FINANCIERO = "analisis_financiero"
     CLARIFICATION = "clarification"
     UNKNOWN = "unknown"
@@ -37,7 +37,7 @@ class IntentType(Enum):
 
 
 class IntentParser:
-    """Parser que identifica intenciones y extrae parámetros del lenguaje natural."""
+    """Parser que identifica intenciones y extrae parametros del lenguaje natural."""
     
     # Patrones para reconocer intenciones
     INTENT_PATTERNS = {
@@ -46,8 +46,8 @@ class IntentParser:
             r"dinero disponible", r"estado de cajas", r"ver balance"
         ],
         IntentType.INGRESO: [
-            r"ingreso", r"ingresar", r"entrada de dinero", r"recib[ií]", r"depositar",
-            r"agregar dinero", r"sumar", r"añadir dinero"
+            r"ingreso", r"ingresar", r"entrada de dinero", r"recib[ii]", r"depositar",
+            r"agregar dinero", r"sumar", r"anadir dinero"
         ],
         IntentType.GASTO: [
             r"gasto", r"gastar", r"pagar", r"salida", r"egreso", r"desembolsar",
@@ -62,26 +62,26 @@ class IntentParser:
             r"proveedores", r"vendedores", r"quien debe", r"quien me debe"
         ],
         IntentType.HISTORIAL: [
-            r"historial", r"movimientos", r"transacciones", r"últimos", r"recientes",
+            r"historial", r"movimientos", r"transactions", r"ultimos", r"recientes",
             r"actividad", r"registro"
         ],
         IntentType.STOCK: [
-            r"stock", r"inventario", r"productos", r"mercanc[ií]a", r"existencias",
+            r"stock", r"inventario", r"productos", r"mercanc[ii]a", r"existencias",
             r"que hay en stock", r"cuantos productos"
         ],
         IntentType.VENTA: [
-            r"venta", r"vender", r"vend[ií]", r"vendido", r"cliente compr[oó]"
+            r"venta", r"vender", r"vend[ii]", r"vendido", r"cliente compr[oo]"
         ],
         IntentType.ENTRADA: [
-            r"entrada", r"comprar", r"compra", r"compr[oó]", r"lleg[oó] mercanc[ií]a",
+            r"entrada", r"comprar", r"compra", r"compr[oo]", r"lleg[oo] mercanc[ii]a",
             r"nuevo producto", r"agregar producto"
         ],
         IntentType.GANANCIA: [
             r"ganancia", r"ganancias", r"utilidad", r"margen", r"beneficio",
-            r"cuanto gan[oé]", r"rentabilidad"
+            r"cuanto gan[oe]", r"rentabilidad"
         ],
         IntentType.CONSIGNAR: [
-            r"consignar", r"consignaci[oó]n", r"dar a vendedor", r"prestar producto"
+            r"consignar", r"consignaci[oo]n", r"dar a vendedor", r"prestar producto"
         ],
         IntentType.STOCK_CONSIGNADO: [
             r"stock consignado", r"productos consignados", r"que tiene.*vendedor"
@@ -93,8 +93,8 @@ class IntentParser:
             r"contenedor", r"contenedores", r"gestionar contenedores"
         ],
         IntentType.CONTENEDOR_CREAR: [
-            r"crear contenedor", r"nuevo contenedor", r"agregar contenedor",
-            r"añadir contenedor", r"registrar contenedor"
+            r"create contenedor", r"nuevo contenedor", r"agregar contenedor",
+            r"anadir contenedor", r"registrar contenedor"
         ],
         IntentType.CONTENEDOR_LISTAR: [
             r"listar contenedores", r"ver contenedores", r"mostrar contenedores",
@@ -102,29 +102,29 @@ class IntentParser:
         ],
         IntentType.CONTENEDOR_EDITAR: [
             r"editar contenedor", r"renombrar contenedor", r"cambiar nombre contenedor",
-            r"modificar contenedor", r"actualizar contenedor"
+            r"modificar contenedor", r"update contenedor"
         ],
         IntentType.CONTENEDOR_ELIMINAR: [
-            r"eliminar contenedor", r"borrar contenedor", r"quitar contenedor",
-            r"eliminar.*contenedor", r"borrar.*contenedor"
+            r"delete contenedor", r"borrar contenedor", r"quitar contenedor",
+            r"delete.*contenedor", r"borrar.*contenedor"
         ],
         IntentType.GREETING: [
-            r"hola", r"buenos d[ií]as", r"buenas tardes", r"buenas noches",
+            r"hola", r"buenos d[ii]as", r"buenas tardes", r"buenas noches",
             r"saludos", r"hey", r"hi"
         ],
         IntentType.HELP: [
             r"ayuda", r"help", r"que puedo hacer", r"comandos", r"como funciona"
         ],
         IntentType.ANALISIS_FINANCIERO: [
-            r"an[aá]lisis", r"analizar", r"resumen financiero", r"estado del negocio",
-            r"c[oó]mo va el negocio", r"c[oó]mo estamos", r"dashboard", r"reporte inteligente",
-            r"tendencias", r"insight", r"como vamos", r"asesor[ií]a"
+            r"an[aa]lisis", r"analizar", r"resumen financiero", r"estado del negocio",
+            r"c[oo]mo va el negocio", r"c[oo]mo estamos", r"dashboard", r"reporte inteligente",
+            r"tendencias", r"insight", r"como vamos", r"asesor[ii]a"
         ],
     }
     
     # Patrones para extraer valores
     MONEDA_PATTERNS = {
-        "usd": [r"\busd\b", r"\bd[oó]lar", r"\bd[oó]lares", r"\b\$"],
+        "usd": [r"\busd\b", r"\bd[oo]lar", r"\bd[oo]lares", r"\b\$"],
         "cup": [r"\bcup\b", r"\bpeso", r"\bpesos", r"\bcubano"],
         "cup-t": [r"cup-t", r"transferible", r"cup transferible"]
     }
@@ -138,42 +138,42 @@ class IntentParser:
     @classmethod
     def parse_intent(cls, text: str) -> Tuple[IntentType, Dict[str, Any]]:
         """
-        Parsea el texto y retorna la intención y parámetros extraídos.
+        Parsea el texto y retorna la intencion y parametros extraidos.
         
         Returns:
-            Tuple de (IntentType, dict con parámetros)
+            Tuple de (IntentType, dict con parametros)
         """
         text_lower = text.lower().strip()
         
-        # Detectar intención
+        # Detectar intencion
         intent = cls._detect_intent(text_lower)
         
-        # Extraer parámetros según la intención
+        # Extraer parametros segun la intencion
         params = cls._extract_parameters(text_lower, intent)
         
         return intent, params
     
     @classmethod
     def _detect_intent(cls, text: str) -> IntentType:
-        """Detecta la intención principal del texto."""
-        # Prioridad: intenciones específicas primero, luego genéricas
-        # Orden de prioridad (de más específico a menos específico)
+        """Detecta la intencion principal del texto."""
+        # Prioridad: intenciones especificas primero, luego genericas
+        # Orden de prioridad (de mas especifico a menos especifico)
         priority_order = [
             IntentType.CONTENEDOR_CREAR,
             IntentType.CONTENEDOR_EDITAR,
             IntentType.CONTENEDOR_ELIMINAR,
             IntentType.CONTENEDOR_LISTAR,
-            IntentType.CONTENEDORES,  # Genérico al final
+            IntentType.CONTENEDORES,  # Generico al final
         ]
         
-        # Primero verificar intenciones específicas en orden de prioridad
+        # Primero verificar intenciones especificas en orden de prioridad
         for intent_type in priority_order:
             if intent_type in cls.INTENT_PATTERNS:
                 for pattern in cls.INTENT_PATTERNS[intent_type]:
                     if re.search(pattern, text, re.IGNORECASE):
                         return intent_type
         
-        # Si no se encontró intención específica de contenedores, buscar otras
+        # Si no se encontro intencion especifica de contenedores, buscar otras
         scores = {}
         
         for intent_type, patterns in cls.INTENT_PATTERNS.items():
@@ -189,24 +189,24 @@ class IntentParser:
                 scores[intent_type] = score
         
         if scores:
-            # Retornar la intención con mayor score
+            # Retornar la intencion con mayor score
             return max(scores.items(), key=lambda x: x[1])[0]
         
         return IntentType.UNKNOWN
     
     @classmethod
     def _extract_parameters(cls, text: str, intent: IntentType) -> Dict[str, Any]:
-        """Extrae parámetros del texto según la intención."""
+        """Extrae parametros del texto segun la intencion."""
         params = {}
         
-        # Extraer números (montos, cantidades)
-        # Buscar números con contexto (ej: "100 USD", "50 CUP", "2 unidades")
+        # Extraer numeros (montos, cantidades)
+        # Buscar numeros con contexto (ej: "100 USD", "50 CUP", "2 unidades")
         number_patterns = [
-            (r'(\d+\.?\d*)\s*(?:usd|d[oó]lar|d[oó]lares|\$)', 'monto_usd'),
+            (r'(\d+\.?\d*)\s*(?:usd|d[oo]lar|d[oo]lares|\$)', 'monto_usd'),
             (r'(\d+\.?\d*)\s*(?:cup|peso|pesos)', 'monto_cup'),
             (r'(\d+\.?\d*)\s*(?:unidades?|u\.?|cantidad)', 'cantidad'),
-            (r'(\d+\.?\d*)\s*(?:d[ií]a|d[ií]as)', 'dias'),
-            (r'\b(\d+\.?\d*)\b', 'numero_generico'),  # Cualquier número
+            (r'(\d+\.?\d*)\s*(?:d[ii]a|d[ii]as)', 'dias'),
+            (r'\b(\d+\.?\d*)\b', 'numero_generico'),  # Cualquier numero
         ]
         
         numbers_found = {}
@@ -218,7 +218,7 @@ class IntentParser:
                 except ValueError:
                     pass
         
-        # Asignar números según contexto
+        # Asignar numeros segun contexto
         if 'monto_usd' in numbers_found:
             params['monto'] = numbers_found['monto_usd']
             params['moneda'] = 'usd'
@@ -262,17 +262,17 @@ class IntentParser:
                 params['caja_origen'] = traspaso_match.group(1).lower()
                 params['caja_destino'] = traspaso_match.group(2).lower()
         
-        # Extraer códigos de producto (mayúsculas seguidas de números)
+        # Extraer codigos de producto (mayusculas seguidas de numeros)
         codigo_match = re.search(r'\b[A-Z]+\d+\b', text.upper())
         if codigo_match:
             params['codigo'] = codigo_match.group()
         
         # Extraer nombres propios (vendedores, proveedores, nombres de contenedores)
-        # Buscar nombres entre comillas o después de ciertas palabras clave
+        # Buscar nombres entre comillas o despues de ciertas palabras clave
         nombre_patterns = [
             r'(?:nombre|llamado|llamada|de nombre)\s+["\']?([^"\']+?)(?:\s|$|,|\.)',
             r'(?:contenedor|nombre)\s+["\']?([A-Za-z][a-zA-Z0-9\s]+?)(?:\s|$|,|\.)',
-            r'(?:crear|nuevo|agregar|añadir)\s+(?:contenedor\s+)?(?:llamado\s+)?["\']?([A-Za-z][a-zA-Z0-9\s]+?)(?:\s|$|,|\.)',
+            r'(?:create|nuevo|agregar|anadir)\s+(?:contenedor\s+)?(?:llamado\s+)?["\']?([A-Za-z][a-zA-Z0-9\s]+?)(?:\s|$|,|\.)',
         ]
         
         for pattern in nombre_patterns:
@@ -283,10 +283,10 @@ class IntentParser:
                 nombre = re.sub(r'\s+', ' ', nombre).strip()
                 if len(nombre) > 0 and nombre.lower() not in ['contenedor', 'contenedores', 'de', 'nombre']:
                     params['nombre'] = nombre
-                    params['actor'] = nombre  # También como actor para compatibilidad
+                    params['actor'] = nombre  # Tambien como actor para compatibilidad
                     break
         
-        # Si no se encontró nombre, buscar la última palabra después de "nombre" o "llamado"
+        # Si no se encontro nombre, buscar la ultima palabra despues de "nombre" o "llamado"
         if 'nombre' not in params:
             # Buscar patrones como "nombre X" o "llamado X"
             last_word_match = re.search(r'(?:nombre|llamado|llamada)\s+([a-zA-Z0-9]+)', text, re.IGNORECASE)
@@ -296,18 +296,18 @@ class IntentParser:
                     params['nombre'] = nombre
                     params['actor'] = nombre
         
-        # Si aún no se encontró, buscar palabras en mayúsculas o cualquier palabra después de ciertos verbos
+        # Si still no se encontro, buscar palabras en mayusculas o cualquier palabra despues de ciertos verbos
         if 'nombre' not in params:
-            # Para crear contenedor, buscar la palabra después de "crear contenedor"
-            crear_match = re.search(r'crear\s+contenedor\s+(?:de\s+nombre\s+)?([a-zA-Z0-9]+)', text, re.IGNORECASE)
-            if crear_match:
-                nombre = crear_match.group(1).strip()
+            # Para create contenedor, buscar la palabra despues de "create contenedor"
+            create_match = re.search(r'create\s+contenedor\s+(?:de\s+nombre\s+)?([a-zA-Z0-9]+)', text, re.IGNORECASE)
+            if create_match:
+                nombre = create_match.group(1).strip()
                 params['nombre'] = nombre
                 params['actor'] = nombre
         
-        # Extraer descripción (texto después de ciertas palabras clave)
+        # Extraer description (texto despues de ciertas palabras clave)
         desc_patterns = [
-            r"(?:por|para|motivo|descripci[oó]n|nota|de|del|de la)\s+(.+)",
+            r"(?:por|para|motivo|descripci[oo]n|nota|de|del|de la)\s+(.+)",
             r"['\"](.+?)['\"]"
         ]
         for pattern in desc_patterns:
@@ -316,15 +316,15 @@ class IntentParser:
                 params['descripcion'] = match.group(1).strip()
                 break
         
-        # Para historial, extraer días
+        # Para historial, extraer dias
         if intent == IntentType.HISTORIAL:
-            dias_match = re.search(r'(\d+)\s*(?:d[ií]a|d[ií]as)', text)
+            dias_match = re.search(r'(\d+)\s*(?:d[ii]a|d[ii]as)', text)
             if dias_match:
                 params['dias'] = int(dias_match.group(1))
         
         # Para contenedores, extraer IDs y nombres
         if intent in (IntentType.CONTENEDOR_EDITAR, IntentType.CONTENEDOR_ELIMINAR):
-            # Buscar ID numérico
+            # Buscar ID numerico
             id_match = re.search(r'\b(\d+)\b', text)
             if id_match:
                 params['id'] = int(id_match.group(1))

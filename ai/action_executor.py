@@ -1,5 +1,5 @@
 """
-Ejecutor de acciones - Ejecuta las acciones basadas en intenciones parseadas.
+Ejecutor de actions - Ejecuta las actions basadas en intenciones parseadas.
 """
 import logging
 from typing import Dict, Any
@@ -14,7 +14,7 @@ logger = logging.getLogger(__name__)
 
 
 class ActionExecutor:
-    """Ejecuta acciones basadas en intenciones parseadas."""
+    """Ejecuta actions basadas en intenciones parseadas."""
     
     @staticmethod
     async def execute_intent(
@@ -23,7 +23,7 @@ class ActionExecutor:
         user_id: int
     ) -> Dict[str, Any]:
         """
-        Ejecuta una acción basada en la intención y parámetros.
+        Ejecuta una action basada en la intencion y parametros.
         
         Returns:
             Dict con 'success', 'message', y datos adicionales
@@ -66,7 +66,7 @@ class ActionExecutor:
                 return await ActionExecutor._execute_exportar()
             
             elif intent == IntentType.CONTENEDOR_CREAR:
-                return await ActionExecutor._execute_contenedor_crear(params)
+                return await ActionExecutor._execute_contenedor_create(params)
             
             elif intent == IntentType.CONTENEDOR_LISTAR:
                 return await ActionExecutor._execute_contenedor_listar()
@@ -75,30 +75,30 @@ class ActionExecutor:
                 return await ActionExecutor._execute_contenedor_editar(params)
             
             elif intent == IntentType.CONTENEDOR_ELIMINAR:
-                return await ActionExecutor._execute_contenedor_eliminar(params)
+                return await ActionExecutor._execute_contenedor_delete(params)
             
             elif intent == IntentType.CONTENEDORES:
-                # Intención general de contenedores, mostrar lista
+                # Intencion general de contenedores, mostrar lista
                 return await ActionExecutor._execute_contenedor_listar()
             
             elif intent == IntentType.ANALISIS_FINANCIERO:
                 return await ActionExecutor._execute_analisis_financiero(params)
             
             elif intent == IntentType.CLARIFICATION:
-                pregunta = params.get("pregunta", "¿Podrías darme más detalles sobre lo que necesitas?")
+                pregunta = params.get("pregunta", "Podrias darme mas detalles sobre lo que necesitas?")
                 return {"success": True, "message": f"🤔 {pregunta}"}
             
             elif intent == IntentType.GREETING:
                 return {
                     "success": True,
-                    "message": "👋 ¡Hola! Soy <b>ContaBot</b>, tu asistente financiero con IA.\n\n"
+                    "message": "👋 Hola! Soy <b>ContaBot</b>, tu asistente financiero con IA.\n\n"
                               "Puedo ayudarte con:\n"
                               "• 💰 Contabilidad y balances\n"
                               "• 📦 Inventario y ventas\n"
                               "• 📊 Reportes inteligentes\n"
-                              "• 🧠 Análisis financiero con IA\n"
-                              "• 📋 Gestión de deudas\n\n"
-                              "Escríbeme en lenguaje natural o usa /start para el menú."
+                              "• 🧠 Analisis financiero con IA\n"
+                              "• 📋 Management de deudas\n\n"
+                              "Escribeme en lenguaje natural o usa /start para el menu."
                 }
             
             elif intent == IntentType.HELP:
@@ -115,32 +115,32 @@ class ActionExecutor:
                               "• \"Venta de SHIRT01, 2 unidades, 60 USD\"\n\n"
                               "📦 <b>Contenedores:</b>\n"
                               "• \"Listar contenedores\" o \"Ver contenedores\"\n"
-                              "• \"Crear contenedor llamado ALMACEN1\"\n\n"
+                              "• \"Create contenedor llamado ALMACEN1\"\n\n"
                               "🧠 <b>IA Financiera:</b>\n"
                               "• \"Analizar estado del negocio\"\n"
-                              "• \"¿Cómo van las tendencias?\"\n"
-                              "• \"Análisis de gastos\"\n"
+                              "• \"Como van las tendencias?\"\n"
+                              "• \"Analisis de gastos\"\n"
                               "• \"Reporte inteligente de inventario\"\n\n"
                               "📊 <b>Reportes:</b>\n"
                               "• \"Ver deudas\" o \"/deudas\"\n"
-                              "• \"Historial de últimos 7 días\"\n\n"
-                              "También puedes usar el menú con /start"
+                              "• \"Historial de ultimos 7 dias\"\n\n"
+                              "Tambien puedes usar el menu con /start"
                 }
             
             else:
                 return {
                     "success": False,
-                    "message": "No entendí tu solicitud. Puedes:\n\n"
+                    "message": "No entendi tu solicitud. Puedes:\n\n"
                               "• Usar comandos como /balance, /stock, etc.\n"
                               "• Escribir en lenguaje natural\n"
-                              "• Usar /start para ver el menú\n"
-                              "• Escribir \"ayuda\" para más información"
+                              "• Usar /start para ver el menu\n"
+                              "• Escribir \"ayuda\" para mas informacion"
                 }
         
         except ValidationError as e:
             return {
                 "success": False,
-                "message": f"❌ Error de validación: {e}"
+                "message": f"❌ Error: validacion: {e}"
             }
         except ValueError as e:
             return {
@@ -148,10 +148,10 @@ class ActionExecutor:
                 "message": f"❌ Error: {e}"
             }
         except Exception as e:
-            logger.error(f"Error ejecutando acción {intent}: {e}", exc_info=True)
+            logger.error(f"Error ejecutando action {intent}: {e}", exc_info=True)
             return {
                 "success": False,
-                "message": f"❌ Ocurrió un error al procesar tu solicitud: {str(e)}"
+                "message": f"❌ An error occurred al procesar tu solicitud: {str(e)}"
             }
     
     @staticmethod
@@ -162,7 +162,7 @@ class ActionExecutor:
         if not balances:
             return {
                 "success": True,
-                "message": "No hay ningún movimiento registrado todavía."
+                "message": "No ningun movimiento registrado todavia."
             }
         
         respuesta = "--- 📊 Balance General ---\n\n"
@@ -192,7 +192,7 @@ class ActionExecutor:
         return {
             "success": True,
             "message": (
-                f"✅ <b>¡Ingreso registrado!</b>\n\n"
+                f"✅ <b>Ingreso registrado!</b>\n\n"
                 f"💰 Monto: {monto:.2f} {moneda.upper()}\n"
                 f"📦 Caja: {caja.upper()}"
             )
@@ -219,7 +219,7 @@ class ActionExecutor:
             "message": (
                 f"💸 <b>Gasto Registrado!</b>\n\n"
                 f"💰 Monto: -{monto:.2f} {moneda.upper()} de {caja.upper()}\n"
-                f"📝 Descripción: {descripcion}"
+                f"📝 Description: {descripcion}"
             )
         }
     
@@ -269,7 +269,7 @@ class ActionExecutor:
         if not deudas['por_pagar'] and not deudas['por_cobrar']:
             return {
                 "success": True,
-                "message": "✅ No hay deudas pendientes (por pagar o por cobrar)."
+                "message": "✅ No deudas pendientes (por pagar o por cobrar)."
             }
         
         respuesta = "📊 <b>ESTADO DE DEUDAS PENDIENTES</b> 📊\n\n"
@@ -285,7 +285,7 @@ class ActionExecutor:
             for moneda, total in totales_por_pagar.items():
                 respuesta += f"  Total {moneda.upper()}: -{total:,.2f} {moneda.upper()}\n"
         else:
-            respuesta += "  <i>No hay deudas con proveedores pendientes.</i>\n"
+            respuesta += "  <i>No deudas con proveedores pendientes.</i>\n"
         
         respuesta += "\n"
         
@@ -300,7 +300,7 @@ class ActionExecutor:
             for moneda, total in totales_por_cobrar.items():
                 respuesta += f"  Total {moneda.upper()}: +{total:,.2f} {moneda.upper()}\n"
         else:
-            respuesta += "  <i>No hay deudas de vendedores pendientes.</i>\n"
+            respuesta += "  <i>No deudas de vendedores pendientes.</i>\n"
         
         return {"success": True, "message": respuesta}
     
@@ -313,12 +313,12 @@ class ActionExecutor:
         if not movimientos:
             return {
                 "success": True,
-                "message": f"✅ No se encontraron movimientos registrados en los últimos {dias} días."
+                "message": f"✅ No se encontraron movimientos registrados en los ultimos {dias} dias."
             }
         
-        reporte = f"⏳ <b>HISTORIAL DE MOVIMIENTOS ({dias} días)</b> 📜\n\n"
+        reporte = f"⏳ <b>HISTORIAL DE MOVIMIENTOS ({dias} dias)</b> 📜\n\n"
         
-        # Mostrar solo los últimos 10 movimientos para no saturar
+        # Mostrar solo los ultimos 10 movimientos para no saturar
         for mov in movimientos[:10]:
             tipo = mov['tipo']
             simbolo = "+" if tipo in ('ingreso', 'venta') else "-"
@@ -350,7 +350,7 @@ class ActionExecutor:
         if not productos:
             return {
                 "success": True,
-                "message": "El inventario está actualmente vacío (stock = 0)."
+                "message": "El inventario esta actualmente empty (stock = 0)."
             }
         
         respuesta = "--- 📋 Inventario Actual ---\n\n"
@@ -379,7 +379,7 @@ class ActionExecutor:
         if not codigo or not cantidad or not monto_total:
             return {
                 "success": False,
-                "message": "❌ Necesito código, cantidad y monto. Ejemplo: \"Venta de SHIRT01, 2 unidades, 60 USD\""
+                "message": "❌ Necesito codigo, cantidad y monto. Ejemplo: \"Venta de SHIRT01, 2 unidades, 60 USD\""
             }
         
         # Intentar detectar si es consignada
@@ -401,7 +401,7 @@ class ActionExecutor:
                         )
                     }
         
-        # Venta estándar
+        # Venta estandar
         resultado = InventarioService.registrar_venta_estandar(
             codigo, cantidad, monto_total, moneda, caja, user_id, nota
         )
@@ -418,7 +418,7 @@ class ActionExecutor:
     
     @staticmethod
     async def _execute_entrada(params: Dict[str, Any]) -> Dict[str, Any]:
-        """Ejecuta registro de entrada de mercancía."""
+        """Ejecuta registro de entrada de mercancia."""
         codigo = params.get('codigo')
         cantidad = params.get('cantidad')
         costo_unitario = params.get('monto')  # Usar monto como costo si no hay otro
@@ -428,7 +428,7 @@ class ActionExecutor:
         if not codigo or not cantidad or not costo_unitario:
             return {
                 "success": False,
-                "message": "❌ Necesito código, cantidad y costo. Ejemplo: \"Entrada de HUEVOS, 100 unidades, 0.5 USD cada uno\""
+                "message": "❌ Necesito codigo, cantidad y costo. Ejemplo: \"Entrada de HUEVOS, 100 unidades, 0.5 USD cada uno\""
             }
         
         resultado = InventarioService.registrar_entrada(
@@ -439,7 +439,7 @@ class ActionExecutor:
             "success": True,
             "message": (
                 f"📦 <b>Entrada Registrada!</b>\n\n"
-                f"Código: {codigo}\n"
+                f"Codigo: {codigo}\n"
                 f"Cantidad: +{cantidad} unidades\n"
                 f"Proveedor: {proveedor}\n"
                 f"Deuda generada: {resultado['costo_total']:.2f} {moneda.upper()}"
@@ -487,29 +487,29 @@ class ActionExecutor:
     
     @staticmethod
     async def _execute_exportar() -> Dict[str, Any]:
-        """Ejecuta exportación."""
+        """Ejecuta exportacion."""
         return {
             "success": True,
-            "message": "💾 Para exportar, usa el comando /exportar que te enviará un archivo CSV con todos los movimientos."
+            "message": "💾 Para exportar, usa el comando /exportar que te enviara un archivo CSV con todos los movimientos."
         }
     
     @staticmethod
-    async def _execute_contenedor_crear(params: Dict[str, Any]) -> Dict[str, Any]:
-        """Ejecuta creación de contenedor."""
+    async def _execute_contenedor_create(params: Dict[str, Any]) -> Dict[str, Any]:
+        """Ejecuta creation de contenedor."""
         nombre = params.get('nombre')
         
         if not nombre:
             return {
                 "success": False,
-                "message": "❌ Necesito el nombre del contenedor. Ejemplo: \"Crear contenedor llamado ALMACEN1\" o \"Nuevo contenedor DEPOSITO\""
+                "message": "❌ Necesito el nombre del contenedor. Ejemplo: \"Create contenedor llamado ALMACEN1\" o \"Nuevo contenedor DEPOSITO\""
             }
         
         try:
-            resultado = ContenedorService.crear(nombre)
+            resultado = ContenedorService.create(nombre)
             return {
                 "success": True,
                 "message": (
-                    f"✅ <b>Contenedor creado!</b>\n\n"
+                    f"✅ <b>Contenedor created!</b>\n\n"
                     f"📦 Nombre: <code>{nombre}</code>\n"
                     f"🆔 ID: {resultado['id']}"
                 )
@@ -528,7 +528,7 @@ class ActionExecutor:
             logger.error(f"Error creando contenedor: {e}", exc_info=True)
             return {
                 "success": False,
-                "message": "❌ Ocurrió un error al crear el contenedor. Intenta nuevamente."
+                "message": "❌ An error occurred al create el contenedor. Try again."
             }
     
     @staticmethod
@@ -539,7 +539,7 @@ class ActionExecutor:
         if not contenedores:
             return {
                 "success": True,
-                "message": "📦 <b>Contenedores</b>\n\nAún no hay contenedores registrados.\n\nPuedes crear uno diciendo: \"Crear contenedor llamado [nombre]\""
+                "message": "📦 <b>Contenedores</b>\n\nStill no hay contenedores registrados.\n\nPuedes create uno diciendo: \"Create contenedor llamado [nombre]\""
             }
         
         respuesta = "📦 <b>Lista de Contenedores</b>\n\n"
@@ -552,7 +552,7 @@ class ActionExecutor:
     
     @staticmethod
     async def _execute_contenedor_editar(params: Dict[str, Any]) -> Dict[str, Any]:
-        """Ejecuta edición de contenedor."""
+        """Ejecuta edicion de contenedor."""
         cont_id = params.get('id') or params.get('cont_id')
         nombre_actual = params.get('nombre_actual') or params.get('actor')
         nuevo_nombre = params.get('nuevo_nombre') or params.get('nombre')
@@ -578,20 +578,20 @@ class ActionExecutor:
             }
         
         try:
-            ContenedorService.actualizar(int(cont_id), nuevo_nombre)
+            ContenedorService.update(int(cont_id), nuevo_nombre)
             return {
                 "success": True,
                 "message": (
-                    f"✅ <b>Contenedor actualizado!</b>\n\n"
+                    f"✅ <b>Contenedor updated!</b>\n\n"
                     f"🆔 ID: {cont_id}\n"
                     f"📦 Nuevo nombre: <code>{nuevo_nombre}</code>"
                 )
             }
         except ValueError as e:
-            if "no encontrado" in str(e).lower():
+            if "not found" in str(e).lower():
                 return {
                     "success": False,
-                    "message": f"❌ No se encontró un contenedor con ID {cont_id}."
+                    "message": f"❌ No se encontro un contenedor con ID {cont_id}."
                 }
             if "UNIQUE" in str(e) or "ya existe" in str(e).lower():
                 return {
@@ -606,12 +606,12 @@ class ActionExecutor:
             logger.error(f"Error editando contenedor: {e}", exc_info=True)
             return {
                 "success": False,
-                "message": "❌ Ocurrió un error al editar el contenedor. Intenta nuevamente."
+                "message": "❌ An error occurred al editar el contenedor. Try again."
             }
     
     @staticmethod
-    async def _execute_contenedor_eliminar(params: Dict[str, Any]) -> Dict[str, Any]:
-        """Ejecuta eliminación de contenedor."""
+    async def _execute_contenedor_delete(params: Dict[str, Any]) -> Dict[str, Any]:
+        """Ejecuta deletion de contenedor."""
         cont_id = params.get('id') or params.get('cont_id')
         nombre = params.get('nombre') or params.get('actor')
         
@@ -626,28 +626,28 @@ class ActionExecutor:
         if not cont_id:
             return {
                 "success": False,
-                "message": "❌ Necesito el ID o nombre del contenedor a eliminar. Ejemplo: \"Eliminar contenedor 1\" o \"Borrar contenedor ALMACEN1\""
+                "message": "❌ Necesito el ID o nombre del contenedor a delete. Ejemplo: \"Delete contenedor 1\" o \"Borrar contenedor ALMACEN1\""
             }
         
         try:
-            # Obtener nombre antes de eliminar para mostrar en el mensaje
+            # Obtener nombre antes de delete para mostrar en el mensaje
             contenedor = ContenedorService.obtener_por_id(int(cont_id))
-            nombre_eliminado = contenedor['nombre'] if contenedor else f"ID {cont_id}"
+            nombre_deleted = contenedor['nombre'] if contenedor else f"ID {cont_id}"
             
-            ContenedorService.eliminar(int(cont_id))
+            ContenedorService.delete(int(cont_id))
             return {
                 "success": True,
                 "message": (
-                    f"🗑️ <b>Contenedor eliminado!</b>\n\n"
-                    f"📦 Contenedor: <code>{nombre_eliminado}</code>\n"
+                    f"🗑️ <b>Contenedor deleted!</b>\n\n"
+                    f"📦 Contenedor: <code>{nombre_deleted}</code>\n"
                     f"🆔 ID: {cont_id}"
                 )
             }
         except ValueError as e:
-            if "no encontrado" in str(e).lower():
+            if "not found" in str(e).lower():
                 return {
                     "success": False,
-                    "message": f"❌ No se encontró un contenedor con ID {cont_id}."
+                    "message": f"❌ No se encontro un contenedor con ID {cont_id}."
                 }
             return {
                 "success": False,
@@ -657,12 +657,12 @@ class ActionExecutor:
             logger.error(f"Error eliminando contenedor: {e}", exc_info=True)
             return {
                 "success": False,
-                "message": "❌ Ocurrió un error al eliminar el contenedor. Intenta nuevamente."
+                "message": "❌ An error occurred al delete el contenedor. Try again."
             }
     
     @staticmethod
     async def _execute_analisis_financiero(params: Dict[str, Any]) -> Dict[str, Any]:
-        """Ejecuta análisis financiero inteligente."""
+        """Ejecuta analisis financiero inteligente."""
         tipo = params.get("tipo", "general")
         return FinancialAdvisor.generar_analisis(tipo)
 

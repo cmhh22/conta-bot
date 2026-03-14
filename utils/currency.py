@@ -1,24 +1,24 @@
 """
-Utilidades para conversión de monedas.
+Currency conversion utilities.
 """
 import core.config as config
 
 
 def get_tasa() -> float:
-    """Obtiene la tasa de cambio actual."""
+    """Get the current exchange rate."""
     return config.TASA_USD_CUP
 
 
 def convert_to_usd(monto: float, moneda: str) -> float:
     """
-    Convierte un monto a USD.
+    Convert an amount to USD.
     
     Args:
-        monto: Monto a convertir
-        moneda: Moneda origen ('usd', 'cup', 'cup-t', 'eur')
+        monto: Amount to convert
+        moneda: Source currency ('usd', 'cup', 'cup-t', 'eur')
     
     Returns:
-        Monto en USD
+        Amount in USD
     """
     if moneda == 'usd':
         return monto
@@ -28,19 +28,19 @@ def convert_to_usd(monto: float, moneda: str) -> float:
         # 1 EUR = 1/TASA_USD_EUR USD
         return monto / config.TASA_USD_EUR
     else:
-        raise ValueError(f"Moneda no soportada: {moneda}")
+        raise ValueError(f"Unsupported currency: {moneda}")
 
 
 def convert_from_usd(monto_usd: float, moneda_destino: str) -> float:
     """
-    Convierte un monto desde USD a otra moneda.
+    Convert an amount from USD to another currency.
     
     Args:
-        monto_usd: Monto en USD
-        moneda_destino: Moneda destino ('usd', 'cup', 'cup-t', 'eur')
+        monto_usd: Amount in USD
+        moneda_destino: Destination currency ('usd', 'cup', 'cup-t', 'eur')
     
     Returns:
-        Monto en la moneda destino
+        Amount in the destination currency
     """
     if moneda_destino == 'usd':
         return monto_usd
@@ -50,26 +50,26 @@ def convert_from_usd(monto_usd: float, moneda_destino: str) -> float:
         # 1 USD = TASA_USD_EUR EUR
         return monto_usd * config.TASA_USD_EUR
     else:
-        raise ValueError(f"Moneda no soportada: {moneda_destino}")
+        raise ValueError(f"Unsupported currency: {moneda_destino}")
 
 
 def convert_currency(monto: float, moneda_origen: str, moneda_destino: str) -> float:
     """
-    Convierte un monto entre dos monedas.
+    Convert an amount between two currencies.
     
     Args:
-        monto: Monto a convertir
-        moneda_origen: Moneda origen
-        moneda_destino: Moneda destino
+        monto: Amount to convert
+        moneda_origen: Source currency
+        moneda_destino: Destination currency
     
     Returns:
-        Monto convertido
+        Converted amount
     """
     if moneda_origen == moneda_destino:
         return monto
     
-    # Convertir a USD primero
+    # Convert to USD first
     monto_usd = convert_to_usd(monto, moneda_origen)
-    # Convertir desde USD a destino
+    # Convert from USD to destination
     return convert_from_usd(monto_usd, moneda_destino)
 

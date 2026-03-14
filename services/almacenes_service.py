@@ -1,5 +1,5 @@
 """
-Servicio de almacenes - Lógica de negocio para gestión de almacenes.
+Warehouses service - Business logic for warehouse management.
 """
 import logging
 from typing import List, Dict, Any, Optional
@@ -9,31 +9,31 @@ from database.repositories import AlmacenRepository
 logger = logging.getLogger(__name__)
 
 
-def crear(nombre: str, ubicacion: Optional[str] = None) -> Dict[str, Any]:
+def create(nombre: str, ubicacion: Optional[str] = None) -> Dict[str, Any]:
     """
-    Crea un nuevo almacén.
+    Create a new warehouse.
     
     Args:
-        nombre: Nombre del almacén (único)
-        ubicacion: Ubicación opcional del almacén
+        nombre: Warehouse name (unique)
+        ubicacion: Optional warehouse location
     
     Returns:
-        Dict con los datos del almacén creado
+        Dict with created warehouse data
     
     Raises:
-        ValueError: Si el nombre ya existe o es inválido
+        ValueError: If the name already exists or is invalid
     """
     nombre = nombre.strip()
     if not nombre:
-        raise ValueError("El nombre del almacén no puede estar vacío")
+        raise ValueError("Warehouse name cannot be empty")
     
     with get_db_connection() as conn:
-        # Verificar si ya existe
+        # Check if it already exists
         existente = AlmacenRepository.obtener_por_nombre(conn, nombre)
         if existente:
-            raise ValueError(f"Ya existe un almacén con el nombre '{nombre}'")
+            raise ValueError(f"A warehouse named '{nombre}' already exists")
         
-        almacen_id = AlmacenRepository.crear(conn, nombre, ubicacion)
+        almacen_id = AlmacenRepository.create(conn, nombre, ubicacion)
         almacen = AlmacenRepository.obtener_por_id(conn, almacen_id)
         
         return {
@@ -46,10 +46,10 @@ def crear(nombre: str, ubicacion: Optional[str] = None) -> Dict[str, Any]:
 
 def listar() -> List[Dict[str, Any]]:
     """
-    Lista todos los almacenes.
+    List all warehouses.
     
     Returns:
-        Lista de diccionarios con los datos de los almacenes
+        List of dictionaries with warehouse data
     """
     with get_db_connection() as conn:
         almacenes = AlmacenRepository.obtener_todos(conn)
@@ -66,13 +66,13 @@ def listar() -> List[Dict[str, Any]]:
 
 def obtener_por_id(almacen_id: int) -> Optional[Dict[str, Any]]:
     """
-    Obtiene un almacén por su ID.
+    Get a warehouse by ID.
     
     Args:
-        almacen_id: ID del almacén
+        almacen_id: Warehouse ID
     
     Returns:
-        Dict con los datos del almacén o None si no existe
+        Dict with warehouse data or None if it does not exist
     """
     with get_db_connection() as conn:
         almacen = AlmacenRepository.obtener_por_id(conn, almacen_id)
@@ -89,13 +89,13 @@ def obtener_por_id(almacen_id: int) -> Optional[Dict[str, Any]]:
 
 def obtener_por_nombre(nombre: str) -> Optional[Dict[str, Any]]:
     """
-    Obtiene un almacén por su nombre.
+    Get a warehouse by name.
     
     Args:
-        nombre: Nombre del almacén
+        nombre: Warehouse name
     
     Returns:
-        Dict con los datos del almacén o None si no existe
+        Dict with warehouse data or None if it does not exist
     """
     with get_db_connection() as conn:
         almacen = AlmacenRepository.obtener_por_nombre(conn, nombre)
@@ -110,66 +110,66 @@ def obtener_por_nombre(nombre: str) -> Optional[Dict[str, Any]]:
         }
 
 
-def actualizar(almacen_id: int, nuevo_nombre: Optional[str] = None,
+def update(almacen_id: int, nuevo_nombre: Optional[str] = None,
                nueva_ubicacion: Optional[str] = None) -> Dict[str, Any]:
     """
-    Actualiza un almacén.
+    Update a warehouse.
     
     Args:
-        almacen_id: ID del almacén a actualizar
-        nuevo_nombre: Nuevo nombre (opcional)
-        nueva_ubicacion: Nueva ubicación (opcional)
+        almacen_id: ID of warehouse to update
+        nuevo_nombre: New name (optional)
+        nueva_ubicacion: New location (optional)
     
     Returns:
-        Dict con los datos actualizados del almacén
+        Dict with updated warehouse data
     
     Raises:
-        ValueError: Si el almacén no existe o el nuevo nombre ya está en uso
+        ValueError: If the warehouse does not exist or the new name is already in use
     """
     with get_db_connection() as conn:
         almacen = AlmacenRepository.obtener_por_id(conn, almacen_id)
         if not almacen:
-            raise ValueError(f"No existe un almacén con ID {almacen_id}")
+            raise ValueError(f"No warehouse exists with ID {almacen_id}")
         
-        # Verificar si el nuevo nombre ya existe (si se está cambiando)
+        # Check if the new name already exists (if being changed)
         if nuevo_nombre:
             nuevo_nombre = nuevo_nombre.strip()
             if not nuevo_nombre:
-                raise ValueError("El nombre del almacén no puede estar vacío")
+                raise ValueError("Warehouse name cannot be empty")
             
             existente = AlmacenRepository.obtener_por_nombre(conn, nuevo_nombre)
             if existente and existente["id"] != almacen_id:
-                raise ValueError(f"Ya existe un almacén con el nombre '{nuevo_nombre}'")
+                raise ValueError(f"A warehouse named '{nuevo_nombre}' already exists")
         
-        AlmacenRepository.actualizar(conn, almacen_id, nuevo_nombre, nueva_ubicacion)
-        almacen_actualizado = AlmacenRepository.obtener_por_id(conn, almacen_id)
+        AlmacenRepository.update(conn, almacen_id, nuevo_nombre, nueva_ubicacion)
+        almacen_updated = AlmacenRepository.obtener_por_id(conn, almacen_id)
         
         return {
-            "id": almacen_actualizado["id"],
-            "nombre": almacen_actualizado["nombre"],
-            "ubicacion": almacen_actualizado["ubicacion"],
-            "fecha_creacion": almacen_actualizado["fecha_creacion"]
+            "id": almacen_updated["id"],
+            "nombre": almacen_updated["nombre"],
+            "ubicacion": almacen_updated["ubicacion"],
+            "fecha_creacion": almacen_updated["fecha_creacion"]
         }
 
 
-def eliminar(almacen_id: int) -> bool:
+def delete(almacen_id: int) -> bool:
     """
-    Elimina un almacén.
+    Delete a warehouse.
     
     Args:
-        almacen_id: ID del almacén a eliminar
+        almacen_id: ID of warehouse to delete
     
     Returns:
-        True si se eliminó correctamente
+        True if deletion was successful
     
     Raises:
-        ValueError: Si el almacén no existe
+        ValueError: If the warehouse does not exist
     """
     with get_db_connection() as conn:
         almacen = AlmacenRepository.obtener_por_id(conn, almacen_id)
         if not almacen:
-            raise ValueError(f"No existe un almacén con ID {almacen_id}")
+            raise ValueError(f"No warehouse exists with ID {almacen_id}")
         
-        AlmacenRepository.eliminar(conn, almacen_id)
+        AlmacenRepository.delete(conn, almacen_id)
         return True
 

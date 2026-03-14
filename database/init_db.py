@@ -1,5 +1,5 @@
 """
-Inicialización de la base de datos.
+Inicializacion de la base de datos.
 """
 import logging
 from database.connection import get_db_connection
@@ -20,9 +20,9 @@ def initialize_database() -> None:
         try:
             migrate_database()
         except Exception as e:
-            logger.warning(f"Error durante migración (puede ser normal si la BD es nueva): {e}")
+            logger.warning(f"Error durante migracion (puede ser normal si la BD es nueva): {e}")
             
     except Exception as e:
-        logger.error(f"Error al inicializar la base de datos: {e}", exc_info=True)
+        logger.error(f"Error while inicializar la base de datos: {e}", exc_info=True)
         raise
 

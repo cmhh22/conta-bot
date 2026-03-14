@@ -17,7 +17,7 @@
 
 ContaBot is a production-ready Telegram bot for small business financial management. Instead of navigating complex menus, users interact in **natural language** — the AI understands intent, extracts parameters, and executes operations automatically.
 
-**What makes it different:** Most bots use rigid command parsing. ContaBot uses **OpenAI Function Calling** with **conversational memory** to enable multi-turn dialogs. If you say _"registra un ingreso de 100 dólares"_ and forget the cash box, the AI **asks you** instead of failing.
+**What makes it different:** Most bots use rigid command parsing. ContaBot uses **OpenAI Function Calling** with **conversational memory** to enable multi-turn dialogs. If you say _"record an income of 100 dollars"_ and forget the cash box, the AI **asks you** instead of failing.
 
 ---
 
@@ -135,12 +135,12 @@ python bot.py
 
 | Message | What happens |
 |---------|-------------|
-| _"Ver balance"_ | Shows all cash box balances |
-| _"Ingreso de 500 USD en CFG"_ | Records $500 income |
-| _"Registra un gasto"_ | AI asks: _"¿Cuánto y en qué caja?"_ |
-| _"¿Cómo va el negocio?"_ | AI Financial Advisor generates dashboard |
-| _"Análisis de gastos"_ | Spending breakdown with trends & charts |
-| _"Venta de SHIRT01, 3 unidades, 90 USD"_ | Records sale, updates stock |
+| _"Show balance"_ | Shows all cash box balances |
+| _"Record 500 USD income in CFG"_ | Records $500 income |
+| _"Record an expense"_ | AI asks: _"How much and in which cash box?"_ |
+| _"How is the business doing?"_ | AI Financial Advisor generates dashboard |
+| _"Expense analysis"_ | Spending breakdown with trends & charts |
+| _"Sell SHIRT01, 3 units, 90 USD"_ | Records sale, updates stock |
 
 ### Traditional Commands
 
@@ -164,12 +164,12 @@ python bot.py
 
 Traditional approach (fragile):
 ```
-User: "ingreso 100 dólares" → LLM → raw JSON → hope it parses → action
+User: "record 100 dollars income" → LLM → raw JSON → hope it parses → action
 ```
 
 ContaBot approach (robust):
 ```
-User: "ingreso 100 dólares" → LLM + Tool schemas → structured function call → action
+User: "record 100 dollars income" → LLM + Tool schemas → structured function call → action
 ```
 
 OpenAI's function calling guarantees valid, typed parameters — no regex cleanup of malformed JSON.
@@ -177,10 +177,10 @@ OpenAI's function calling guarantees valid, typed parameters — no regex cleanu
 ### Conversation Memory
 
 ```
-User: "Registra un ingreso"
-Bot:  "🤔 ¿Cuánto dinero y en qué caja?"     ← AI detects missing params
-User: "200 dólares en CFG"
-Bot:  "✅ Ingreso registrado: 200.00 USD en CFG"  ← Context from previous turn
+User: "Record an income"
+Bot:  "🤔 How much money and in which cash box?"     ← AI detects missing params
+User: "200 dollars in CFG"
+Bot:  "✅ Income recorded: 200.00 USD in CFG"  ← Context from previous turn
 ```
 
 ### Financial Advisor

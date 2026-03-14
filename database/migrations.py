@@ -1,5 +1,5 @@
 """
-Script de migración para actualizar la base de datos existente.
+Script de migracion para update la base de datos existente.
 Ejecuta este script una vez para agregar las nuevas tablas y columnas.
 """
 import sqlite3
@@ -30,7 +30,7 @@ def migrate_database() -> None:
                         fecha_creacion TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP
                     )
                 """)
-                logger.info("Tabla Proveedores creada.")
+                logger.info("Tabla Proveedores created.")
             else:
                 logger.info("Tabla Proveedores ya existe.")
             
@@ -51,7 +51,7 @@ def migrate_database() -> None:
             if 'proveedor_id' not in columns:
                 logger.info("Agregando columna proveedor_id a Contenedores...")
                 # SQLite no soporta ADD COLUMN con FOREIGN KEY directamente
-                # Necesitamos recrear la tabla
+                # Necesitamos recreate la tabla
                 cursor.execute("""
                     CREATE TABLE IF NOT EXISTS Contenedores_new (
                         id INTEGER PRIMARY KEY AUTOINCREMENT,
@@ -69,25 +69,25 @@ def migrate_database() -> None:
                     SELECT id, nombre, fecha_creacion FROM Contenedores
                 """)
                 
-                # Eliminar tabla antigua
+                # Delete tabla antigua
                 cursor.execute("DROP TABLE Contenedores")
                 
                 # Renombrar tabla nueva
                 cursor.execute("ALTER TABLE Contenedores_new RENAME TO Contenedores")
                 
-                logger.info("Columna proveedor_id agregada con relación FOREIGN KEY.")
+                logger.info("Columna proveedor_id agregada con relacion FOREIGN KEY.")
             else:
                 logger.info("Columna proveedor_id ya existe.")
-                # Verificar si tiene restricción UNIQUE y eliminarla si existe
-                # SQLite no permite eliminar UNIQUE directamente, necesitamos recrear la tabla
+                # Verificar si tiene restriccion UNIQUE y deletela si existe
+                # SQLite no permite delete UNIQUE directamente, necesitamos recreate la tabla
                 cursor.execute("""
                     SELECT sql FROM sqlite_master 
                     WHERE type='table' AND name='Contenedores'
                 """)
                 table_sql = cursor.fetchone()
                 if table_sql and 'proveedor_id INTEGER UNIQUE' in table_sql[0]:
-                    logger.info("Eliminando restricción UNIQUE de proveedor_id para permitir relación muchos-a-uno...")
-                    # Recrear tabla sin UNIQUE
+                    logger.info("Eliminando restriccion UNIQUE de proveedor_id para permitir relacion muchos-a-uno...")
+                    # Recreate tabla sin UNIQUE
                     cursor.execute("""
                         CREATE TABLE IF NOT EXISTS Contenedores_new (
                             id INTEGER PRIMARY KEY AUTOINCREMENT,
@@ -105,13 +105,13 @@ def migrate_database() -> None:
                         SELECT id, nombre, numero_contenedor, proveedor_id, fecha_creacion FROM Contenedores
                     """)
                     
-                    # Eliminar tabla antigua
+                    # Delete tabla antigua
                     cursor.execute("DROP TABLE Contenedores")
                     
                     # Renombrar tabla nueva
                     cursor.execute("ALTER TABLE Contenedores_new RENAME TO Contenedores")
                     
-                    logger.info("Restricción UNIQUE eliminada. Ahora un proveedor puede tener múltiples contenedores.")
+                    logger.info("Restriccion UNIQUE deleted. Ahora un proveedor puede tener multiples contenedores.")
             
             # Verificar si la tabla Almacenes existe
             cursor.execute("""
@@ -128,7 +128,7 @@ def migrate_database() -> None:
                         fecha_creacion TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP
                     )
                 """)
-                logger.info("Tabla Almacenes creada.")
+                logger.info("Tabla Almacenes created.")
             else:
                 logger.info("Tabla Almacenes ya existe.")
             
@@ -151,7 +151,7 @@ def migrate_database() -> None:
                         UNIQUE(contenedor_id, producto_codigo)
                     )
                 """)
-                logger.info("Tabla Contenedor_Productos creada.")
+                logger.info("Tabla Contenedor_Productos created.")
             else:
                 logger.info("Tabla Contenedor_Productos ya existe.")
             
@@ -174,7 +174,7 @@ def migrate_database() -> None:
                         UNIQUE(almacen_id, producto_codigo)
                     )
                 """)
-                logger.info("Tabla Inventario_Almacen creada.")
+                logger.info("Tabla Inventario_Almacen created.")
             else:
                 logger.info("Tabla Inventario_Almacen ya existe.")
             
@@ -201,7 +201,7 @@ def migrate_database() -> None:
                         FOREIGN KEY(producto_codigo) REFERENCES Productos(codigo) ON DELETE RESTRICT
                     )
                 """)
-                logger.info("Tabla Movimientos_Inventario creada.")
+                logger.info("Tabla Movimientos_Inventario created.")
             else:
                 logger.info("Tabla Movimientos_Inventario ya existe.")
             
@@ -219,7 +219,7 @@ def migrate_database() -> None:
                         fecha_creacion TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP
                     )
                 """)
-                logger.info("Tabla Vendedores creada.")
+                logger.info("Tabla Vendedores created.")
             else:
                 logger.info("Tabla Vendedores ya existe.")
             
@@ -238,11 +238,11 @@ def migrate_database() -> None:
                         fecha_creacion TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP
                     )
                 """)
-                logger.info("Tabla Cajas creada.")
+                logger.info("Tabla Cajas created.")
                 
                 # Insertar cajas por defecto
                 cajas_por_defecto = [
-                    ('cfg', 'Caja Física General'),
+                    ('cfg', 'Caja Fisica General'),
                     ('sc', 'Caja Secundaria'),
                     ('trd', 'Caja Tercera')
                 ]
@@ -266,7 +266,7 @@ def migrate_database() -> None:
                 cursor.execute("SELECT id, nombre FROM Cajas")
                 cajas_map = {row[1]: row[0] for row in cursor.fetchall()}
                 
-                # Crear tabla temporal con nueva estructura
+                # Create tabla temporal con nueva estructura
                 cursor.execute("""
                     CREATE TABLE Movimientos_new (
                         id INTEGER PRIMARY KEY AUTOINCREMENT,
@@ -294,7 +294,7 @@ def migrate_database() -> None:
                             VALUES (?, ?, ?, ?, ?, ?, ?, ?)
                         """, (mov_id, fecha, tipo, monto, moneda, caja_id, user_id, descripcion))
                     else:
-                        logger.warning(f"Movimiento {mov_id} tiene caja '{caja_nombre}' no encontrada. Usando primera caja disponible.")
+                        logger.warning(f"Movimiento {mov_id} tiene caja '{caja_nombre}' not found. Usando primera caja disponible.")
                         if cajas_map:
                             primera_caja_id = list(cajas_map.values())[0]
                             cursor.execute("""
@@ -302,15 +302,15 @@ def migrate_database() -> None:
                                 VALUES (?, ?, ?, ?, ?, ?, ?, ?)
                             """, (mov_id, fecha, tipo, monto, moneda, primera_caja_id, user_id, descripcion))
                 
-                # Eliminar tabla antigua
+                # Delete tabla antigua
                 cursor.execute("DROP TABLE Movimientos")
                 
                 # Renombrar tabla nueva
                 cursor.execute("ALTER TABLE Movimientos_new RENAME TO Movimientos")
                 
-                logger.info("Migración de Movimientos completada. Ahora usa caja_id (INTEGER).")
+                logger.info("Migracion de Movimientos completada. Ahora usa caja_id (INTEGER).")
             elif 'caja_id' in columns:
-                logger.info("Tabla Movimientos ya tiene caja_id. No se requiere migración.")
+                logger.info("Tabla Movimientos ya tiene caja_id. No se requiere migracion.")
             else:
                 logger.warning("Tabla Movimientos no tiene ni 'caja' ni 'caja_id'. Verificar estructura.")
             
@@ -338,7 +338,7 @@ def migrate_database() -> None:
             else:
                 logger.info("No se encontraron traspasos de destino a corregir.")
             
-            # Crear tabla Deudas_Productos si no existe
+            # Create tabla Deudas_Productos si no existe
             cursor.execute("""
                 SELECT name FROM sqlite_master 
                 WHERE type='table' AND name='Deudas_Productos'
@@ -358,19 +358,19 @@ def migrate_database() -> None:
                         FOREIGN KEY(producto_codigo) REFERENCES Productos(codigo) ON DELETE RESTRICT
                     )
                 """)
-                logger.info("Tabla Deudas_Productos creada.")
+                logger.info("Tabla Deudas_Productos created.")
             else:
                 logger.info("Tabla Deudas_Productos ya existe.")
             
-            # Migración: Agregar EUR a las restricciones CHECK de moneda
+            # Migracion: Agregar EUR a las restricciones CHECK de moneda
             # SQLite no permite modificar CHECK constraints directamente,
             # pero las nuevas tablas ya tienen EUR. Para tablas existentes,
-            # las restricciones se aplicarán en nuevas inserciones.
-            # Nota: Las tablas existentes seguirán funcionando, pero para aplicar
-            # la restricción completa, se necesitaría recrear las tablas.
-            logger.info("Nota: EUR agregado a VALID_MONEDAS. Las nuevas inserciones aceptarán 'eur'.")
+            # las restricciones se aplicaran en nuevas inserciones.
+            # Nota: Las tablas existentes seguiran funcionando, pero para aplicar
+            # la restriccion completa, se necesitaria recreate las tablas.
+            logger.info("Nota: EUR agregado a VALID_MONEDAS. Las nuevas inserciones aceptaran 'eur'.")
             
-            # Crear tabla Cajas_Externas si no existe
+            # Create tabla Cajas_Externas si no existe
             cursor.execute("""
                 SELECT name FROM sqlite_master 
                 WHERE type='table' AND name='Cajas_Externas'
@@ -387,11 +387,11 @@ def migrate_database() -> None:
                         fecha_creacion TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP
                     )
                 """)
-                logger.info("Tabla Cajas_Externas creada.")
+                logger.info("Tabla Cajas_Externas created.")
             else:
                 logger.info("Tabla Cajas_Externas ya existe.")
             
-            # Crear tabla Transferencias_Externas si no existe
+            # Create tabla Transferencias_Externas si no existe
             cursor.execute("""
                 SELECT name FROM sqlite_master 
                 WHERE type='table' AND name='Transferencias_Externas'
@@ -417,15 +417,15 @@ def migrate_database() -> None:
                         FOREIGN KEY(producto_codigo) REFERENCES Productos(codigo) ON DELETE RESTRICT
                     )
                 """)
-                logger.info("Tabla Transferencias_Externas creada.")
+                logger.info("Tabla Transferencias_Externas created.")
             else:
                 logger.info("Tabla Transferencias_Externas ya existe.")
             
             conn.commit()
-            logger.info("Migración completada exitosamente.")
+            logger.info("Migracion completada exitosamente.")
             
     except Exception as e:
-        logger.error(f"Error durante la migración: {e}", exc_info=True)
+        logger.error(f"Error durante la migracion: {e}", exc_info=True)
         raise
 
 

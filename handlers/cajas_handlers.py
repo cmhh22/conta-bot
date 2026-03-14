@@ -1,5 +1,5 @@
 """
-Handlers para gestión de cajas (CRUD completo).
+Handlers for cash box management (full CRUD).
 """
 import logging
 from typing import List
@@ -18,15 +18,15 @@ from core.config import VALID_MONEDAS
 
 logger = logging.getLogger(__name__)
 
-# Estados de la conversación
+# Conversation states
 MENU, CREAR_NOMBRE, CREAR_DESCRIPCION, EDIT_MENU, EDIT_NOMBRE, EDIT_DESCRIPCION, CONFIRM_DELETE = range(7)
 
 
 def _main_menu_kb() -> InlineKeyboardMarkup:
-    """Genera el teclado del menú principal."""
+    """Build the main menu keyboard."""
     keyboard = [
         [
-            InlineKeyboardButton("➕ Crear", callback_data="caja:create"),
+            InlineKeyboardButton("➕ Create", callback_data="caja:create"),
             InlineKeyboardButton("📋 Listar", callback_data="caja:list"),
         ],
         [InlineKeyboardButton("❌ Cerrar", callback_data="caja:close")],
@@ -35,16 +35,16 @@ def _main_menu_kb() -> InlineKeyboardMarkup:
 
 
 async def _render_list(update: Update, context: ContextTypes.DEFAULT_TYPE) -> None:
-    """Renderiza la lista de cajas."""
+    """Render the cash box list."""
     from utils.telegram_helpers import reply_html
     
     cajas = CajaService.listar()
     
     if not cajas:
-        text = "💰 <b>Cajas</b>\n\nAún no hay cajas registradas."
+        text = "💰 <b>Cash Boxes</b>\n\nNo cash boxes are registered yet."
         kb = InlineKeyboardMarkup([
-            [InlineKeyboardButton("➕ Crear", callback_data="caja:create")],
-            [InlineKeyboardButton("⬅️ Volver", callback_data="caja:back")]
+            [InlineKeyboardButton("➕ Create", callback_data="caja:create")],
+            [InlineKeyboardButton("⬅️ Back", callback_data="caja:back")]
         ])
         await reply_html(update, text, reply_markup=kb)
         return
@@ -56,7 +56,7 @@ async def _render_list(update: Update, context: ContextTypes.DEFAULT_TYPE) -> No
         nombre = caja["nombre"]
         saldos = caja.get("saldos", {})
         
-        # Formatear saldos para mostrar
+        # Format balances for display
         saldos_text = ""
         if saldos:
             saldos_list = []
@@ -66,7 +66,7 @@ async def _render_list(update: Update, context: ContextTypes.DEFAULT_TYPE) -> No
             if saldos_list:
                 saldos_text = " | " + " | ".join(saldos_list)
         else:
-            saldos_text = " | Sin saldo"
+                saldos_text = " | No balance"
         
         text += f"<b>{nombre}</b>{saldos_text}\n"
         
@@ -75,8 +75,8 @@ async def _render_list(update: Update, context: ContextTypes.DEFAULT_TYPE) -> No
             InlineKeyboardButton("📊 Detalles", callback_data=f"caja:detalles:{caja_id}"),
             InlineKeyboardButton("🗑️", callback_data=f"caja:del:{caja_id}"),
         ])
-    text += "\nSelecciona una acción:"
-    keyboard.append([InlineKeyboardButton("⬅️ Volver", callback_data="caja:back")])
+    text += "\nSelect an action:"
+    keyboard.append([InlineKeyboardButton("⬅️ Back", callback_data="caja:back")])
     kb = InlineKeyboardMarkup(keyboard)
     
     await reply_html(update, text, reply_markup=kb)
@@ -84,10 +84,10 @@ async def _render_list(update: Update, context: ContextTypes.DEFAULT_TYPE) -> No
 
 @admin_only
 async def cajas_entry(update: Update, context: ContextTypes.DEFAULT_TYPE) -> int:
-    """Punto de entrada para la gestión de cajas."""
+    """Entry point for cash box management."""
     from utils.telegram_helpers import reply_html
     
-    # Limpiar cualquier dato residual de conversaciones anteriores
+    # Clear any residual data from previous conversations
     keys_to_remove = [
         "caja_nombre", "caja_descripcion", "caja_edit_id", "caja_del_id"
     ]
@@ -95,8 +95,8 @@ async def cajas_entry(update: Update, context: ContextTypes.DEFAULT_TYPE) -> int
         context.user_data.pop(key, None)
     
     msg = (
-        "💰 <b>Gestión de Cajas</b>\n\n"
-        "Administra tus cajas. Usa el menú de abajo."
+        "💰 <b>Cash Box Management</b>\n\n"
+        "Manage your cash boxes. Use the menu below."
     )
     await reply_html(update, msg, reply_markup=_main_menu_kb())
     return MENU
@@ -104,7 +104,7 @@ async def cajas_entry(update: Update, context: ContextTypes.DEFAULT_TYPE) -> int
 
 @admin_only
 async def menu_callback(update: Update, context: ContextTypes.DEFAULT_TYPE) -> int:
-    """Maneja los callbacks del menú."""
+    """Handle menu callbacks."""
     from utils.telegram_helpers import reply_html, reply_text
     
     q = update.callback_query
@@ -115,7 +115,7 @@ async def menu_callback(update: Update, context: ContextTypes.DEFAULT_TYPE) -> i
     if data == "caja:create":
         await reply_html(
             update,
-            "🆕 <b>Nueva Caja</b>\n\nEnvía el <b>nombre</b> de la caja:"
+            "🆕 <b>New Cash Box</b>\n\nSend the cash box <b>name</b>:"
         )
         return CREAR_NOMBRE
     
@@ -127,41 +127,41 @@ async def menu_callback(update: Update, context: ContextTypes.DEFAULT_TYPE) -> i
         return await cajas_entry(update, context)
     
     if data == "caja:close":
-        # Limpiar todos los datos de la conversación
+        # Clear all conversation data
         keys_to_remove = [
             "caja_nombre", "caja_descripcion", "caja_edit_id", "caja_del_id"
         ]
         for key in keys_to_remove:
             context.user_data.pop(key, None)
-        await reply_text(update, "✅ Cerrado.")
+        await reply_text(update, "✅ Closed.")
         return ConversationHandler.END
     
-    # Acciones por ítem
+    # Per-item actions
     if data.startswith("caja:detalles:"):
         caja_id = int(data.split(":")[-1])
         caja = CajaService.obtener_por_id(caja_id)
         if not caja:
-            await reply_text(update, "❌ Caja no encontrada.")
+            await reply_text(update, "❌ Cash box not found.")
             return MENU
         
         saldos = caja.get("saldos", {})
-        descripcion_text = caja.get('descripcion') or "Sin descripción"
+        descripcion_text = caja.get('descripcion') or "No description"
         
-        text = f"📊 <b>Detalles de Caja</b>\n\n"
-        text += f"Nombre: <code>{caja['nombre']}</code>\n"
-        text += f"Descripción: {descripcion_text}\n\n"
-        text += f"<b>Saldos:</b>\n"
+        text = f"📊 <b>Cash Box Details</b>\n\n"
+        text += f"Name: <code>{caja['nombre']}</code>\n"
+        text += f"Description: {descripcion_text}\n\n"
+        text += f"<b>Balances:</b>\n"
         
         if saldos:
             for moneda in VALID_MONEDAS:
                 saldo = saldos.get(moneda, 0)
                 text += f"• {moneda.upper()}: <b>{saldo:.2f}</b>\n"
         else:
-            text += "Sin movimientos registrados.\n"
+            text += "No transactions recorded.\n"
         
         kb = InlineKeyboardMarkup([
-            [InlineKeyboardButton("✏️ Editar", callback_data=f"caja:edit:{caja_id}")],
-            [InlineKeyboardButton("⬅️ Volver", callback_data="caja:back")]
+            [InlineKeyboardButton("✏️ Edit", callback_data=f"caja:edit:{caja_id}")],
+            [InlineKeyboardButton("⬅️ Back", callback_data="caja:back")]
         ])
         await reply_html(update, text, reply_markup=kb)
         return MENU
@@ -171,20 +171,20 @@ async def menu_callback(update: Update, context: ContextTypes.DEFAULT_TYPE) -> i
         context.user_data["caja_edit_id"] = caja_id
         caja = CajaService.obtener_por_id(caja_id)
         if not caja:
-            await reply_text(update, "❌ Caja no encontrada.")
+            await reply_text(update, "❌ Cash box not found.")
             return MENU
         
         kb = InlineKeyboardMarkup([
-            [InlineKeyboardButton("✏️ Editar Nombre", callback_data="caja:edit_nombre")],
-            [InlineKeyboardButton("📝 Editar Descripción", callback_data="caja:edit_descripcion")],
-            [InlineKeyboardButton("⬅️ Volver", callback_data="caja:back")]
+            [InlineKeyboardButton("✏️ Edit Name", callback_data="caja:edit_nombre")],
+            [InlineKeyboardButton("📝 Edit Description", callback_data="caja:edit_descripcion")],
+            [InlineKeyboardButton("⬅️ Back", callback_data="caja:back")]
         ])
-        descripcion_text = caja.get('descripcion') or "Sin descripción"
+        descripcion_text = caja.get('descripcion') or "No description"
         await reply_html(
             update,
-            f"✏️ <b>Editar Caja</b>\n\n"
-            f"Nombre: <code>{caja['nombre']}</code>\n"
-            f"Descripción: {descripcion_text}",
+            f"✏️ <b>Edit Cash Box</b>\n\n"
+            f"Name: <code>{caja['nombre']}</code>\n"
+            f"Description: {descripcion_text}",
             reply_markup=kb
         )
         return EDIT_MENU
@@ -192,29 +192,29 @@ async def menu_callback(update: Update, context: ContextTypes.DEFAULT_TYPE) -> i
     if data == "caja:edit_nombre":
         caja_id = context.user_data.get("caja_edit_id")
         if not caja_id:
-            await reply_text(update, "❌ No hay caja en edición.")
+            await reply_text(update, "❌ No cash box is currently being edited.")
             return MENU
         caja = CajaService.obtener_por_id(caja_id)
         await reply_html(
             update,
-            f"✏️ <b>Renombrar Caja</b>\n\n"
-            f"Actual: <code>{caja['nombre']}</code>\n"
-            f"Envía el <b>nuevo nombre</b>:"
+            f"✏️ <b>Rename Cash Box</b>\n\n"
+            f"Current: <code>{caja['nombre']}</code>\n"
+            f"Send the <b>new name</b>:"
         )
         return EDIT_NOMBRE
     
     if data == "caja:edit_descripcion":
         caja_id = context.user_data.get("caja_edit_id")
         if not caja_id:
-            await reply_text(update, "❌ No hay caja en edición.")
+            await reply_text(update, "❌ No cash box is currently being edited.")
             return MENU
         caja = CajaService.obtener_por_id(caja_id)
         await reply_html(
             update,
-            f"📝 <b>Editar Descripción</b>\n\n"
-            f"Caja: <code>{caja['nombre']}</code>\n"
-            f"Descripción actual: {caja.get('descripcion') or 'Sin descripción'}\n\n"
-            f"Envía la <b>nueva descripción</b> (o 'sin' para quitar):"
+            f"📝 <b>Edit Description</b>\n\n"
+            f"Cash box: <code>{caja['nombre']}</code>\n"
+            f"Current description: {caja.get('descripcion') or 'No description'}\n\n"
+            f"Send the <b>new description</b> (or 'none' to clear):"
         )
         return EDIT_DESCRIPCION
     
@@ -223,17 +223,17 @@ async def menu_callback(update: Update, context: ContextTypes.DEFAULT_TYPE) -> i
         context.user_data["caja_del_id"] = caja_id
         caja = CajaService.obtener_por_id(caja_id)
         if not caja:
-            await reply_text(update, "❌ Caja no encontrada.")
+            await reply_text(update, "❌ Cash box not found.")
             return MENU
         kb = InlineKeyboardMarkup([
-            [InlineKeyboardButton("✅ Sí, borrar", callback_data="caja:delok"),
-             InlineKeyboardButton("↩️ Cancelar", callback_data="caja:cancel")]
+            [InlineKeyboardButton("✅ Yes, delete", callback_data="caja:delok"),
+             InlineKeyboardButton("↩️ Cancel", callback_data="caja:cancel")]
         ])
         await reply_html(
             update,
-            f"⚠️ <b>Confirmar eliminación</b>\n\n"
-            f"Vas a borrar: <code>{caja['nombre']}</code>\n"
-            f"Esta acción no se puede deshacer.",
+            f"⚠️ <b>Confirm deletion</b>\n\n"
+            f"You are about to delete: <code>{caja['nombre']}</code>\n"
+            f"This action cannot be undone.",
             reply_markup=kb
         )
         return CONFIRM_DELETE
@@ -241,20 +241,20 @@ async def menu_callback(update: Update, context: ContextTypes.DEFAULT_TYPE) -> i
     if data == "caja:delok":
         caja_id = context.user_data.get("caja_del_id")
         if caja_id is None:
-            await reply_text(update, "❌ No hay elemento para eliminar.")
+            await reply_text(update, "❌ No item selected for deletion.")
             await _render_list(update, context)
             return MENU
         try:
-            CajaService.eliminar(int(caja_id))
+            CajaService.delete(int(caja_id))
             context.user_data.pop("caja_del_id", None)
-            await reply_text(update, "🗑️ Caja eliminada correctamente.")
+            await reply_text(update, "🗑️ Cash box deleted successfully.")
             await _render_list(update, context)
         except ValueError as e:
             await reply_text(update, f"❌ {e}")
             await _render_list(update, context)
         except Exception as e:
-            logger.error(f"Error eliminando caja: {e}", exc_info=True)
-            await reply_text(update, "❌ No se pudo eliminar. Intenta de nuevo.")
+            logger.error(f"Error deleting cash box: {e}", exc_info=True)
+            await reply_text(update, "❌ Could not delete. Try again.")
             await _render_list(update, context)
         return MENU
     
@@ -266,8 +266,8 @@ async def menu_callback(update: Update, context: ContextTypes.DEFAULT_TYPE) -> i
 
 
 @admin_only
-async def crear_nombre_receive(update: Update, context: ContextTypes.DEFAULT_TYPE) -> int:
-    """Recibe el nombre para crear una caja."""
+async def create_nombre_receive(update: Update, context: ContextTypes.DEFAULT_TYPE) -> int:
+    """Receive the name for creating a cash box."""
     from utils.telegram_helpers import reply_html, reply_text
     
     if not update.message:
@@ -275,21 +275,21 @@ async def crear_nombre_receive(update: Update, context: ContextTypes.DEFAULT_TYP
     
     nombre = (update.message.text or "").strip()
     if not nombre:
-        await reply_text(update, "❌ El nombre no puede estar vacío. Envía un nombre válido.")
+        await reply_text(update, "❌ Name cannot be empty. Send a valid name.")
         return CREAR_NOMBRE
     
     context.user_data["caja_nombre"] = nombre
     await reply_html(
         update,
         f"✅ Nombre: <code>{nombre}</code>\n\n"
-        f"Envía la <b>descripción</b> (opcional, o 'sin' para omitir):"
+        f"Send the <b>description</b> (optional, or 'none' to skip):"
     )
     return CREAR_DESCRIPCION
 
 
 @admin_only
-async def crear_descripcion_receive(update: Update, context: ContextTypes.DEFAULT_TYPE) -> int:
-    """Recibe la descripción para crear una caja."""
+async def create_descripcion_receive(update: Update, context: ContextTypes.DEFAULT_TYPE) -> int:
+    """Receive the description for creating a cash box."""
     from utils.telegram_helpers import reply_html, reply_text
     
     if not update.message:
@@ -299,41 +299,41 @@ async def crear_descripcion_receive(update: Update, context: ContextTypes.DEFAUL
     nombre = context.user_data.get("caja_nombre")
     
     if not nombre:
-        await reply_text(update, "❌ Error: datos incompletos. Empieza de nuevo.")
+        await reply_text(update, "❌ Error: incomplete data. Start again.")
         return ConversationHandler.END
     
-    # Si el usuario escribe 'sin', no guardar descripción
-    if descripcion.lower() == 'sin':
+    # If user writes an explicit empty marker, do not store description
+    if descripcion.lower() in ('sin', 'none', 'no description'):
         descripcion = None
     
     try:
-        resultado = CajaService.crear(nombre, descripcion)
+        resultado = CajaService.create(nombre, descripcion)
         await reply_html(
             update,
-            f"✅ <b>Creado</b>\n\nCaja: <code>{nombre}</code>"
+            f"✅ <b>Created</b>\n\nCash box: <code>{nombre}</code>"
         )
         context.user_data.pop("caja_nombre", None)
         context.user_data.pop("caja_descripcion", None)
         await reply_html(
             update,
-            "¿Qué deseas hacer ahora?", reply_markup=_main_menu_kb()
+            "What would you like to do now?", reply_markup=_main_menu_kb()
         )
         return MENU
     except ValueError as e:
         if "ya existe" in str(e).lower():
-            await reply_text(update, "⚠️ Ya existe una caja con ese nombre. Usa otro nombre.")
+            await reply_text(update, "⚠️ A cash box with that name already exists. Use another name.")
         else:
             await reply_text(update, f"❌ {e}")
         return CREAR_NOMBRE
     except Exception as e:
-        logger.error(f"Error creando caja: {e}", exc_info=True)
-        await reply_text(update, "❌ Ocurrió un error al crear. Intenta nuevamente.")
+        logger.error(f"Error creating cash box: {e}", exc_info=True)
+        await reply_text(update, "❌ An error occurred while creating. Please try again.")
         return CREAR_NOMBRE
 
 
 @admin_only
 async def edit_nombre_receive(update: Update, context: ContextTypes.DEFAULT_TYPE) -> int:
-    """Recibe el nuevo nombre para editar una caja."""
+    """Receive the new name to edit a cash box."""
     from utils.telegram_helpers import reply_html, reply_text
     
     if not update.message:
@@ -341,39 +341,39 @@ async def edit_nombre_receive(update: Update, context: ContextTypes.DEFAULT_TYPE
     
     caja_id = context.user_data.get("caja_edit_id")
     if caja_id is None:
-        await reply_text(update, "❌ No hay caja en edición.")
+        await reply_text(update, "❌ No cash box is currently being edited.")
         return MENU
     
     nuevo_nombre = (update.message.text or "").strip()
     if not nuevo_nombre:
-        await reply_text(update, "❌ El nombre no puede estar vacío. Envía un nombre válido.")
+        await reply_text(update, "❌ Name cannot be empty. Send a valid name.")
         return EDIT_NOMBRE
     
     try:
         caja = CajaService.obtener_por_id(caja_id)
-        CajaService.actualizar(int(caja_id), nuevo_nombre, caja.get('descripcion'))
+        CajaService.update(int(caja_id), nuevo_nombre, caja.get('descripcion'))
         await reply_html(
             update,
-            f"✅ <b>Actualizado</b>\n\nNuevo nombre: <code>{nuevo_nombre}</code>"
+            f"✅ <b>Updated</b>\n\nNew name: <code>{nuevo_nombre}</code>"
         )
         context.user_data.pop("caja_edit_id", None)
         await _render_list(update, context)
         return MENU
     except ValueError as e:
         if "ya existe" in str(e).lower():
-            await reply_text(update, "⚠️ Ya existe una caja con ese nombre. Usa otro nombre.")
+            await reply_text(update, "⚠️ A cash box with that name already exists. Use another name.")
         else:
             await reply_text(update, f"❌ {e}")
         return EDIT_NOMBRE
     except Exception as e:
-        logger.error(f"Error actualizando caja: {e}", exc_info=True)
-        await reply_text(update, "❌ Ocurrió un error al actualizar. Intenta nuevamente.")
+        logger.error(f"Error updating cash box: {e}", exc_info=True)
+        await reply_text(update, "❌ An error occurred while updating. Please try again.")
         return EDIT_NOMBRE
 
 
 @admin_only
 async def edit_descripcion_receive(update: Update, context: ContextTypes.DEFAULT_TYPE) -> int:
-    """Recibe la nueva descripción para editar una caja."""
+    """Receive the new description to edit a cash box."""
     from utils.telegram_helpers import reply_html, reply_text
     
     if not update.message:
@@ -381,21 +381,21 @@ async def edit_descripcion_receive(update: Update, context: ContextTypes.DEFAULT
     
     caja_id = context.user_data.get("caja_edit_id")
     if caja_id is None:
-        await reply_text(update, "❌ No hay caja en edición.")
+        await reply_text(update, "❌ No cash box is currently being edited.")
         return MENU
     
     nueva_descripcion = (update.message.text or "").strip()
     
-    # Si el usuario escribe 'sin', quitar descripción
-    if nueva_descripcion.lower() == 'sin':
+    # If user writes an explicit empty marker, clear description
+    if nueva_descripcion.lower() in ('sin', 'none', 'no description'):
         nueva_descripcion = None
     
     try:
         caja = CajaService.obtener_por_id(caja_id)
-        CajaService.actualizar(int(caja_id), caja['nombre'], nueva_descripcion)
+        CajaService.update(int(caja_id), caja['nombre'], nueva_descripcion)
         await reply_html(
             update,
-            f"✅ <b>Actualizado</b>\n\nDescripción actualizada."
+            f"✅ <b>Updated</b>\n\nDescription updated."
         )
         context.user_data.pop("caja_edit_id", None)
         await _render_list(update, context)
@@ -404,23 +404,23 @@ async def edit_descripcion_receive(update: Update, context: ContextTypes.DEFAULT
         await reply_text(update, f"❌ {e}")
         return EDIT_DESCRIPCION
     except Exception as e:
-        logger.error(f"Error actualizando caja: {e}", exc_info=True)
-        await reply_text(update, "❌ Ocurrió un error al actualizar. Intenta nuevamente.")
+        logger.error(f"Error updating cash box: {e}", exc_info=True)
+        await reply_text(update, "❌ An error occurred while updating. Please try again.")
         return EDIT_DESCRIPCION
 
 
 async def cancel_command(update: Update, context: ContextTypes.DEFAULT_TYPE) -> int:
-    """Cancela la operación actual."""
+    """Cancel the current operation."""
     from utils.telegram_helpers import reply_text
     
-    # Limpiar todos los datos de la conversación
+    # Clear all conversation data
     keys_to_remove = [
         "caja_nombre", "caja_descripcion", "caja_edit_id", "caja_del_id"
     ]
     for key in keys_to_remove:
         context.user_data.pop(key, None)
     
-    await reply_text(update, "✅ Operación cancelada.")
+    await reply_text(update, "✅ Operation canceled.")
     return ConversationHandler.END
 
 
@@ -434,11 +434,11 @@ cajas_conv_handler = ConversationHandler(
             CallbackQueryHandler(menu_callback, pattern=r"^caja:.*"),
         ],
         CREAR_NOMBRE: [
-            MessageHandler(filters.TEXT & ~filters.COMMAND, crear_nombre_receive),
+            MessageHandler(filters.TEXT & ~filters.COMMAND, create_nombre_receive),
             CallbackQueryHandler(menu_callback, pattern=r"^caja:.*"),
         ],
         CREAR_DESCRIPCION: [
-            MessageHandler(filters.TEXT & ~filters.COMMAND, crear_descripcion_receive),
+            MessageHandler(filters.TEXT & ~filters.COMMAND, create_descripcion_receive),
             CallbackQueryHandler(menu_callback, pattern=r"^caja:.*"),
         ],
         EDIT_MENU: [

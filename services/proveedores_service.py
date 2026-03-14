@@ -1,5 +1,5 @@
 """
-Servicio de proveedores - Lógica de negocio para gestión de proveedores.
+Suppliers service - Business logic for supplier management.
 """
 import logging
 from typing import List, Dict, Any, Optional
@@ -10,19 +10,19 @@ logger = logging.getLogger(__name__)
 
 
 class ProveedorService:
-    """Servicio para operaciones con proveedores."""
+    """Service for supplier operations."""
     
     @staticmethod
-    def crear(name: str) -> Dict[str, Any]:
-        """Crea un nuevo proveedor."""
+    def create(name: str) -> Dict[str, Any]:
+        """Create a new supplier."""
         with get_db_connection() as conn:
-            proveedor_id = ProveedorRepository.crear(conn, name)
+            proveedor_id = ProveedorRepository.create(conn, name)
         
         return {"id": proveedor_id, "name": name}
     
     @staticmethod
     def listar() -> List[Dict[str, Any]]:
-        """Obtiene todos los proveedores."""
+        """Get all suppliers."""
         with get_db_connection() as conn:
             proveedores = ProveedorRepository.obtener_todos(conn)
         
@@ -37,7 +37,7 @@ class ProveedorService:
     
     @staticmethod
     def obtener_por_id(proveedor_id: int) -> Optional[Dict[str, Any]]:
-        """Obtiene un proveedor por su ID."""
+        """Get a supplier by ID."""
         with get_db_connection() as conn:
             proveedor = ProveedorRepository.obtener_por_id(conn, proveedor_id)
         
@@ -52,7 +52,7 @@ class ProveedorService:
     
     @staticmethod
     def obtener_por_nombre(name: str) -> Optional[Dict[str, Any]]:
-        """Obtiene un proveedor por su nombre."""
+        """Get a supplier by name."""
         with get_db_connection() as conn:
             proveedor = ProveedorRepository.obtener_por_nombre(conn, name)
         
@@ -66,18 +66,18 @@ class ProveedorService:
         }
     
     @staticmethod
-    def actualizar(proveedor_id: int, nuevo_name: str) -> None:
-        """Actualiza el nombre de un proveedor."""
+    def update(proveedor_id: int, nuevo_name: str) -> None:
+        """Update a supplier name."""
         with get_db_connection() as conn:
-            rows_updated = ProveedorRepository.actualizar(conn, proveedor_id, nuevo_name)
+            rows_updated = ProveedorRepository.update(conn, proveedor_id, nuevo_name)
             if rows_updated == 0:
-                raise ValueError("Proveedor no encontrado")
+                raise ValueError("Supplier not found")
     
     @staticmethod
-    def eliminar(proveedor_id: int) -> None:
-        """Elimina un proveedor."""
+    def delete(proveedor_id: int) -> None:
+        """Delete a supplier."""
         with get_db_connection() as conn:
-            rows_updated = ProveedorRepository.eliminar(conn, proveedor_id)
+            rows_updated = ProveedorRepository.delete(conn, proveedor_id)
             if rows_updated == 0:
-                raise ValueError("Proveedor no encontrado")
+                raise ValueError("Supplier not found")
 

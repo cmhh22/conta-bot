@@ -1,5 +1,5 @@
 """
-Handlers para gestión de productos (CRUD completo).
+Handlers para management de productos (CRUD completo).
 """
 import logging
 from typing import List
@@ -20,15 +20,15 @@ from core.config import VALID_MONEDAS
 
 logger = logging.getLogger(__name__)
 
-# Estados de la conversación
+# Estados de la conversacion
 MENU, CREAR_CODIGO, CREAR_NOMBRE, CREAR_COSTO, CREAR_MONEDA, CREAR_STOCK, EDIT_MENU, EDIT_CODIGO, EDIT_NOMBRE, EDIT_COSTO, EDIT_MONEDA, CONFIRM_DELETE = range(12)
 
 
 def _main_menu_kb() -> InlineKeyboardMarkup:
-    """Genera el teclado del menú principal."""
+    """Genera el teclado del menu principal."""
     keyboard = [
         [
-            InlineKeyboardButton("➕ Crear", callback_data="prod:create"),
+            InlineKeyboardButton("➕ Create", callback_data="prod:create"),
             InlineKeyboardButton("📋 Listar", callback_data="prod:list"),
         ],
         [InlineKeyboardButton("❌ Cerrar", callback_data="prod:close")],
@@ -42,15 +42,15 @@ async def _render_list(update: Update, context: ContextTypes.DEFAULT_TYPE) -> No
         productos = ProductoRepository.obtener_todos(conn)
     
     if not productos:
-        text = "📦 <b>Productos</b>\n\nAún no hay productos registrados."
+        text = "📦 <b>Productos</b>\n\nStill no hay productos registrados."
         kb = InlineKeyboardMarkup([
-            [InlineKeyboardButton("➕ Crear", callback_data="prod:create")],
-            [InlineKeyboardButton("⬅️ Volver", callback_data="prod:back")]
+            [InlineKeyboardButton("➕ Create", callback_data="prod:create")],
+            [InlineKeyboardButton("⬅️ Back", callback_data="prod:back")]
         ])
         await reply_html(update, text, reply_markup=kb)
         return
     
-    text = "📦 <b>Productos</b>\n\nSelecciona una acción para cada ítem:"
+    text = "📦 <b>Productos</b>\n\nSelect una action para cada item:"
     keyboard: List[List[InlineKeyboardButton]] = []
     for prod in productos:
         prod_codigo = prod["codigo"]
@@ -65,7 +65,7 @@ async def _render_list(update: Update, context: ContextTypes.DEFAULT_TYPE) -> No
             InlineKeyboardButton(f"✏️ {display_name[:40]}", callback_data=f"prod:edit:{prod_codigo}"),
             InlineKeyboardButton("🗑️", callback_data=f"prod:del:{prod_codigo}"),
         ])
-    keyboard.append([InlineKeyboardButton("⬅️ Volver", callback_data="prod:back")])
+    keyboard.append([InlineKeyboardButton("⬅️ Back", callback_data="prod:back")])
     kb = InlineKeyboardMarkup(keyboard)
     
     await reply_html(update, text, reply_markup=kb)
@@ -73,7 +73,7 @@ async def _render_list(update: Update, context: ContextTypes.DEFAULT_TYPE) -> No
 
 @admin_only
 async def productos_entry(update: Update, context: ContextTypes.DEFAULT_TYPE) -> int:
-    """Punto de entrada para la gestión de productos."""
+    """Punto de entrada para la management de productos."""
     logger.info(f"productos_entry called by user {update.effective_user.id}")
     
     # Limpiar cualquier dato residual de conversaciones anteriores
@@ -85,8 +85,8 @@ async def productos_entry(update: Update, context: ContextTypes.DEFAULT_TYPE) ->
         context.user_data.pop(key, None)
     
     msg = (
-        "📦 <b>Gestión de Productos</b>\n\n"
-        "Administra tus productos. Usa el menú de abajo."
+        "📦 <b>Management de Productos</b>\n\n"
+        "Administra tus productos. Usa el menu de abajo."
     )
     await reply_html(update, msg, reply_markup=_main_menu_kb())
     return MENU
@@ -94,7 +94,7 @@ async def productos_entry(update: Update, context: ContextTypes.DEFAULT_TYPE) ->
 
 @admin_only
 async def menu_callback(update: Update, context: ContextTypes.DEFAULT_TYPE) -> int:
-    """Maneja los callbacks del menú."""
+    """Maneja los callbacks del menu."""
     q = update.callback_query
     if q:
         await q.answer()
@@ -103,7 +103,7 @@ async def menu_callback(update: Update, context: ContextTypes.DEFAULT_TYPE) -> i
     if data == "prod:create":
         await reply_html(
             update,
-            "🆕 <b>Nuevo Producto</b>\n\nEnvía el <b>código</b> del producto (único):"
+            "🆕 <b>Nuevo Producto</b>\n\nSend el <b>codigo</b> del producto (unico):"
         )
         return CREAR_CODIGO
     
@@ -121,10 +121,10 @@ async def menu_callback(update: Update, context: ContextTypes.DEFAULT_TYPE) -> i
         ]
         for key in keys_to_remove:
             context.user_data.pop(key, None)
-        await reply_text(update, "✅ Cerrado.")
+        await reply_text(update, "✅ Closed.")
         return ConversationHandler.END
     
-    # Acciones por ítem
+    # Actions por item
     if data.startswith("prod:edit:"):
         prod_codigo = data.split(":")[-1]
         context.user_data["prod_edit_codigo"] = prod_codigo
@@ -133,24 +133,24 @@ async def menu_callback(update: Update, context: ContextTypes.DEFAULT_TYPE) -> i
             producto = ProductoRepository.obtener_por_codigo(conn, prod_codigo)
         
         if not producto:
-            await reply_text(update, "❌ Producto no encontrado.")
+            await reply_text(update, "❌ Producto not found.")
             return MENU
         
         kb = InlineKeyboardMarkup([
             [InlineKeyboardButton("✏️ Nombre", callback_data="prod:edit_nombre")],
             [InlineKeyboardButton("💰 Costo", callback_data="prod:edit_costo")],
             [InlineKeyboardButton("💵 Moneda", callback_data="prod:edit_moneda")],
-            [InlineKeyboardButton("⬅️ Volver", callback_data="prod:back")]
+            [InlineKeyboardButton("⬅️ Back", callback_data="prod:back")]
         ])
         stock_val = producto["stock"] if "stock" in producto.keys() else 0
         await reply_html(
             update,
             f"✏️ <b>Editar Producto</b>\n\n"
-            f"Código: <code>{producto['codigo']}</code>\n"
+            f"Codigo: <code>{producto['codigo']}</code>\n"
             f"Nombre: <code>{producto['nombre']}</code>\n"
             f"Costo: <code>{producto['costo_unitario']} {producto['moneda_costo']}</code>\n"
             f"Stock: <code>{stock_val}</code>\n\n"
-            f"¿Qué deseas editar?",
+            f"What would you like to edit?",
             reply_markup=kb
         )
         return EDIT_MENU
@@ -158,56 +158,56 @@ async def menu_callback(update: Update, context: ContextTypes.DEFAULT_TYPE) -> i
     if data == "prod:edit_nombre":
         prod_codigo = context.user_data.get("prod_edit_codigo")
         if not prod_codigo:
-            await reply_text(update, "❌ No hay producto en edición.")
+            await reply_text(update, "❌ No producto en edicion.")
             return MENU
         
         with get_db_connection() as conn:
             producto = ProductoRepository.obtener_por_codigo(conn, prod_codigo)
         
         if not producto:
-            await reply_text(update, "❌ Producto no encontrado.")
+            await reply_text(update, "❌ Producto not found.")
             return MENU
         
         await reply_html(
             update,
             f"✏️ <b>Renombrar Producto</b>\n\n"
             f"Actual: <code>{producto['nombre']}</code>\n"
-            f"Envía el <b>nuevo nombre</b>:"
+            f"Send el <b>nuevo nombre</b>:"
         )
         return EDIT_NOMBRE
     
     if data == "prod:edit_costo":
         prod_codigo = context.user_data.get("prod_edit_codigo")
         if not prod_codigo:
-            await reply_text(update, "❌ No hay producto en edición.")
+            await reply_text(update, "❌ No producto en edicion.")
             return MENU
         
         with get_db_connection() as conn:
             producto = ProductoRepository.obtener_por_codigo(conn, prod_codigo)
         
         if not producto:
-            await reply_text(update, "❌ Producto no encontrado.")
+            await reply_text(update, "❌ Producto not found.")
             return MENU
         
         await reply_html(
             update,
-            f"💰 <b>Actualizar Costo</b>\n\n"
+            f"💰 <b>Update Costo</b>\n\n"
             f"Actual: <code>{producto['costo_unitario']} {producto['moneda_costo']}</code>\n"
-            f"Envía el <b>nuevo costo unitario</b>:"
+            f"Send el <b>nuevo costo unitario</b>:"
         )
         return EDIT_COSTO
     
     if data == "prod:edit_moneda":
         prod_codigo = context.user_data.get("prod_edit_codigo")
         if not prod_codigo:
-            await reply_text(update, "❌ No hay producto en edición.")
+            await reply_text(update, "❌ No producto en edicion.")
             return MENU
         
         with get_db_connection() as conn:
             producto = ProductoRepository.obtener_por_codigo(conn, prod_codigo)
         
         if not producto:
-            await reply_text(update, "❌ Producto no encontrado.")
+            await reply_text(update, "❌ Producto not found.")
             return MENU
         
         keyboard = []
@@ -218,14 +218,14 @@ async def menu_callback(update: Update, context: ContextTypes.DEFAULT_TYPE) -> i
                     callback_data=f"prod:set_moneda:{moneda}"
                 )
             ])
-        keyboard.append([InlineKeyboardButton("⬅️ Volver", callback_data="prod:back")])
+        keyboard.append([InlineKeyboardButton("⬅️ Back", callback_data="prod:back")])
         kb = InlineKeyboardMarkup(keyboard)
         
         await reply_html(
             update,
             f"💵 <b>Cambiar Moneda</b>\n\n"
             f"Actual: <code>{producto['moneda_costo']}</code>\n"
-            f"Selecciona la nueva moneda:",
+            f"Select la nueva moneda:",
             reply_markup=kb
         )
         return EDIT_MONEDA
@@ -235,17 +235,17 @@ async def menu_callback(update: Update, context: ContextTypes.DEFAULT_TYPE) -> i
         prod_codigo = context.user_data.get("prod_edit_codigo")
         
         if not prod_codigo:
-            await reply_text(update, "❌ No hay producto en edición.")
+            await reply_text(update, "❌ No producto en edicion.")
             return MENU
         
         try:
             with get_db_connection() as conn:
                 producto = ProductoRepository.obtener_por_codigo(conn, prod_codigo)
                 if not producto:
-                    await reply_text(update, "❌ Producto no encontrado.")
+                    await reply_text(update, "❌ Producto not found.")
                     return MENU
                 
-                ProductoRepository.actualizar_costo(conn, prod_codigo, producto['costo_unitario'], moneda)
+                ProductoRepository.update_costo(conn, prod_codigo, producto['costo_unitario'], moneda)
             
             await reply_html(
                 update,
@@ -266,18 +266,18 @@ async def menu_callback(update: Update, context: ContextTypes.DEFAULT_TYPE) -> i
             producto = ProductoRepository.obtener_por_codigo(conn, prod_codigo)
         
         if not producto:
-            await reply_text(update, "❌ Producto no encontrado.")
+            await reply_text(update, "❌ Producto not found.")
             return MENU
         
         kb = InlineKeyboardMarkup([
-            [InlineKeyboardButton("✅ Sí, borrar", callback_data="prod:delok"),
-             InlineKeyboardButton("↩️ Cancelar", callback_data="prod:cancel")]
+            [InlineKeyboardButton("✅ Yes, borrar", callback_data="prod:delok"),
+             InlineKeyboardButton("↩️ Cancel", callback_data="prod:cancel")]
         ])
         await reply_html(
             update,
-            f"⚠️ <b>Confirmar eliminación</b>\n\n"
+            f"⚠️ <b>Confirmar deletion</b>\n\n"
             f"Vas a borrar: <code>{producto['codigo']}</code> - {producto['nombre']}\n"
-            f"Esta acción no se puede deshacer.",
+            f"Esta action no se puede deshacer.",
             reply_markup=kb
         )
         return CONFIRM_DELETE
@@ -285,19 +285,19 @@ async def menu_callback(update: Update, context: ContextTypes.DEFAULT_TYPE) -> i
     if data == "prod:delok":
         prod_codigo = context.user_data.get("prod_del_codigo")
         if not prod_codigo:
-            await reply_text(update, "❌ No hay elemento para eliminar.")
+            await reply_text(update, "❌ No elemento para delete.")
             await _render_list(update, context)
             return MENU
         
         try:
-            # Nota: No hay método eliminar en ProductoRepository, pero podemos implementarlo
+            # Nota: No metodo delete en ProductoRepository, pero podemos implementarlo
             # Por ahora, solo mostramos un mensaje
-            await reply_text(update, "⚠️ La eliminación de productos no está implementada por seguridad.")
+            await reply_text(update, "⚠️ La deletion de productos no esta implementada por seguridad.")
             context.user_data.pop("prod_del_codigo", None)
             await _render_list(update, context)
         except Exception as e:
             logger.error(f"Error eliminando producto: {e}", exc_info=True)
-            await reply_text(update, "❌ No se pudo eliminar. Intenta de nuevo.")
+            await reply_text(update, "❌ No se pudo delete. Intenta de nuevo.")
             await _render_list(update, context)
         return MENU
     
@@ -309,54 +309,54 @@ async def menu_callback(update: Update, context: ContextTypes.DEFAULT_TYPE) -> i
 
 
 @admin_only
-async def crear_codigo_receive(update: Update, context: ContextTypes.DEFAULT_TYPE) -> int:
-    """Recibe el código del producto."""
+async def create_codigo_receive(update: Update, context: ContextTypes.DEFAULT_TYPE) -> int:
+    """Recibe el codigo del producto."""
     if not update.message:
         return CREAR_CODIGO
     
     codigo = (update.message.text or "").strip().upper()
     if not codigo:
-        await reply_text(update, "❌ El código no puede estar vacío. Envía un código válido.")
+        await reply_text(update, "❌ El codigo no puede estar empty. Send un codigo valid.")
         return CREAR_CODIGO
     
     # Verificar si ya existe
     with get_db_connection() as conn:
         existente = ProductoRepository.obtener_por_codigo(conn, codigo)
         if existente:
-            await reply_text(update, "⚠️ Ya existe un producto con ese código. Usa otro código.")
+            await reply_text(update, "⚠️ Ya existe un producto con ese codigo. Usa otro codigo.")
             return CREAR_CODIGO
     
     context.user_data["prod_codigo"] = codigo
     await reply_html(
         update,
-        f"✅ Código: <code>{codigo}</code>\n\n"
-        f"Envía el <b>nombre</b> del producto:"
+        f"✅ Codigo: <code>{codigo}</code>\n\n"
+        f"Send el <b>nombre</b> del producto:"
     )
     return CREAR_NOMBRE
 
 
 @admin_only
-async def crear_nombre_receive(update: Update, context: ContextTypes.DEFAULT_TYPE) -> int:
+async def create_nombre_receive(update: Update, context: ContextTypes.DEFAULT_TYPE) -> int:
     """Recibe el nombre del producto."""
     if not update.message:
         return CREAR_NOMBRE
     
     nombre = (update.message.text or "").strip()
     if not nombre:
-        await reply_text(update, "❌ El nombre no puede estar vacío. Envía un nombre válido.")
+        await reply_text(update, "❌ El nombre no puede estar empty. Send un nombre valid.")
         return CREAR_NOMBRE
     
     context.user_data["prod_nombre"] = nombre
     await reply_html(
         update,
         f"✅ Nombre: <code>{nombre}</code>\n\n"
-        f"Envía el <b>costo unitario</b>:"
+        f"Send el <b>costo unitario</b>:"
     )
     return CREAR_COSTO
 
 
 @admin_only
-async def crear_costo_receive(update: Update, context: ContextTypes.DEFAULT_TYPE) -> int:
+async def create_costo_receive(update: Update, context: ContextTypes.DEFAULT_TYPE) -> int:
     """Recibe el costo del producto."""
     if not update.message:
         return CREAR_COSTO
@@ -382,17 +382,17 @@ async def crear_costo_receive(update: Update, context: ContextTypes.DEFAULT_TYPE
         await reply_html(
             update,
             f"✅ Costo: <code>{costo}</code>\n\n"
-            f"Selecciona la <b>moneda</b>:",
+            f"Select la <b>moneda</b>:",
             reply_markup=kb
         )
         return CREAR_MONEDA
     except ValueError:
-        await reply_text(update, "❌ El costo debe ser un número válido.")
+        await reply_text(update, "❌ El costo debe ser un numero valid.")
         return CREAR_COSTO
 
 
-async def crear_moneda_callback(update: Update, context: ContextTypes.DEFAULT_TYPE) -> int:
-    """Maneja la selección de moneda."""
+async def create_moneda_callback(update: Update, context: ContextTypes.DEFAULT_TYPE) -> int:
+    """Maneja la selection de moneda."""
     q = update.callback_query
     if q:
         await q.answer()
@@ -405,7 +405,7 @@ async def crear_moneda_callback(update: Update, context: ContextTypes.DEFAULT_TY
         await reply_html(
             update,
             f"✅ Moneda: <code>{moneda}</code>\n\n"
-            f"Envía el <b>stock inicial</b> (0 si no hay stock):"
+            f"Send el <b>stock inicial</b> (0 si no hay stock):"
         )
         return CREAR_STOCK
     
@@ -413,7 +413,7 @@ async def crear_moneda_callback(update: Update, context: ContextTypes.DEFAULT_TY
 
 
 @admin_only
-async def crear_stock_receive(update: Update, context: ContextTypes.DEFAULT_TYPE) -> int:
+async def create_stock_receive(update: Update, context: ContextTypes.DEFAULT_TYPE) -> int:
     """Recibe el stock inicial y crea el producto."""
     if not update.message:
         return CREAR_STOCK
@@ -433,14 +433,14 @@ async def crear_stock_receive(update: Update, context: ContextTypes.DEFAULT_TYPE
             await reply_text(update, "❌ Error: datos incompletos. Empieza de nuevo.")
             return await productos_entry(update, context)
         
-        # Crear el producto
+        # Create el producto
         with get_db_connection() as conn:
-            ProductoRepository.crear(conn, codigo, nombre, costo, moneda, stock)
+            ProductoRepository.create(conn, codigo, nombre, costo, moneda, stock)
         
         await reply_html(
             update,
             f"✅ <b>Producto Creado</b>\n\n"
-            f"Código: <code>{codigo}</code>\n"
+            f"Codigo: <code>{codigo}</code>\n"
             f"Nombre: <code>{nombre}</code>\n"
             f"Costo: <code>{costo} {moneda}</code>\n"
             f"Stock: <code>{stock}</code>"
@@ -453,18 +453,18 @@ async def crear_stock_receive(update: Update, context: ContextTypes.DEFAULT_TYPE
         
         await reply_html(
             update,
-            "¿Qué deseas hacer ahora?", reply_markup=_main_menu_kb()
+            "What would you like to do now?", reply_markup=_main_menu_kb()
         )
         return MENU
     except ValueError as e:
         if "UNIQUE" in str(e) or "ya existe" in str(e).lower():
-            await reply_text(update, "⚠️ Ya existe un producto con ese código. Usa otro código.")
+            await reply_text(update, "⚠️ Ya existe un producto con ese codigo. Usa otro codigo.")
         else:
             await reply_text(update, f"❌ {str(e)}")
         return CREAR_CODIGO
     except Exception as e:
         logger.error(f"Error creando producto: {e}", exc_info=True)
-        await reply_text(update, "❌ Ocurrió un error al crear. Intenta nuevamente.")
+        await reply_text(update, "❌ An error occurred al create. Try again.")
         return CREAR_CODIGO
 
 
@@ -476,24 +476,24 @@ async def edit_nombre_receive(update: Update, context: ContextTypes.DEFAULT_TYPE
     
     prod_codigo = context.user_data.get("prod_edit_codigo")
     if not prod_codigo:
-        await reply_text(update, "❌ No hay producto en edición.")
+        await reply_text(update, "❌ No producto en edicion.")
         return MENU
     
     nuevo_nombre = (update.message.text or "").strip()
     if not nuevo_nombre:
-        await reply_text(update, "❌ El nombre no puede estar vacío. Envía un nombre válido.")
+        await reply_text(update, "❌ El nombre no puede estar empty. Send un nombre valid.")
         return EDIT_NOMBRE
     
     try:
-        # Actualizar nombre (necesitamos agregar este método al repositorio)
+        # Update nombre (necesitamos agregar este metodo al repositorio)
         # Por ahora, solo mostramos un mensaje
-        await reply_text(update, "⚠️ La actualización de nombre no está implementada aún.")
+        await reply_text(update, "⚠️ La update de nombre no esta implementada still.")
         context.user_data.pop("prod_edit_codigo", None)
         await _render_list(update, context)
         return MENU
     except Exception as e:
         logger.error(f"Error actualizando producto: {e}", exc_info=True)
-        await reply_text(update, "❌ Ocurrió un error al actualizar. Intenta nuevamente.")
+        await reply_text(update, "❌ An error occurred al update. Try again.")
         return EDIT_NOMBRE
 
 
@@ -505,7 +505,7 @@ async def edit_costo_receive(update: Update, context: ContextTypes.DEFAULT_TYPE)
     
     prod_codigo = context.user_data.get("prod_edit_codigo")
     if not prod_codigo:
-        await reply_text(update, "❌ No hay producto en edición.")
+        await reply_text(update, "❌ No producto en edicion.")
         return MENU
     
     try:
@@ -517,10 +517,10 @@ async def edit_costo_receive(update: Update, context: ContextTypes.DEFAULT_TYPE)
         with get_db_connection() as conn:
             producto = ProductoRepository.obtener_por_codigo(conn, prod_codigo)
             if not producto:
-                await reply_text(update, "❌ Producto no encontrado.")
+                await reply_text(update, "❌ Producto not found.")
                 return MENU
             
-            ProductoRepository.actualizar_costo(conn, prod_codigo, nuevo_costo, producto['moneda_costo'])
+            ProductoRepository.update_costo(conn, prod_codigo, nuevo_costo, producto['moneda_costo'])
         
         await reply_html(
             update,
@@ -530,16 +530,16 @@ async def edit_costo_receive(update: Update, context: ContextTypes.DEFAULT_TYPE)
         await _render_list(update, context)
         return MENU
     except ValueError:
-        await reply_text(update, "❌ El costo debe ser un número válido.")
+        await reply_text(update, "❌ El costo debe ser un numero valid.")
         return EDIT_COSTO
     except Exception as e:
         logger.error(f"Error actualizando costo: {e}", exc_info=True)
-        await reply_text(update, "❌ Ocurrió un error al actualizar. Intenta nuevamente.")
+        await reply_text(update, "❌ An error occurred al update. Try again.")
         return EDIT_COSTO
 
 
 async def cancel_command(update: Update, context: ContextTypes.DEFAULT_TYPE) -> int:
-    """Cancela la operación actual."""
+    """Cancela la operation actual."""
     keys_to_remove = [
         "prod_codigo", "prod_nombre", "prod_costo", "prod_moneda", "prod_stock",
         "prod_edit_codigo", "prod_del_codigo"
@@ -547,7 +547,7 @@ async def cancel_command(update: Update, context: ContextTypes.DEFAULT_TYPE) -> 
     for key in keys_to_remove:
         context.user_data.pop(key, None)
     
-    await reply_text(update, "✅ Operación cancelada.")
+    await reply_text(update, "✅ Operation cancelada.")
     return ConversationHandler.END
 
 
@@ -561,23 +561,23 @@ productos_conv_handler = ConversationHandler(
             CallbackQueryHandler(menu_callback, pattern=r"^prod:.*"),
         ],
         CREAR_CODIGO: [
-            MessageHandler(filters.TEXT & ~filters.COMMAND, crear_codigo_receive),
+            MessageHandler(filters.TEXT & ~filters.COMMAND, create_codigo_receive),
             CallbackQueryHandler(menu_callback, pattern=r"^prod:.*"),
         ],
         CREAR_NOMBRE: [
-            MessageHandler(filters.TEXT & ~filters.COMMAND, crear_nombre_receive),
+            MessageHandler(filters.TEXT & ~filters.COMMAND, create_nombre_receive),
             CallbackQueryHandler(menu_callback, pattern=r"^prod:.*"),
         ],
         CREAR_COSTO: [
-            MessageHandler(filters.TEXT & ~filters.COMMAND, crear_costo_receive),
+            MessageHandler(filters.TEXT & ~filters.COMMAND, create_costo_receive),
             CallbackQueryHandler(menu_callback, pattern=r"^prod:.*"),
         ],
         CREAR_MONEDA: [
-            CallbackQueryHandler(crear_moneda_callback, pattern=r"^prod:moneda:"),
+            CallbackQueryHandler(create_moneda_callback, pattern=r"^prod:moneda:"),
             CallbackQueryHandler(menu_callback, pattern=r"^prod:.*"),
         ],
         CREAR_STOCK: [
-            MessageHandler(filters.TEXT & ~filters.COMMAND, crear_stock_receive),
+            MessageHandler(filters.TEXT & ~filters.COMMAND, create_stock_receive),
             CallbackQueryHandler(menu_callback, pattern=r"^prod:.*"),
         ],
         EDIT_MENU: [

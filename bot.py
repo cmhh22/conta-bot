@@ -1,5 +1,5 @@
 """
-Bot principal de Telegram para gestión financiera.
+Bot principal de Telegram para management financiera.
 """
 import logging
 from telegram import BotCommand, Update
@@ -42,7 +42,7 @@ from handlers.menu_handlers import start_command, menu_callback, menu_query_hand
 from handlers.form_handlers import ingreso_conv_handler, gasto_conv_handler, traspaso_conv_handler, deuda_proveedor_conv_handler, cambio_moneda_conv_handler, transferencia_externa_conv_handler, pago_proveedor_conv_handler
 from ai.chatbot_handler import chatbot_handler
 
-# Configuración de logging
+# Configuration de logging
 logging.basicConfig(
     format="%(asctime)s - %(name)s - %(levelname)s - %(message)s",
     level=logging.INFO
@@ -51,7 +51,7 @@ logger = logging.getLogger(__name__)
 
 
 async def cancel_active_conversations(update: Update, context: ContextTypes.DEFAULT_TYPE) -> None:
-    """Cancela cualquier conversación activa cuando se ejecuta un comando."""
+    """Cancela cualquier conversacion activa cuando se ejecuta un comando."""
     if not update.message or not update.message.text:
         return
     
@@ -70,173 +70,173 @@ async def cancel_active_conversations(update: Update, context: ContextTypes.DEFA
         'consignar_almacen', 'mover_consignacion', 'pagar_consignacion', 'start', 'cancel'
     ]
     
-    # Si el comando actual inicia una conversación o es cancel/start, no cancelar
+    # Si el comando actual inicia una conversacion o es cancel/start, no cancelar
     if command in conversation_commands:
         return
     
-    # Cancelar todas las conversaciones activas
+    # Cancel todas las conversaciones activas
     from telegram.ext import ConversationHandler
     user_id = update.effective_user.id
     chat_id = update.effective_chat.id
     
-    # Obtener todos los ConversationHandlers de la aplicación
-    # Los handlers están en diferentes grupos, necesitamos buscar en todos
+    # Obtener todos los ConversationHandlers de la aplicacion
+    # Los handlers estan en diferentes grupos, necesitamos buscar en todos
     cancelled = False
     for group in context.application.handlers.values():
         for handler in group:
             if isinstance(handler, ConversationHandler):
-                # Verificar si hay una conversación activa para este usuario
-                # El atributo 'conversations' puede no estar disponible directamente
-                # Intentamos acceder de forma segura
+                # Check whether there is an active conversation for this user
+                # The 'conversations' attribute may not be directly available
+                # Access it safely
                 try:
                     key = (chat_id, user_id)
-                    # Intentar acceder a las conversaciones de forma segura
+                    # Try to access conversations safely
                     if hasattr(handler, 'conversations') and handler.conversations.get(key) is not None:
-                        # Cancelar la conversación
+                        # Cancel the conversation
                         handler.conversations.pop(key, None)
                         handler_name = getattr(handler, 'name', 'unknown')
-                        logger.info(f"Conversación '{handler_name}' cancelada para usuario {user_id} al ejecutar comando /{command}")
+                        logger.info(f"Conversation '{handler_name}' canceled for user {user_id} when executing /{command}")
                         cancelled = True
                 except (AttributeError, TypeError):
-                    # Si no se puede acceder a las conversaciones, simplemente continuar
-                    # Esto puede ocurrir en algunas versiones de python-telegram-bot
+                    # If conversations cannot be accessed, continue
+                    # This can happen in some versions of python-telegram-bot
                     pass
     
-    # Notificar al usuario solo una vez
+    # Notify the user only once
     if cancelled:
         try:
             await update.message.reply_text(
-                f"✅ Operación anterior cancelada. Ejecutando comando /{command}..."
+                f"✅ Previous operation canceled. Running command /{command}..."
             )
         except Exception:
             pass  # Si no se puede enviar el mensaje, continuar
 
 
 async def error_handler(update: object, context: ContextTypes.DEFAULT_TYPE) -> None:
-    """Maneja errores globales del bot."""
+    """Handle global bot errors."""
     error = context.error
     logger.error(f"Exception while handling an update: {error}", exc_info=error)
     
-    # Manejar errores de red específicamente
+    # Handle network errors specifically
     if isinstance(error, NetworkError):
-        logger.warning(f"Error de red detectado: {error}")
-        # El bot reintentará automáticamente, solo logueamos
+        logger.warning(f"Network error detected: {error}")
+        # The bot will retry automatically; only log
         return
     
     if isinstance(error, TimedOut):
-        logger.warning(f"Timeout detectado: {error}")
+        logger.warning(f"Timeout detected: {error}")
         return
     
     if isinstance(error, RetryAfter):
-        logger.warning(f"Rate limit detectado: {error}. Esperando {error.retry_after} segundos")
+        logger.warning(f"Rate limit detected: {error}. Waiting {error.retry_after} seconds")
         return
     
-    # Errores de autenticación/autorización
+    # Authentication/authorization errors
     if isinstance(error, Forbidden):
-        # Forbidden puede ser por token inválido o bot bloqueado
+        # Forbidden can happen due to invalid token or blocked bot
         error_msg = str(error).lower()
         if "unauthorized" in error_msg or "invalid token" in error_msg or "token" in error_msg:
-            logger.error(f"Error de autenticación: {error}. Verifica que el TOKEN sea válido.")
+            logger.error(f"Authentication error: {error}. Verify TOKEN is valid.")
         else:
-            logger.warning(f"Bot bloqueado por usuario o sin permisos: {error}")
+            logger.warning(f"Bot blocked by user or missing permissions: {error}")
         return
     
     if isinstance(error, BadRequest):
-        logger.warning(f"Petición inválida a la API de Telegram: {error}")
+        logger.warning(f"Invalid request to Telegram API: {error}")
         return
     
-    # Errores de conexión generales
+    # General connection errors
     if isinstance(error, (ConnectionError, OSError)):
-        logger.warning(f"Error de conexión: {error}. El bot reintentará automáticamente.")
+        logger.warning(f"Connection error: {error}. The bot will retry automatically.")
         return
     
-    # Para otros errores de Telegram
+    # Other Telegram errors
     if isinstance(error, TelegramError):
-        logger.warning(f"Error de Telegram: {error}")
-        # Para otros errores, intentar notificar al usuario si hay un update válido
+        logger.warning(f"Telegram error: {error}")
+        # Try notifying the user if update is valid
         if isinstance(update, Update) and update.effective_message:
             try:
                 await update.effective_message.reply_text(
-                    "❌ Ocurrió un error al procesar tu solicitud. "
-                    "Por favor, intenta nuevamente en unos momentos."
+                    "❌ An error occurred while processing your request. "
+                    "Please try again in a few moments."
                 )
             except Exception:
-                logger.error("No se pudo enviar mensaje de error al usuario")
+                logger.error("Could not send error message to user")
         return
     
-    # Para otros errores, intentar notificar al usuario si hay un update válido
+    # For other errors, try notifying the user if update is valid
     if isinstance(update, Update) and update.effective_message:
         try:
             await update.effective_message.reply_text(
-                "❌ Ocurrió un error al procesar tu solicitud. "
-                "Por favor, intenta nuevamente en unos momentos."
+                "❌ An error occurred while processing your request. "
+                "Please try again in a few moments."
             )
         except Exception:
-            # Si no podemos enviar el mensaje, solo logueamos
-            logger.error("No se pudo enviar mensaje de error al usuario")
+            # If message cannot be sent, log only
+            logger.error("Could not send error message to user")
 
 
 def main() -> None:
-    """Función principal que inicia el bot."""
-    # Inicializar base de datos
+    """Main function that starts the bot."""
+    # Initialize database
     initialize_database()
     
-    # Inicializar OpenAI si está configurado
+    # Initialize OpenAI if configured
     from ai.openai_service import OpenAIService
     if OpenAIService.initialize():
-        logger.info("🤖 OpenAI activado - Usando IA avanzada para procesamiento de lenguaje natural")
+        logger.info("🤖 OpenAI enabled - Using advanced AI for natural language processing")
     else:
-        logger.info("📝 Usando parser de reglas básico para procesamiento de lenguaje natural")
+        logger.info("📝 Using basic rule-based parser for natural language processing")
     
     if not TOKEN:
         raise RuntimeError(
-            "TELEGRAM_BOT_TOKEN no está configurado. Define la variable de entorno "
-            "TELEGRAM_BOT_TOKEN o crea un archivo config_secret.py con TOKEN y ADMIN_USER_IDS."
+            "TELEGRAM_BOT_TOKEN is not configured. Define environment variable "
+            "TELEGRAM_BOT_TOKEN or create config_secret.py with TOKEN and ADMIN_USER_IDS."
         )
     
-    # Configurar menú de comandos del bot
+    # Configure bot command menu
     async def post_init(app: Application) -> None:
-        """Configura los comandos del bot después de la inicialización."""
+        """Configure bot commands after initialization."""
         commands = [
-            BotCommand("start", "Menú principal del bot"),
-            BotCommand("contenedores", "Gestión de contenedores"),
-            BotCommand("proveedores", "Gestión de proveedores"),
-            BotCommand("vendedores", "Gestión de vendedores"),
-            BotCommand("almacenes", "Gestión de almacenes"),
-            BotCommand("productos", "Gestión de productos"),
-            BotCommand("cajas", "Gestión de cajas"),
-            BotCommand("cajas_externas", "Gestionar cajas externas (USA)"),
-            BotCommand("mover_producto", "Mover productos de contenedor a almacén"),
-            BotCommand("mover_almacen", "Mover productos entre almacenes"),
-            BotCommand("consignar_almacen", "Consignar productos desde almacén a vendedor"),
-            BotCommand("mover_consignacion", "Mover consignación de un vendedor a otro"),
-            BotCommand("pagar_consignacion", "Pagar consignación de un vendedor"),
-            BotCommand("agregar_producto_contenedor", "Agregar productos a un contenedor"),
-            BotCommand("productos_contenedor", "Ver productos de un contenedor"),
-            BotCommand("inventario_almacen", "Ver inventario de un almacén"),
-            BotCommand("resumen_logistica", "Ver resumen de logística"),
-            BotCommand("balance", "Ver saldos de todas las cajas"),
-            BotCommand("ingreso", "Registrar entrada de dinero"),
-            BotCommand("gasto", "Registrar salida de dinero"),
-            BotCommand("traspaso", "Traspaso entre cajas (interactivo)"),
-            BotCommand("cambio", "Traspaso entre cajas"),
-            BotCommand("cambio_moneda", "Cambiar moneda dentro de una caja"),
-            BotCommand("transferencia_externa", "Transferir dinero a caja externa (USA)"),
-            BotCommand("deuda_proveedor", "Generar deuda con proveedor"),
-            BotCommand("pago_proveedor", "Pagar deuda a proveedor (interactivo)"),
-            BotCommand("pago_prov", "Pagar deuda a proveedor (interactivo)"),
-            BotCommand("deudas", "Ver estado de deudas pendientes"),
-            BotCommand("historial", "Ver historial de movimientos"),
-            BotCommand("stock", "Ver inventario actual"),
-            BotCommand("venta", "Registrar una venta"),
-            BotCommand("entrada", "Registrar entrada de mercancía"),
-            BotCommand("ganancia", "Ver reporte de ganancias"),
-            BotCommand("exportar", "Exportar movimientos a CSV"),
+            BotCommand("start", "Main bot menu"),
+            BotCommand("contenedores", "Container management"),
+            BotCommand("proveedores", "Supplier management"),
+            BotCommand("vendedores", "Seller management"),
+            BotCommand("almacenes", "Warehouse management"),
+            BotCommand("productos", "Product management"),
+            BotCommand("cajas", "Cash box management"),
+            BotCommand("cajas_externas", "External cash box management (USA)"),
+            BotCommand("mover_producto", "Move products from container to warehouse"),
+            BotCommand("mover_almacen", "Move products between warehouses"),
+            BotCommand("consignar_almacen", "Consign products from warehouse to seller"),
+            BotCommand("mover_consignacion", "Move consignment from one seller to another"),
+            BotCommand("pagar_consignacion", "Pay seller consignment"),
+            BotCommand("agregar_producto_contenedor", "Add products to a container"),
+            BotCommand("productos_contenedor", "View products in a container"),
+            BotCommand("inventario_almacen", "View warehouse inventory"),
+            BotCommand("resumen_logistica", "View logistics summary"),
+            BotCommand("balance", "View balances for all cash boxes"),
+            BotCommand("ingreso", "Record incoming cash"),
+            BotCommand("gasto", "Record outgoing cash"),
+            BotCommand("traspaso", "Transfer between cash boxes (interactive)"),
+            BotCommand("cambio", "Transfer between cash boxes"),
+            BotCommand("cambio_moneda", "Convert currency inside one cash box"),
+            BotCommand("transferencia_externa", "Transfer money to external cash box (USA)"),
+            BotCommand("deuda_proveedor", "Generate supplier debt"),
+            BotCommand("pago_proveedor", "Pay supplier debt (interactive)"),
+            BotCommand("pago_prov", "Pay supplier debt (interactive)"),
+            BotCommand("deudas", "View pending debt status"),
+            BotCommand("historial", "View transaction history"),
+            BotCommand("stock", "View current inventory"),
+            BotCommand("venta", "Record a sale"),
+            BotCommand("entrada", "Record product intake"),
+            BotCommand("ganancia", "View profit report"),
+            BotCommand("exportar", "Export transactions to CSV"),
         ]
         await app.bot.set_my_commands(commands)
         logger.info("Comandos del bot configurados correctamente")
     
-    # Crear aplicación con post_init
+    # Create aplicacion con post_init
     application = Application.builder().token(TOKEN).post_init(post_init).build()
     
     # Agregar error handler global para manejar errores de red y otros errores
@@ -247,7 +247,7 @@ def main() -> None:
     from telegram.ext import MessageHandler, filters
     application.add_handler(MessageHandler(filters.COMMAND, cancel_active_conversations), group=-1)
     
-    # --- MENÚ PRINCIPAL Y NAVEGACIÓN ---
+    # --- MENU PRINCIPAL Y NAVEGACION ---
     application.add_handler(CommandHandler("start", start_command))
     
     # --- CONTENEDORES, PROVEEDORES Y ALMACENES (deben ir antes del menu_query_handler) ---
@@ -265,7 +265,7 @@ def main() -> None:
     application.add_handler(mover_consignacion_conv_handler)
     application.add_handler(pagar_consignacion_conv_handler)
     
-    # --- MENÚ Y NAVEGACIÓN (después de ConversationHandlers) ---
+    # --- MENU Y NAVEGACION (despues de ConversationHandlers) ---
     application.add_handler(menu_query_handler)
     application.add_handler(contabilidad_query_handler)
     
@@ -299,7 +299,7 @@ def main() -> None:
     application.add_handler(CommandHandler("consignar", consignar_command))
     application.add_handler(CommandHandler("stock_consignado", stock_consignado_command))
     
-    # Logística
+    # Logistica
     application.add_handler(CommandHandler("productos_contenedor", productos_contenedor_command))
     application.add_handler(CommandHandler("inventario_almacen", inventario_almacen_command))
     application.add_handler(CallbackQueryHandler(inventario_almacen_callback, pattern=r"^inv_alm:\d+$"))
@@ -311,7 +311,7 @@ def main() -> None:
     logger.info("Bot iniciado correctamente. Presiona CTRL+C para detenerlo.")
     logger.info("🤖 Chatbot de IA activado - Los usuarios pueden escribir en lenguaje natural")
     
-    # Configurar polling con mejor manejo de errores
+    # Configure polling con mejor manejo de errores
     try:
         application.run_polling(
             allowed_updates=["message", "callback_query"],
@@ -321,7 +321,7 @@ def main() -> None:
     except KeyboardInterrupt:
         logger.info("Bot detenido por el usuario")
     except Exception as e:
-        logger.error(f"Error crítico al ejecutar el bot: {e}", exc_info=True)
+        logger.error(f"Error critico al ejecutar el bot: {e}", exc_info=True)
         raise
 
 

@@ -1,5 +1,5 @@
 """
-Handlers para gestión de almacenes (CRUD completo).
+Handlers para management de almacenes (CRUD completo).
 """
 import logging
 from typing import List
@@ -14,21 +14,21 @@ from telegram.ext import (
 )
 from utils.decorators import admin_only
 from services.almacenes_service import (
-    crear, listar, obtener_por_id, actualizar, eliminar
+    create, listar, obtener_por_id, update, delete
 )
 from services.logistica_service import obtener_inventario_almacen
 
 logger = logging.getLogger(__name__)
 
-# Estados de la conversación
+# Estados de la conversacion
 MENU, CREAR_NOMBRE, CREAR_UBICACION, EDIT_MENU, EDIT_NOMBRE, EDIT_UBICACION, CONFIRM_DELETE = range(7)
 
 
 def _main_menu_kb() -> InlineKeyboardMarkup:
-    """Genera el teclado del menú principal."""
+    """Genera el teclado del menu principal."""
     keyboard = [
         [
-            InlineKeyboardButton("➕ Crear", callback_data="alm:create"),
+            InlineKeyboardButton("➕ Create", callback_data="alm:create"),
             InlineKeyboardButton("📋 Listar", callback_data="alm:list"),
         ],
         [InlineKeyboardButton("❌ Cerrar", callback_data="alm:close")],
@@ -43,15 +43,15 @@ async def _render_list(update: Update, context: ContextTypes.DEFAULT_TYPE) -> No
     almacenes = listar()
     
     if not almacenes:
-        text = "🏢 <b>Almacenes</b>\n\nAún no hay almacenes registrados."
+        text = "🏢 <b>Almacenes</b>\n\nStill no hay almacenes registrados."
         kb = InlineKeyboardMarkup([
-            [InlineKeyboardButton("➕ Crear", callback_data="alm:create")],
-            [InlineKeyboardButton("⬅️ Volver", callback_data="alm:back")]
+            [InlineKeyboardButton("➕ Create", callback_data="alm:create")],
+            [InlineKeyboardButton("⬅️ Back", callback_data="alm:back")]
         ])
         await reply_html(update, text, reply_markup=kb)
         return
     
-    text = "🏢 <b>Almacenes</b>\n\nSelecciona una acción para cada ítem:"
+    text = "🏢 <b>Almacenes</b>\n\nSelect una action para cada item:"
     keyboard: List[List[InlineKeyboardButton]] = []
     for alm in almacenes:
         alm_id = alm["id"]
@@ -66,7 +66,7 @@ async def _render_list(update: Update, context: ContextTypes.DEFAULT_TYPE) -> No
             InlineKeyboardButton(f"✏️ {display_name[:40]}", callback_data=f"alm:edit:{alm_id}"),
             InlineKeyboardButton("🗑️", callback_data=f"alm:del:{alm_id}"),
         ])
-    keyboard.append([InlineKeyboardButton("⬅️ Volver", callback_data="alm:back")])
+    keyboard.append([InlineKeyboardButton("⬅️ Back", callback_data="alm:back")])
     kb = InlineKeyboardMarkup(keyboard)
     
     await reply_html(update, text, reply_markup=kb)
@@ -74,7 +74,7 @@ async def _render_list(update: Update, context: ContextTypes.DEFAULT_TYPE) -> No
 
 @admin_only
 async def almacenes_entry(update: Update, context: ContextTypes.DEFAULT_TYPE) -> int:
-    """Punto de entrada para la gestión de almacenes."""
+    """Punto de entrada para la management de almacenes."""
     from utils.telegram_helpers import reply_html
     
     # Limpiar cualquier dato residual de conversaciones anteriores
@@ -85,8 +85,8 @@ async def almacenes_entry(update: Update, context: ContextTypes.DEFAULT_TYPE) ->
         context.user_data.pop(key, None)
     
     msg = (
-        "🏢 <b>Gestión de Almacenes</b>\n\n"
-        "Administra tus almacenes. Usa el menú de abajo."
+        "🏢 <b>Management de Almacenes</b>\n\n"
+        "Administra tus almacenes. Usa el menu de abajo."
     )
     await reply_html(update, msg, reply_markup=_main_menu_kb())
     return MENU
@@ -94,7 +94,7 @@ async def almacenes_entry(update: Update, context: ContextTypes.DEFAULT_TYPE) ->
 
 @admin_only
 async def menu_callback(update: Update, context: ContextTypes.DEFAULT_TYPE) -> int:
-    """Maneja los callbacks del menú."""
+    """Maneja los callbacks del menu."""
     from utils.telegram_helpers import reply_html, reply_text
     
     q = update.callback_query
@@ -105,7 +105,7 @@ async def menu_callback(update: Update, context: ContextTypes.DEFAULT_TYPE) -> i
     if data == "alm:create":
         await reply_html(
             update,
-            "🆕 <b>Nuevo Almacén</b>\n\nEnvía el <b>nombre</b> del almacén:"
+            "🆕 <b>Nuevo Almacen</b>\n\nSend el <b>nombre</b> del almacen:"
         )
         return CREAR_NOMBRE
     
@@ -117,36 +117,36 @@ async def menu_callback(update: Update, context: ContextTypes.DEFAULT_TYPE) -> i
         return await almacenes_entry(update, context)
     
     if data == "alm:close":
-        # Limpiar todos los datos de la conversación
+        # Limpiar todos los datos de la conversacion
         keys_to_remove = [
             "alm_nombre", "alm_ubicacion", "alm_edit_id", "alm_del_id"
         ]
         for key in keys_to_remove:
             context.user_data.pop(key, None)
-        await reply_text(update, "✅ Cerrado.")
+        await reply_text(update, "✅ Closed.")
         return ConversationHandler.END
     
-    # Acciones por ítem
+    # Actions por item
     if data.startswith("alm:edit:"):
         alm_id = int(data.split(":")[-1])
         context.user_data["alm_edit_id"] = alm_id
         almacen = obtener_por_id(alm_id)
         if not almacen:
-            await reply_text(update, "❌ Almacén no encontrado.")
+            await reply_text(update, "❌ Almacen not found.")
             return MENU
         
         kb = InlineKeyboardMarkup([
             [InlineKeyboardButton("✏️ Nombre", callback_data="alm:edit_nombre")],
-            [InlineKeyboardButton("📍 Ubicación", callback_data="alm:edit_ubicacion")],
+            [InlineKeyboardButton("📍 Location", callback_data="alm:edit_ubicacion")],
             [InlineKeyboardButton("📦 Ver Inventario", callback_data="alm:inventario")],
-            [InlineKeyboardButton("⬅️ Volver", callback_data="alm:back")]
+            [InlineKeyboardButton("⬅️ Back", callback_data="alm:back")]
         ])
         await reply_html(
             update,
-            f"✏️ <b>Almacén: {almacen['nombre']}</b>\n\n"
+            f"✏️ <b>Almacen: {almacen['nombre']}</b>\n\n"
             f"Nombre: <code>{almacen['nombre']}</code>\n"
-            f"Ubicación: <code>{almacen.get('ubicacion', 'N/A')}</code>\n\n"
-            f"¿Qué deseas hacer?",
+            f"Location: <code>{almacen.get('ubicacion', 'N/A')}</code>\n\n"
+            f"Que deseas hacer?",
             reply_markup=kb
         )
         return EDIT_MENU
@@ -154,52 +154,52 @@ async def menu_callback(update: Update, context: ContextTypes.DEFAULT_TYPE) -> i
     if data == "alm:edit_nombre":
         alm_id = context.user_data.get("alm_edit_id")
         if alm_id is None:
-            await reply_text(update, "❌ No hay almacén en edición.")
+            await reply_text(update, "❌ No almacen en edicion.")
             return MENU
         almacen = obtener_por_id(alm_id)
         if not almacen:
-            await reply_text(update, "❌ Almacén no encontrado.")
+            await reply_text(update, "❌ Almacen not found.")
             return MENU
         await reply_html(
             update,
-            f"✏️ <b>Renombrar Almacén</b>\n\n"
+            f"✏️ <b>Renombrar Almacen</b>\n\n"
             f"Actual: <code>{almacen['nombre']}</code>\n"
-            f"Envía el <b>nuevo nombre</b>:"
+            f"Send el <b>nuevo nombre</b>:"
         )
         return EDIT_NOMBRE
     
     if data == "alm:edit_ubicacion":
         alm_id = context.user_data.get("alm_edit_id")
         if alm_id is None:
-            await reply_text(update, "❌ No hay almacén en edición.")
+            await reply_text(update, "❌ No almacen en edicion.")
             return MENU
         almacen = obtener_por_id(alm_id)
         if not almacen:
-            await reply_text(update, "❌ Almacén no encontrado.")
+            await reply_text(update, "❌ Almacen not found.")
             return MENU
         await reply_html(
             update,
-            f"📍 <b>Actualizar Ubicación</b>\n\n"
+            f"📍 <b>Update Location</b>\n\n"
             f"Actual: <code>{almacen.get('ubicacion', 'N/A')}</code>\n"
-            f"Envía la <b>nueva ubicación</b> (o 'sin ubicación' para eliminar):"
+            f"Send la <b>nueva location</b> (o 'sin location' para delete):"
         )
         return EDIT_UBICACION
     
     if data == "alm:inventario":
         alm_id = context.user_data.get("alm_edit_id")
         if alm_id is None:
-            await reply_text(update, "❌ No hay almacén seleccionado.")
+            await reply_text(update, "❌ No almacen selectdo.")
             return MENU
         almacen = obtener_por_id(alm_id)
         if not almacen:
-            await reply_text(update, "❌ Almacén no encontrado.")
+            await reply_text(update, "❌ Almacen not found.")
             return MENU
         
         try:
             inventario = obtener_inventario_almacen(alm_id)
             
             if not inventario:
-                text = f"📦 <b>Inventario: {almacen['nombre']}</b>\n\nEste almacén no tiene productos en inventario."
+                text = f"📦 <b>Inventario: {almacen['nombre']}</b>\n\nEste almacen no tiene productos en inventario."
             else:
                 text = f"📦 <b>Inventario: {almacen['nombre']}</b>\n\n"
                 for item in inventario:
@@ -209,7 +209,7 @@ async def menu_callback(update: Update, context: ContextTypes.DEFAULT_TYPE) -> i
                     )
             
             kb = InlineKeyboardMarkup([
-                [InlineKeyboardButton("⬅️ Volver", callback_data=f"alm:edit:{alm_id}")]
+                [InlineKeyboardButton("⬅️ Back", callback_data=f"alm:edit:{alm_id}")]
             ])
             await reply_html(update, text, reply_markup=kb)
         except Exception as e:
@@ -222,17 +222,17 @@ async def menu_callback(update: Update, context: ContextTypes.DEFAULT_TYPE) -> i
         context.user_data["alm_del_id"] = alm_id
         almacen = obtener_por_id(alm_id)
         if not almacen:
-            await reply_text(update, "❌ Almacén no encontrado.")
+            await reply_text(update, "❌ Almacen not found.")
             return MENU
         kb = InlineKeyboardMarkup([
-            [InlineKeyboardButton("✅ Sí, borrar", callback_data="alm:delok"),
-             InlineKeyboardButton("↩️ Cancelar", callback_data="alm:cancel")]
+            [InlineKeyboardButton("✅ Yes, borrar", callback_data="alm:delok"),
+             InlineKeyboardButton("↩️ Cancel", callback_data="alm:cancel")]
         ])
         await reply_html(
             update,
-            f"⚠️ <b>Confirmar eliminación</b>\n\n"
+            f"⚠️ <b>Confirmar deletion</b>\n\n"
             f"Vas a borrar: <code>{almacen['nombre']}</code>\n"
-            f"Esta acción no se puede deshacer.",
+            f"Esta action no se puede deshacer.",
             reply_markup=kb
         )
         return CONFIRM_DELETE
@@ -240,20 +240,20 @@ async def menu_callback(update: Update, context: ContextTypes.DEFAULT_TYPE) -> i
     if data == "alm:delok":
         alm_id = context.user_data.get("alm_del_id")
         if alm_id is None:
-            await reply_text(update, "❌ No hay elemento para eliminar.")
+            await reply_text(update, "❌ No elemento para delete.")
             await _render_list(update, context)
             return MENU
         try:
-            eliminar(int(alm_id))
+            delete(int(alm_id))
             context.user_data.pop("alm_del_id", None)
-            await reply_text(update, "🗑️ Almacén eliminado correctamente.")
+            await reply_text(update, "🗑️ Almacen deleted correctamente.")
             await _render_list(update, context)
         except ValueError as e:
             await reply_text(update, f"❌ {e}")
             await _render_list(update, context)
         except Exception as e:
-            logger.error(f"Error eliminando almacén: {e}", exc_info=True)
-            await reply_text(update, "❌ No se pudo eliminar. Intenta de nuevo.")
+            logger.error(f"Error eliminando almacen: {e}", exc_info=True)
+            await reply_text(update, "❌ No se pudo delete. Intenta de nuevo.")
             await _render_list(update, context)
         return MENU
     
@@ -265,8 +265,8 @@ async def menu_callback(update: Update, context: ContextTypes.DEFAULT_TYPE) -> i
 
 
 @admin_only
-async def crear_nombre_receive(update: Update, context: ContextTypes.DEFAULT_TYPE) -> int:
-    """Recibe el nombre para crear un almacén."""
+async def create_nombre_receive(update: Update, context: ContextTypes.DEFAULT_TYPE) -> int:
+    """Recibe el nombre para create un almacen."""
     from utils.telegram_helpers import reply_html, reply_text
     
     if not update.message:
@@ -274,21 +274,21 @@ async def crear_nombre_receive(update: Update, context: ContextTypes.DEFAULT_TYP
     
     nombre = (update.message.text or "").strip()
     if not nombre:
-        await reply_text(update, "❌ El nombre no puede estar vacío. Envía un nombre válido.")
+        await reply_text(update, "❌ El nombre no puede estar empty. Send un nombre valid.")
         return CREAR_NOMBRE
     
     context.user_data["alm_nombre"] = nombre
     await reply_html(
         update,
         f"✅ Nombre: <code>{nombre}</code>\n\n"
-        f"Envía la <b>ubicación</b> del almacén (opcional, o escribe 'sin ubicación' para omitir):"
+        f"Send la <b>location</b> del almacen (opcional, o escribe 'sin location' para omitir):"
     )
     return CREAR_UBICACION
 
 
 @admin_only
-async def crear_ubicacion_receive(update: Update, context: ContextTypes.DEFAULT_TYPE) -> int:
-    """Recibe la ubicación y crea el almacén."""
+async def create_ubicacion_receive(update: Update, context: ContextTypes.DEFAULT_TYPE) -> int:
+    """Recibe la location y crea el almacen."""
     from utils.telegram_helpers import reply_html, reply_text
     
     if not update.message:
@@ -296,42 +296,42 @@ async def crear_ubicacion_receive(update: Update, context: ContextTypes.DEFAULT_
     
     nombre = context.user_data.get("alm_nombre")
     if not nombre:
-        await reply_text(update, "❌ Error: no se encontró el nombre. Empieza de nuevo.")
+        await reply_text(update, "❌ Error: no se encontro el nombre. Empieza de nuevo.")
         return await almacenes_entry(update, context)
     
     ubicacion = (update.message.text or "").strip()
-    if ubicacion.lower() in ["sin ubicación", "sin ubicacion", "n/a", "na"]:
+    if ubicacion.lower() in ["sin location", "sin ubicacion", "n/a", "na"]:
         ubicacion = None
     
     try:
-        resultado = crear(nombre, ubicacion)
+        resultado = create(nombre, ubicacion)
         await reply_html(
             update,
             f"✅ <b>Creado</b>\n\n"
-            f"Almacén: <code>{resultado['nombre']}</code>\n"
-            f"Ubicación: <code>{resultado.get('ubicacion', 'N/A')}</code>"
+            f"Almacen: <code>{resultado['nombre']}</code>\n"
+            f"Location: <code>{resultado.get('ubicacion', 'N/A')}</code>"
         )
         context.user_data.pop("alm_nombre", None)
         await reply_html(
             update,
-            "¿Qué deseas hacer ahora?", reply_markup=_main_menu_kb()
+            "What would you like to do now?", reply_markup=_main_menu_kb()
         )
         return MENU
     except ValueError as e:
         if "ya existe" in str(e).lower():
-            await reply_text(update, "⚠️ Ya existe un almacén con ese nombre. Usa otro nombre.")
+            await reply_text(update, "⚠️ Ya existe un almacen con ese nombre. Usa otro nombre.")
         else:
             await reply_text(update, f"❌ {e}")
         return CREAR_NOMBRE
     except Exception as e:
-        logger.error(f"Error creando almacén: {e}", exc_info=True)
-        await reply_text(update, "❌ Ocurrió un error al crear. Intenta nuevamente.")
+        logger.error(f"Error creando almacen: {e}", exc_info=True)
+        await reply_text(update, "❌ An error occurred al create. Try again.")
         return CREAR_NOMBRE
 
 
 @admin_only
 async def edit_nombre_receive(update: Update, context: ContextTypes.DEFAULT_TYPE) -> int:
-    """Recibe el nuevo nombre para editar un almacén."""
+    """Recibe el nuevo nombre para editar un almacen."""
     from utils.telegram_helpers import reply_html, reply_text
     
     if not update.message:
@@ -339,16 +339,16 @@ async def edit_nombre_receive(update: Update, context: ContextTypes.DEFAULT_TYPE
     
     alm_id = context.user_data.get("alm_edit_id")
     if alm_id is None:
-        await reply_text(update, "❌ No hay almacén en edición.")
+        await reply_text(update, "❌ No almacen en edicion.")
         return MENU
     
     nuevo_nombre = (update.message.text or "").strip()
     if not nuevo_nombre:
-        await reply_text(update, "❌ El nombre no puede estar vacío. Envía un nombre válido.")
+        await reply_text(update, "❌ El nombre no puede estar empty. Send un nombre valid.")
         return EDIT_NOMBRE
     
     try:
-        actualizar(int(alm_id), nuevo_nombre=nuevo_nombre)
+        update(int(alm_id), nuevo_nombre=nuevo_nombre)
         await reply_html(
             update,
             f"✅ <b>Actualizado</b>\n\nNuevo nombre: <code>{nuevo_nombre}</code>"
@@ -358,19 +358,19 @@ async def edit_nombre_receive(update: Update, context: ContextTypes.DEFAULT_TYPE
         return MENU
     except ValueError as e:
         if "ya existe" in str(e).lower():
-            await reply_text(update, "⚠️ Ya existe un almacén con ese nombre. Usa otro nombre.")
+            await reply_text(update, "⚠️ Ya existe un almacen con ese nombre. Usa otro nombre.")
         else:
             await reply_text(update, f"❌ {e}")
         return EDIT_NOMBRE
     except Exception as e:
-        logger.error(f"Error actualizando almacén: {e}", exc_info=True)
-        await reply_text(update, "❌ Ocurrió un error al actualizar. Intenta nuevamente.")
+        logger.error(f"Error actualizando almacen: {e}", exc_info=True)
+        await reply_text(update, "❌ An error occurred al update. Try again.")
         return EDIT_NOMBRE
 
 
 @admin_only
 async def edit_ubicacion_receive(update: Update, context: ContextTypes.DEFAULT_TYPE) -> int:
-    """Recibe la nueva ubicación para editar un almacén."""
+    """Recibe la nueva location para editar un almacen."""
     from utils.telegram_helpers import reply_html, reply_text
     
     if not update.message:
@@ -378,18 +378,18 @@ async def edit_ubicacion_receive(update: Update, context: ContextTypes.DEFAULT_T
     
     alm_id = context.user_data.get("alm_edit_id")
     if alm_id is None:
-        await reply_text(update, "❌ No hay almacén en edición.")
+        await reply_text(update, "❌ No almacen en edicion.")
         return MENU
     
     nueva_ubicacion = (update.message.text or "").strip()
-    if nueva_ubicacion.lower() in ["sin ubicación", "sin ubicacion", "n/a", "na"]:
+    if nueva_ubicacion.lower() in ["sin location", "sin ubicacion", "n/a", "na"]:
         nueva_ubicacion = None
     
     try:
-        actualizar(int(alm_id), nueva_ubicacion=nueva_ubicacion)
+        update(int(alm_id), nueva_ubicacion=nueva_ubicacion)
         await reply_html(
             update,
-            f"✅ <b>Actualizado</b>\n\nNueva ubicación: <code>{nueva_ubicacion or 'N/A'}</code>"
+            f"✅ <b>Actualizado</b>\n\nNueva location: <code>{nueva_ubicacion or 'N/A'}</code>"
         )
         context.user_data.pop("alm_edit_id", None)
         await _render_list(update, context)
@@ -398,23 +398,23 @@ async def edit_ubicacion_receive(update: Update, context: ContextTypes.DEFAULT_T
         await reply_text(update, f"❌ {e}")
         return EDIT_UBICACION
     except Exception as e:
-        logger.error(f"Error actualizando almacén: {e}", exc_info=True)
-        await reply_text(update, "❌ Ocurrió un error al actualizar. Intenta nuevamente.")
+        logger.error(f"Error actualizando almacen: {e}", exc_info=True)
+        await reply_text(update, "❌ An error occurred al update. Try again.")
         return EDIT_UBICACION
 
 
 async def cancel_command(update: Update, context: ContextTypes.DEFAULT_TYPE) -> int:
-    """Cancela la operación actual."""
+    """Cancela la operation actual."""
     from utils.telegram_helpers import reply_text
     
-    # Limpiar todos los datos de la conversación
+    # Limpiar todos los datos de la conversacion
     keys_to_remove = [
         "alm_nombre", "alm_ubicacion", "alm_edit_id", "alm_del_id"
     ]
     for key in keys_to_remove:
         context.user_data.pop(key, None)
     
-    await reply_text(update, "✅ Operación cancelada.")
+    await reply_text(update, "✅ Operation cancelada.")
     return ConversationHandler.END
 
 
@@ -428,11 +428,11 @@ almacenes_conv_handler = ConversationHandler(
             CallbackQueryHandler(menu_callback, pattern=r"^alm:.*"),
         ],
         CREAR_NOMBRE: [
-            MessageHandler(filters.TEXT & ~filters.COMMAND, crear_nombre_receive),
+            MessageHandler(filters.TEXT & ~filters.COMMAND, create_nombre_receive),
             CallbackQueryHandler(menu_callback, pattern=r"^alm:.*"),
         ],
         CREAR_UBICACION: [
-            MessageHandler(filters.TEXT & ~filters.COMMAND, crear_ubicacion_receive),
+            MessageHandler(filters.TEXT & ~filters.COMMAND, create_ubicacion_receive),
             CallbackQueryHandler(menu_callback, pattern=r"^alm:.*"),
         ],
         EDIT_MENU: [

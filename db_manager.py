@@ -1,15 +1,15 @@
 import sqlite3
 import logging
 
-# Configuración de logging (si la tenías en bot.py, cópiala aquí)
+# Logging configuration (if you had it in bot.py, copy it here)
 logger = logging.getLogger(__name__)
 
 def setup_database():
-    """Crea la BD y las tablas 'Movimientos' y 'Productos' si no existen."""
+    """Create the DB and the 'Movimientos' and 'Productos' tables if they do not exist."""
     conn = sqlite3.connect("contabilidad.db") 
     cursor = conn.cursor()
     
-    # Tabla Movimientos (Corregida: Eliminado 'N/A' de la restricción de caja)
+    # Movimientos table (fixed: removed 'N/A' from the box constraint)
     cursor.execute("""
     CREATE TABLE IF NOT EXISTS Movimientos (
         id INTEGER PRIMARY KEY AUTOINCREMENT,
@@ -23,7 +23,7 @@ def setup_database():
     )
     """)
     
-    # 🌟 NUEVA TABLA: Productos (con columna moneda_costo) 
+    # 🌟 NEW TABLE: Productos (with moneda_costo column) 
     cursor.execute("""
     CREATE TABLE IF NOT EXISTS Productos (
         id INTEGER PRIMARY KEY AUTOINCREMENT,
@@ -36,20 +36,20 @@ def setup_database():
     )
     """)
     
-    # 🌟 NUEVA TABLA: Deudas (Cuentas por Pagar y por Cobrar)
+    # 🌟 NEW TABLE: Deudas (Accounts Payable and Accounts Receivable)
     cursor.execute("""
     CREATE TABLE IF NOT EXISTS Deudas (
         id INTEGER PRIMARY KEY AUTOINCREMENT,
         fecha TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
-        actor_id TEXT NOT NULL,         -- ID del Vendedor o Proveedor (ej: 'PEDRO', 'MARIA')
+        actor_id TEXT NOT NULL,         -- Seller or Supplier ID (e.g.: 'PEDRO', 'MARIA')
         tipo TEXT NOT NULL CHECK (tipo IN ('POR_PAGAR', 'POR_COBRAR')),
-        monto_pendiente REAL NOT NULL CHECK (monto_pendiente >= 0),   -- El saldo de la deuda
+        monto_pendiente REAL NOT NULL CHECK (monto_pendiente >= 0),   -- Debt balance
         moneda TEXT NOT NULL CHECK (moneda IN ('usd', 'cup', 'cup-t', 'eur')),
-        UNIQUE(actor_id, moneda, tipo)   -- Un actor solo puede tener una deuda por moneda y tipo
+        UNIQUE(actor_id, moneda, tipo)   -- One actor can have only one debt per currency and type
     )
     """)
     
-    # **Añadir/Verificar la tabla Consignaciones**
+    # **Add/verify Consignaciones table**
     cursor.execute("""
         CREATE TABLE IF NOT EXISTS Consignaciones (
             id INTEGER PRIMARY KEY AUTOINCREMENT,
@@ -64,7 +64,7 @@ def setup_database():
         )
     """)
     
-    # 🌟 NUEVA TABLA: Contenedores (solo nombre único)
+    # 🌟 NEW TABLE: Contenedores (unique name only)
     cursor.execute(
         """
         CREATE TABLE IF NOT EXISTS Contenedores (

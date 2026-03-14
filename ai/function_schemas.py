@@ -3,22 +3,22 @@ Esquemas de funciones para OpenAI Function Calling.
 Define las herramientas que el modelo puede invocar de forma estructurada y confiable.
 """
 
-SYSTEM_PROMPT = """Eres ContaBot, un asistente financiero inteligente para gestión de negocios.
-Respondes siempre en español. Eres preciso con números y operaciones financieras.
+SYSTEM_PROMPT = """Eres ContaBot, un asistente financiero inteligente para management de negocios.
+Respondes siempre en espanol. Eres preciso con numeros y operaciones financieras.
 
 Tu personalidad:
 - Profesional pero amigable
 - Proactivo: si detectas datos faltantes, los pides amablemente
-- Analítico: cuando muestras datos, añades observaciones útiles
-- Conciso: no repites información innecesaria
+- Analitico: cuando muestras datos, anades observaciones utiles
+- Conciso: no repites informacion innecesaria
 
 Contexto del sistema:
-- Monedas válidas: usd, cup, cup-t (pesos transferibles), eur
-- Las cajas se identifican por ID numérico (el usuario puede decir el nombre)
-- Los productos tienen códigos alfanuméricos (ej: SHIRT01, HUEVOS)
+- Monedas valids: usd, cup, cup-t (pesos transferibles), eur
+- Las cajas se identifican por ID numerico (el usuario puede decir el nombre)
+- Los productos tienen codigos alfanumericos (ej: SHIRT01, HUEVOS)
 - Los actores son proveedores o vendedores identificados por nombre
 
-Cuando el usuario NO proporciona información suficiente para completar una operación,
+Cuando el usuario NO proporciona informacion suficiente para completar una operation,
 responde con intent "clarification" y en params.question pon tu pregunta.
 """
 
@@ -49,7 +49,7 @@ AVAILABLE_FUNCTIONS = [
                         "type": "string",
                         "description": "Nombre o ID de la caja destino (ej: cfg, sc, trd)",
                     },
-                    "descripcion": {"type": "string", "description": "Descripción del ingreso"},
+                    "descripcion": {"type": "string", "description": "Description del ingreso"},
                 },
                 "required": ["monto", "moneda", "caja"],
             },
@@ -122,7 +122,7 @@ AVAILABLE_FUNCTIONS = [
                 "properties": {
                     "dias": {
                         "type": "integer",
-                        "description": "Número de días hacia atrás para consultar (default: 7)",
+                        "description": "Numero de dias hacia atras para consultar (default: 7)",
                         "default": 7,
                     }
                 },
@@ -146,7 +146,7 @@ AVAILABLE_FUNCTIONS = [
             "parameters": {
                 "type": "object",
                 "properties": {
-                    "codigo": {"type": "string", "description": "Código del producto (ej: SHIRT01)"},
+                    "codigo": {"type": "string", "description": "Codigo del producto (ej: SHIRT01)"},
                     "cantidad": {"type": "number", "description": "Unidades vendidas"},
                     "monto": {"type": "number", "description": "Monto total de la venta"},
                     "moneda": {"type": "string", "enum": ["usd", "cup", "cup-t", "eur"]},
@@ -164,11 +164,11 @@ AVAILABLE_FUNCTIONS = [
         "type": "function",
         "function": {
             "name": "registrar_entrada",
-            "description": "Registra la entrada/compra de mercancía",
+            "description": "Registra la entrada/compra de mercancia",
             "parameters": {
                 "type": "object",
                 "properties": {
-                    "codigo": {"type": "string", "description": "Código del producto"},
+                    "codigo": {"type": "string", "description": "Codigo del producto"},
                     "cantidad": {"type": "number", "description": "Unidades recibidas"},
                     "costo_unitario": {"type": "number", "description": "Costo por unidad"},
                     "moneda": {"type": "string", "enum": ["usd", "cup", "cup-t", "eur"]},
@@ -204,14 +204,14 @@ AVAILABLE_FUNCTIONS = [
         "type": "function",
         "function": {
             "name": "gestionar_contenedor",
-            "description": "Gestiona contenedores: crear, listar, editar o eliminar",
+            "description": "Gestiona contenedores: create, listar, editar o delete",
             "parameters": {
                 "type": "object",
                 "properties": {
                     "accion": {
                         "type": "string",
-                        "enum": ["crear", "listar", "editar", "eliminar"],
-                        "description": "Acción a realizar",
+                        "enum": ["create", "listar", "editar", "delete"],
+                        "description": "Action a realizar",
                     },
                     "nombre": {"type": "string", "description": "Nombre del contenedor"},
                     "nuevo_nombre": {
@@ -228,14 +228,14 @@ AVAILABLE_FUNCTIONS = [
         "type": "function",
         "function": {
             "name": "solicitar_analisis_financiero",
-            "description": "Solicita un análisis inteligente del estado financiero del negocio con tendencias, alertas y recomendaciones",
+            "description": "Solicita un analisis inteligente del estado financiero del negocio con tendencias, alertas y recomendaciones",
             "parameters": {
                 "type": "object",
                 "properties": {
                     "tipo": {
                         "type": "string",
                         "enum": ["general", "gastos", "ingresos", "inventario", "deudas", "tendencias"],
-                        "description": "Tipo de análisis solicitado",
+                        "description": "Tipo de analisis solicitado",
                         "default": "general",
                     }
                 },
@@ -272,13 +272,13 @@ AVAILABLE_FUNCTIONS = [
         "type": "function",
         "function": {
             "name": "pedir_clarificacion",
-            "description": "Solicita información adicional cuando el mensaje del usuario es ambiguo o le faltan datos",
+            "description": "Solicita informacion adicional cuando el mensaje del usuario es ambiguo o le faltan datos",
             "parameters": {
                 "type": "object",
                 "properties": {
                     "pregunta": {
                         "type": "string",
-                        "description": "Pregunta de clarificación para el usuario",
+                        "description": "Pregunta de clarificacion para el usuario",
                     }
                 },
                 "required": ["pregunta"],
@@ -287,7 +287,7 @@ AVAILABLE_FUNCTIONS = [
     },
 ]
 
-# Mapeo de nombres de función a IntentType para compatibilidad
+# Mapeo de nombres de funcion a IntentType para compatibilidad
 FUNCTION_TO_INTENT = {
     "consultar_balance": "balance",
     "registrar_ingreso": "ingreso",

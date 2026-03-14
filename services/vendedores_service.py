@@ -1,5 +1,5 @@
 """
-Servicio de vendedores - Lógica de negocio para gestión de vendedores.
+Sellers service - Business logic for seller management.
 """
 import logging
 from typing import List, Dict, Any, Optional
@@ -10,19 +10,19 @@ logger = logging.getLogger(__name__)
 
 
 class VendedorService:
-    """Servicio para operaciones con vendedores."""
+    """Service for seller operations."""
     
     @staticmethod
-    def crear(name: str) -> Dict[str, Any]:
-        """Crea un nuevo vendedor."""
+    def create(name: str) -> Dict[str, Any]:
+        """Create a new seller."""
         with get_db_connection() as conn:
-            vendedor_id = VendedorRepository.crear(conn, name)
+            vendedor_id = VendedorRepository.create(conn, name)
         
         return {"id": vendedor_id, "name": name}
     
     @staticmethod
     def listar() -> List[Dict[str, Any]]:
-        """Obtiene todos los vendedores."""
+        """Get all sellers."""
         with get_db_connection() as conn:
             vendedores = VendedorRepository.obtener_todos(conn)
         
@@ -37,7 +37,7 @@ class VendedorService:
     
     @staticmethod
     def obtener_por_id(vendedor_id: int) -> Optional[Dict[str, Any]]:
-        """Obtiene un vendedor por su ID."""
+        """Get a seller by ID."""
         with get_db_connection() as conn:
             vendedor = VendedorRepository.obtener_por_id(conn, vendedor_id)
         
@@ -52,7 +52,7 @@ class VendedorService:
     
     @staticmethod
     def obtener_por_nombre(name: str) -> Optional[Dict[str, Any]]:
-        """Obtiene un vendedor por su nombre."""
+        """Get a seller by name."""
         with get_db_connection() as conn:
             vendedor = VendedorRepository.obtener_por_nombre(conn, name)
         
@@ -66,18 +66,18 @@ class VendedorService:
         }
     
     @staticmethod
-    def actualizar(vendedor_id: int, nuevo_name: str) -> None:
-        """Actualiza el nombre de un vendedor."""
+    def update(vendedor_id: int, nuevo_name: str) -> None:
+        """Update a seller name."""
         with get_db_connection() as conn:
-            rows_updated = VendedorRepository.actualizar(conn, vendedor_id, nuevo_name)
+            rows_updated = VendedorRepository.update(conn, vendedor_id, nuevo_name)
             if rows_updated == 0:
-                raise ValueError("Vendedor no encontrado")
+                raise ValueError("Seller not found")
     
     @staticmethod
-    def eliminar(vendedor_id: int) -> None:
-        """Elimina un vendedor."""
+    def delete(vendedor_id: int) -> None:
+        """Delete a seller."""
         with get_db_connection() as conn:
-            rows_updated = VendedorRepository.eliminar(conn, vendedor_id)
+            rows_updated = VendedorRepository.delete(conn, vendedor_id)
             if rows_updated == 0:
-                raise ValueError("Vendedor no encontrado")
+                raise ValueError("Seller not found")
 

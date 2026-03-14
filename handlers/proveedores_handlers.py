@@ -1,5 +1,5 @@
 """
-Handlers para gestión de proveedores (CRUD completo).
+Handlers for supplier management (full CRUD).
 """
 import logging
 from typing import List
@@ -17,15 +17,15 @@ from services.proveedores_service import ProveedorService
 
 logger = logging.getLogger(__name__)
 
-# Estados de la conversación
+# Conversation states
 MENU, CREAR_NOMBRE, EDIT_NOMBRE, CONFIRM_DELETE = range(4)
 
 
 def _main_menu_kb() -> InlineKeyboardMarkup:
-    """Genera el teclado del menú principal."""
+    """Build the main menu keyboard."""
     keyboard = [
         [
-            InlineKeyboardButton("➕ Crear", callback_data="prov:create"),
+            InlineKeyboardButton("➕ Create", callback_data="prov:create"),
             InlineKeyboardButton("📋 Listar", callback_data="prov:list"),
         ],
         [InlineKeyboardButton("❌ Cerrar", callback_data="prov:close")],
@@ -34,21 +34,21 @@ def _main_menu_kb() -> InlineKeyboardMarkup:
 
 
 async def _render_list(update: Update, context: ContextTypes.DEFAULT_TYPE) -> None:
-    """Renderiza la lista de proveedores."""
+    """Render the suppliers list."""
     from utils.telegram_helpers import reply_html
     
     proveedores = ProveedorService.listar()
     
     if not proveedores:
-        text = "👥 <b>Proveedores</b>\n\nAún no hay proveedores registrados."
+        text = "👥 <b>Suppliers</b>\n\nNo suppliers are registered yet."
         kb = InlineKeyboardMarkup([
-            [InlineKeyboardButton("➕ Crear", callback_data="prov:create")],
-            [InlineKeyboardButton("⬅️ Volver", callback_data="prov:back")]
+            [InlineKeyboardButton("➕ Create", callback_data="prov:create")],
+            [InlineKeyboardButton("⬅️ Back", callback_data="prov:back")]
         ])
         await reply_html(update, text, reply_markup=kb)
         return
     
-    text = "👥 <b>Proveedores</b>\n\nSelecciona una acción para cada ítem:"
+    text = "👥 <b>Suppliers</b>\n\nSelect an action for each item:"
     keyboard: List[List[InlineKeyboardButton]] = []
     for prov in proveedores:
         prov_id = prov["id"]
@@ -57,7 +57,7 @@ async def _render_list(update: Update, context: ContextTypes.DEFAULT_TYPE) -> No
             InlineKeyboardButton(f"✏️ {nombre}", callback_data=f"prov:edit:{prov_id}"),
             InlineKeyboardButton("🗑️", callback_data=f"prov:del:{prov_id}"),
         ])
-    keyboard.append([InlineKeyboardButton("⬅️ Volver", callback_data="prov:back")])
+    keyboard.append([InlineKeyboardButton("⬅️ Back", callback_data="prov:back")])
     kb = InlineKeyboardMarkup(keyboard)
     
     await reply_html(update, text, reply_markup=kb)
@@ -65,10 +65,10 @@ async def _render_list(update: Update, context: ContextTypes.DEFAULT_TYPE) -> No
 
 @admin_only
 async def proveedores_entry(update: Update, context: ContextTypes.DEFAULT_TYPE) -> int:
-    """Punto de entrada para la gestión de proveedores."""
+    """Entry point for supplier management."""
     from utils.telegram_helpers import reply_html
     
-    # Limpiar cualquier dato residual de conversaciones anteriores
+    # Clear any residual data from previous conversations
     keys_to_remove = [
         "prov_nombre", "prov_edit_id", "prov_del_id"
     ]
@@ -76,8 +76,8 @@ async def proveedores_entry(update: Update, context: ContextTypes.DEFAULT_TYPE) 
         context.user_data.pop(key, None)
     
     msg = (
-        "👥 <b>Gestión de Proveedores</b>\n\n"
-        "Administra tus proveedores. Usa el menú de abajo."
+        "👥 <b>Supplier Management</b>\n\n"
+        "Manage your suppliers. Use the menu below."
     )
     await reply_html(update, msg, reply_markup=_main_menu_kb())
     return MENU
@@ -85,7 +85,7 @@ async def proveedores_entry(update: Update, context: ContextTypes.DEFAULT_TYPE) 
 
 @admin_only
 async def menu_callback(update: Update, context: ContextTypes.DEFAULT_TYPE) -> int:
-    """Maneja los callbacks del menú."""
+    """Handle menu callbacks."""
     from utils.telegram_helpers import reply_html, reply_text
     
     q = update.callback_query
@@ -96,7 +96,7 @@ async def menu_callback(update: Update, context: ContextTypes.DEFAULT_TYPE) -> i
     if data == "prov:create":
         await reply_html(
             update,
-            "🆕 <b>Nuevo Proveedor</b>\n\nEnvía el <b>nombre</b> del proveedor:"
+            "🆕 <b>New Supplier</b>\n\nSend the supplier <b>name</b>:"
         )
         return CREAR_NOMBRE
     
@@ -108,16 +108,16 @@ async def menu_callback(update: Update, context: ContextTypes.DEFAULT_TYPE) -> i
         return await proveedores_entry(update, context)
     
     if data == "prov:close":
-        # Limpiar todos los datos de la conversación
+        # Clear all conversation data
         keys_to_remove = [
             "prov_nombre", "prov_edit_id", "prov_del_id"
         ]
         for key in keys_to_remove:
             context.user_data.pop(key, None)
-        await reply_text(update, "✅ Cerrado.")
+        await reply_text(update, "✅ Closed.")
         return ConversationHandler.END
     
-    # Acciones por ítem
+    # Per-item actions
     if data.startswith("prov:edit:"):
         from utils.telegram_helpers import reply_html, reply_text
         
@@ -125,13 +125,13 @@ async def menu_callback(update: Update, context: ContextTypes.DEFAULT_TYPE) -> i
         context.user_data["prov_edit_id"] = prov_id
         proveedor = ProveedorService.obtener_por_id(prov_id)
         if not proveedor:
-            await reply_text(update, "❌ Proveedor no encontrado.")
+            await reply_text(update, "❌ Supplier not found.")
             return MENU
         await reply_html(
             update,
-            f"✏️ <b>Renombrar Proveedor</b>\n\n"
-            f"Actual: <code>{proveedor['name']}</code>\n"
-            f"Envía el <b>nuevo nombre</b>:"
+            f"✏️ <b>Rename Supplier</b>\n\n"
+            f"Current: <code>{proveedor['name']}</code>\n"
+            f"Send the <b>new name</b>:"
         )
         return EDIT_NOMBRE
     
@@ -142,17 +142,17 @@ async def menu_callback(update: Update, context: ContextTypes.DEFAULT_TYPE) -> i
         context.user_data["prov_del_id"] = prov_id
         proveedor = ProveedorService.obtener_por_id(prov_id)
         if not proveedor:
-            await reply_text(update, "❌ Proveedor no encontrado.")
+            await reply_text(update, "❌ Supplier not found.")
             return MENU
         kb = InlineKeyboardMarkup([
-            [InlineKeyboardButton("✅ Sí, borrar", callback_data="prov:delok"),
-             InlineKeyboardButton("↩️ Cancelar", callback_data="prov:cancel")]
+            [InlineKeyboardButton("✅ Yes, delete", callback_data="prov:delok"),
+             InlineKeyboardButton("↩️ Cancel", callback_data="prov:cancel")]
         ])
         await reply_html(
             update,
-            f"⚠️ <b>Confirmar eliminación</b>\n\n"
-            f"Vas a borrar: <code>{proveedor['name']}</code>\n"
-            f"Esta acción no se puede deshacer.",
+            f"⚠️ <b>Confirm deletion</b>\n\n"
+            f"You are about to delete: <code>{proveedor['name']}</code>\n"
+            f"This action cannot be undone.",
             reply_markup=kb
         )
         return CONFIRM_DELETE
@@ -162,22 +162,22 @@ async def menu_callback(update: Update, context: ContextTypes.DEFAULT_TYPE) -> i
         
         prov_id = context.user_data.get("prov_del_id")
         if prov_id is None:
-            await reply_text(update, "❌ No hay elemento para eliminar.")
+            await reply_text(update, "❌ No item selected for deletion.")
             await _render_list(update, context)
             return MENU
         try:
-            ProveedorService.eliminar(int(prov_id))
-            # Limpiar el ID de eliminación
+            ProveedorService.delete(int(prov_id))
+            # Clear delete ID
             context.user_data.pop("prov_del_id", None)
-            # Mostrar mensaje y luego la lista actualizada
-            await reply_text(update, "🗑️ Proveedor eliminado correctamente.")
+            # Show message, then updated list
+            await reply_text(update, "🗑️ Supplier deleted successfully.")
             await _render_list(update, context)
         except ValueError as e:
             await reply_text(update, f"❌ {e}")
             await _render_list(update, context)
         except Exception as e:
-            logger.error(f"Error eliminando proveedor: {e}", exc_info=True)
-            await reply_text(update, "❌ No se pudo eliminar. Intenta de nuevo.")
+            logger.error(f"Error deleting supplier: {e}", exc_info=True)
+            await reply_text(update, "❌ Could not delete. Try again.")
             await _render_list(update, context)
         return MENU
     
@@ -189,8 +189,8 @@ async def menu_callback(update: Update, context: ContextTypes.DEFAULT_TYPE) -> i
 
 
 @admin_only
-async def crear_nombre_receive(update: Update, context: ContextTypes.DEFAULT_TYPE) -> int:
-    """Recibe el nombre para crear un proveedor."""
+async def create_nombre_receive(update: Update, context: ContextTypes.DEFAULT_TYPE) -> int:
+    """Receive the name for creating a supplier."""
     from utils.telegram_helpers import reply_html, reply_text
     
     if not update.message:
@@ -198,35 +198,35 @@ async def crear_nombre_receive(update: Update, context: ContextTypes.DEFAULT_TYP
     
     nombre = (update.message.text or "").strip()
     if not nombre:
-        await reply_text(update, "❌ El nombre no puede estar vacío. Envía un nombre válido.")
+        await reply_text(update, "❌ Name cannot be empty. Send a valid name.")
         return CREAR_NOMBRE
     
     try:
-        resultado = ProveedorService.crear(nombre)
+        resultado = ProveedorService.create(nombre)
         await reply_html(
             update,
-            f"✅ <b>Creado</b>\n\nProveedor: <code>{nombre}</code>"
+            f"✅ <b>Created</b>\n\nSupplier: <code>{nombre}</code>"
         )
         await reply_html(
             update,
-            "¿Qué deseas hacer ahora?", reply_markup=_main_menu_kb()
+            "What would you like to do now?", reply_markup=_main_menu_kb()
         )
         return MENU
     except ValueError as e:
         if "UNIQUE" in str(e) or "ya existe" in str(e).lower():
-            await reply_text(update, "⚠️ Ya existe un proveedor con ese nombre. Usa otro nombre.")
+            await reply_text(update, "⚠️ A supplier with that name already exists. Use another name.")
         else:
             await reply_text(update, f"❌ {e}")
         return CREAR_NOMBRE
     except Exception as e:
-        logger.error(f"Error creando proveedor: {e}", exc_info=True)
-        await reply_text(update, "❌ Ocurrió un error al crear. Intenta nuevamente.")
+        logger.error(f"Error creating supplier: {e}", exc_info=True)
+        await reply_text(update, "❌ An error occurred while creating. Please try again.")
         return CREAR_NOMBRE
 
 
 @admin_only
 async def edit_nombre_receive(update: Update, context: ContextTypes.DEFAULT_TYPE) -> int:
-    """Recibe el nuevo nombre para editar un proveedor."""
+    """Receive the new name to edit a supplier."""
     from utils.telegram_helpers import reply_html, reply_text
     
     if not update.message:
@@ -234,51 +234,51 @@ async def edit_nombre_receive(update: Update, context: ContextTypes.DEFAULT_TYPE
     
     prov_id = context.user_data.get("prov_edit_id")
     if prov_id is None:
-        await reply_text(update, "❌ No hay proveedor en edición.")
+        await reply_text(update, "❌ No supplier is currently being edited.")
         return MENU
     
     nuevo_nombre = (update.message.text or "").strip()
     if not nuevo_nombre:
-        await reply_text(update, "❌ El nombre no puede estar vacío. Envía un nombre válido.")
+        await reply_text(update, "❌ Name cannot be empty. Send a valid name.")
         return EDIT_NOMBRE
     
     try:
-        ProveedorService.actualizar(int(prov_id), nuevo_nombre)
+        ProveedorService.update(int(prov_id), nuevo_nombre)
         await reply_html(
             update,
-            f"✅ <b>Actualizado</b>\n\nNuevo nombre: <code>{nuevo_nombre}</code>"
+            f"✅ <b>Updated</b>\n\nNew name: <code>{nuevo_nombre}</code>"
         )
         context.user_data.pop("prov_edit_id", None)
         await _render_list(update, context)
         return MENU
     except ValueError as e:
         if "UNIQUE" in str(e) or "ya existe" in str(e).lower():
-            await reply_text(update, "⚠️ Ya existe un proveedor con ese nombre. Usa otro nombre.")
+            await reply_text(update, "⚠️ A supplier with that name already exists. Use another name.")
         else:
             await reply_text(update, f"❌ {e}")
         return EDIT_NOMBRE
     except Exception as e:
-        logger.error(f"Error actualizando proveedor: {e}", exc_info=True)
-        await reply_text(update, "❌ Ocurrió un error al actualizar. Intenta nuevamente.")
+        logger.error(f"Error updating supplier: {e}", exc_info=True)
+        await reply_text(update, "❌ An error occurred while updating. Please try again.")
         return EDIT_NOMBRE
 
 
 async def cancel_command(update: Update, context: ContextTypes.DEFAULT_TYPE) -> int:
-    """Cancela la operación actual."""
+    """Cancel the current operation."""
     from utils.telegram_helpers import reply_text
     
-    # Limpiar todos los datos de la conversación
+    # Clear all conversation data
     keys_to_remove = [
         "prov_nombre", "prov_edit_id", "prov_del_id"
     ]
     for key in keys_to_remove:
         context.user_data.pop(key, None)
     
-    await reply_text(update, "✅ Operación cancelada.")
+    await reply_text(update, "✅ Operation canceled.")
     return ConversationHandler.END
 
 
-# ConversationHandler exportable
+# Exportable ConversationHandler
 proveedores_conv_handler = ConversationHandler(
     entry_points=[
         CommandHandler("proveedores", proveedores_entry),
@@ -288,7 +288,7 @@ proveedores_conv_handler = ConversationHandler(
             CallbackQueryHandler(menu_callback, pattern=r"^prov:.*"),
         ],
         CREAR_NOMBRE: [
-            MessageHandler(filters.TEXT & ~filters.COMMAND, crear_nombre_receive),
+            MessageHandler(filters.TEXT & ~filters.COMMAND, create_nombre_receive),
             CallbackQueryHandler(menu_callback, pattern=r"^prov:.*"),
         ],
         EDIT_NOMBRE: [

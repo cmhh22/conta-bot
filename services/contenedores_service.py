@@ -1,5 +1,5 @@
 """
-Servicio de contenedores - Lógica de negocio para gestión de contenedores.
+Containers service - Business logic for container management.
 """
 import logging
 from typing import List, Dict, Any, Optional
@@ -10,13 +10,13 @@ logger = logging.getLogger(__name__)
 
 
 class ContenedorService:
-    """Servicio para operaciones con contenedores."""
+    """Service for container operations."""
     
     @staticmethod
-    def crear(nombre: str, numero_contenedor: Optional[str] = None, proveedor_id: Optional[int] = None) -> Dict[str, Any]:
-        """Crea un nuevo contenedor."""
+    def create(nombre: str, numero_contenedor: Optional[str] = None, proveedor_id: Optional[int] = None) -> Dict[str, Any]:
+        """Create a new container."""
         with get_db_connection() as conn:
-            cont_id = ContenedorRepository.crear(conn, nombre, numero_contenedor, proveedor_id)
+            cont_id = ContenedorRepository.create(conn, nombre, numero_contenedor, proveedor_id)
         
         return {
             "id": cont_id, 
@@ -27,7 +27,7 @@ class ContenedorService:
     
     @staticmethod
     def listar() -> List[Dict[str, Any]]:
-        """Obtiene todos los contenedores con información del proveedor."""
+        """Get all containers with supplier information."""
         with get_db_connection() as conn:
             contenedores = ContenedorRepository.obtener_todos(conn)
         
@@ -45,7 +45,7 @@ class ContenedorService:
     
     @staticmethod
     def obtener_por_id(cont_id: int) -> Optional[Dict[str, Any]]:
-        """Obtiene un contenedor por su ID con información del proveedor."""
+        """Get a container by ID with supplier information."""
         with get_db_connection() as conn:
             contenedor = ContenedorRepository.obtener_por_id(conn, cont_id)
         
@@ -62,33 +62,33 @@ class ContenedorService:
         }
     
     @staticmethod
-    def actualizar(cont_id: int, nuevo_nombre: Optional[str] = None, 
+    def update(cont_id: int, nuevo_nombre: Optional[str] = None, 
                    numero_contenedor: Optional[str] = None, 
                    proveedor_id: Optional[int] = None,
                    quitar_proveedor: bool = False) -> None:
-        """Actualiza un contenedor.
+        """Update a container.
         
         Args:
-            quitar_proveedor: Si es True, quita el proveedor del contenedor (establece proveedor_id a NULL)
+            quitar_proveedor: If True, remove the supplier from the container (set proveedor_id to NULL)
         """
         with get_db_connection() as conn:
-            rows_updated = ContenedorRepository.actualizar(
+            rows_updated = ContenedorRepository.update(
                 conn, cont_id, nuevo_nombre, numero_contenedor, proveedor_id, quitar_proveedor
             )
             if rows_updated == 0:
-                raise ValueError("Contenedor no encontrado")
+                raise ValueError("Container not found")
     
     @staticmethod
-    def eliminar(cont_id: int) -> None:
-        """Elimina un contenedor."""
+    def delete(cont_id: int) -> None:
+        """Delete a container."""
         with get_db_connection() as conn:
-            rows_updated = ContenedorRepository.eliminar(conn, cont_id)
+            rows_updated = ContenedorRepository.delete(conn, cont_id)
             if rows_updated == 0:
-                raise ValueError("Contenedor no encontrado")
+                raise ValueError("Container not found")
     
     @staticmethod
     def obtener_por_proveedor(proveedor_id: int) -> List[Dict[str, Any]]:
-        """Obtiene todos los contenedores asociados a un proveedor (relación muchos a uno)."""
+        """Get all containers associated with one supplier (many-to-one relationship)."""
         with get_db_connection() as conn:
             contenedores = ContenedorRepository.obtener_por_proveedor(conn, proveedor_id)
         

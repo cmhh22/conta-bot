@@ -1,5 +1,5 @@
 """
-Módulo para generar reportes en formato PDF y Excel.
+Module to generate reports in PDF and Excel format.
 """
 import logging
 import os
@@ -9,7 +9,7 @@ from pathlib import Path
 
 logger = logging.getLogger(__name__)
 
-# Intentar importar las librerías necesarias
+# Try importing required libraries
 try:
     from reportlab.lib import colors
     from reportlab.lib.pagesizes import letter, A4
@@ -20,7 +20,7 @@ try:
     REPORTLAB_AVAILABLE = True
 except ImportError:
     REPORTLAB_AVAILABLE = False
-    logger.warning("reportlab no está instalado. Las exportaciones a PDF no estarán disponibles.")
+    logger.warning("reportlab is not installed. PDF exports will not be available.")
 
 try:
     from openpyxl import Workbook
@@ -29,11 +29,11 @@ try:
     OPENPYXL_AVAILABLE = True
 except ImportError:
     OPENPYXL_AVAILABLE = False
-    logger.warning("openpyxl no está instalado. Las exportaciones a Excel no estarán disponibles.")
+    logger.warning("openpyxl is not installed. Excel exports will not be available.")
 
 
 def _ensure_export_dir() -> Path:
-    """Asegura que existe el directorio de exportaciones."""
+    """Ensure the export directory exists."""
     export_dir = Path("exports")
     export_dir.mkdir(exist_ok=True)
     return export_dir
@@ -41,20 +41,20 @@ def _ensure_export_dir() -> Path:
 
 def export_movimientos_pdf(movimientos: List[Dict[str, Any]], filename: Optional[str] = None) -> str:
     """
-    Exporta movimientos a un archivo PDF.
+    Export transactions to a PDF file.
     
     Args:
-        movimientos: Lista de diccionarios con los movimientos
-        filename: Nombre del archivo (opcional)
+        movimientos: List of dictionaries containing transactions
+        filename: File name (optional)
     
     Returns:
-        Ruta del archivo PDF generado
+        Generated PDF file path
     
     Raises:
-        ImportError: Si reportlab no está instalado
+        ImportError: If reportlab is not installed
     """
     if not REPORTLAB_AVAILABLE:
-        raise ImportError("reportlab no está instalado. Instala con: pip install reportlab")
+        raise ImportError("reportlab is not installed. Install with: pip install reportlab")
     
     if not filename:
         timestamp = datetime.now().strftime("%Y%m%d_%H%M%S")
@@ -63,12 +63,12 @@ def export_movimientos_pdf(movimientos: List[Dict[str, Any]], filename: Optional
     export_dir = _ensure_export_dir()
     filepath = export_dir / filename
     
-    # Crear documento PDF
+    # Create PDF document
     doc = SimpleDocTemplate(str(filepath), pagesize=A4)
     story = []
     styles = getSampleStyleSheet()
     
-    # Estilos personalizados
+    # Custom styles
     title_style = ParagraphStyle(
         'CustomTitle',
         parent=styles['Heading1'],
@@ -87,38 +87,38 @@ def export_movimientos_pdf(movimientos: List[Dict[str, Any]], filename: Optional
         fontName='Helvetica-Bold'
     )
     
-    # Título
-    story.append(Paragraph("REPORTE DE MOVIMIENTOS", title_style))
+    # Title
+    story.append(Paragraph("TRANSACTIONS REPORT", title_style))
     story.append(Spacer(1, 0.2*inch))
     
-    # Información del reporte
+    # Report information
     fecha_reporte = datetime.now().strftime("%d/%m/%Y %H:%M:%S")
-    info_text = f"<b>Fecha de generación:</b> {fecha_reporte}<br/>"
-    info_text += f"<b>Total de movimientos:</b> {len(movimientos)}"
+    info_text = f"<b>Generated on:</b> {fecha_reporte}<br/>"
+    info_text += f"<b>Total transactions:</b> {len(movimientos)}"
     story.append(Paragraph(info_text, styles['Normal']))
     story.append(Spacer(1, 0.3*inch))
     
     if not movimientos:
-        story.append(Paragraph("No hay movimientos para mostrar.", styles['Normal']))
+        story.append(Paragraph("There are no transactions to display.", styles['Normal']))
     else:
-        # Preparar datos para la tabla
+        # Prepare table data
         data = []
         
-        # Encabezados
-        headers = ['Fecha', 'Tipo', 'Monto', 'Moneda', 'Caja', 'Descripción']
+        # Headers
+        headers = ['Date', 'Type', 'Amount', 'Currency', 'Box', 'Description']
         data.append(headers)
         
-        # Datos
+        # Data
         for mov in movimientos:
             fecha = mov.get('fecha', 'N/A')
             if isinstance(fecha, str) and ' ' in fecha:
-                fecha = fecha.split()[0]  # Solo la fecha
+                fecha = fecha.split()[0]  # Date only
             
             tipo = mov.get('tipo', 'N/A').upper()
             monto = mov.get('monto', 0)
             moneda = mov.get('moneda', 'N/A').upper()
             caja_nombre = mov.get('caja_nombre', mov.get('caja', 'N/A'))
-            descripcion = mov.get('descripcion', '')[:50]  # Limitar longitud
+            descripcion = mov.get('descripcion', '')[:50]  # Limit length
             
             row = [
                 fecha,
@@ -130,12 +130,12 @@ def export_movimientos_pdf(movimientos: List[Dict[str, Any]], filename: Optional
             ]
             data.append(row)
         
-        # Crear tabla
+        # Create table
         table = Table(data, colWidths=[1*inch, 0.8*inch, 1*inch, 0.6*inch, 1*inch, 2*inch])
         
-        # Estilo de la tabla
+        # Table style
         table.setStyle(TableStyle([
-            # Encabezados
+            # Headers
             ('BACKGROUND', (0, 0), (-1, 0), colors.HexColor('#4472C4')),
             ('TEXTCOLOR', (0, 0), (-1, 0), colors.whitesmoke),
             ('ALIGN', (0, 0), (-1, -1), 'LEFT'),
@@ -144,7 +144,7 @@ def export_movimientos_pdf(movimientos: List[Dict[str, Any]], filename: Optional
             ('BOTTOMPADDING', (0, 0), (-1, 0), 12),
             ('TOPPADDING', (0, 0), (-1, 0), 12),
             
-            # Filas alternadas
+            # Alternating rows
             ('ROWBACKGROUNDS', (0, 1), (-1, -1), [colors.white, colors.HexColor('#F2F2F2')]),
             ('FONTSIZE', (0, 1), (-1, -1), 8),
             ('GRID', (0, 0), (-1, -1), 0.5, colors.grey),
@@ -153,28 +153,28 @@ def export_movimientos_pdf(movimientos: List[Dict[str, Any]], filename: Optional
         
         story.append(table)
     
-    # Construir PDF
+    # Build PDF
     doc.build(story)
-    logger.info(f"PDF generado: {filepath}")
+    logger.info(f"PDF generated: {filepath}")
     return str(filepath)
 
 
 def export_movimientos_excel(movimientos: List[Dict[str, Any]], filename: Optional[str] = None) -> str:
     """
-    Exporta movimientos a un archivo Excel.
+    Export transactions to an Excel file.
     
     Args:
-        movimientos: Lista de diccionarios con los movimientos
-        filename: Nombre del archivo (opcional)
+        movimientos: List of dictionaries containing transactions
+        filename: File name (optional)
     
     Returns:
-        Ruta del archivo Excel generado
+        Generated Excel file path
     
     Raises:
-        ImportError: Si openpyxl no está instalado
+        ImportError: If openpyxl is not installed
     """
     if not OPENPYXL_AVAILABLE:
-        raise ImportError("openpyxl no está instalado. Instala con: pip install openpyxl")
+        raise ImportError("openpyxl is not installed. Install with: pip install openpyxl")
     
     if not filename:
         timestamp = datetime.now().strftime("%Y%m%d_%H%M%S")
@@ -183,12 +183,12 @@ def export_movimientos_excel(movimientos: List[Dict[str, Any]], filename: Option
     export_dir = _ensure_export_dir()
     filepath = export_dir / filename
     
-    # Crear workbook
+    # Create workbook
     wb = Workbook()
     ws = wb.active
-    ws.title = "Movimientos"
+    ws.title = "Transactions"
     
-    # Estilos
+    # Styles
     header_fill = PatternFill(start_color="4472C4", end_color="4472C4", fill_type="solid")
     header_font = Font(bold=True, color="FFFFFF", size=11)
     border = Border(
@@ -199,11 +199,11 @@ def export_movimientos_excel(movimientos: List[Dict[str, Any]], filename: Option
     )
     center_align = Alignment(horizontal='center', vertical='center')
     
-    # Encabezados
-    headers = ['ID', 'Fecha', 'Tipo', 'Monto', 'Moneda', 'Caja', 'Usuario ID', 'Descripción']
+    # Headers
+    headers = ['ID', 'Date', 'Type', 'Amount', 'Currency', 'Box', 'User ID', 'Description']
     ws.append(headers)
     
-    # Aplicar estilo a encabezados
+    # Apply header styling
     for col_num, header in enumerate(headers, 1):
         cell = ws.cell(row=1, column=col_num)
         cell.fill = header_fill
@@ -211,11 +211,11 @@ def export_movimientos_excel(movimientos: List[Dict[str, Any]], filename: Option
         cell.alignment = center_align
         cell.border = border
     
-    # Datos
+    # Data
     for mov in movimientos:
         fecha = mov.get('fecha', 'N/A')
         if isinstance(fecha, str) and ' ' in fecha:
-            fecha = fecha.split()[0]  # Solo la fecha
+            fecha = fecha.split()[0]  # Date only
         
         row = [
             mov.get('id', ''),
@@ -229,47 +229,47 @@ def export_movimientos_excel(movimientos: List[Dict[str, Any]], filename: Option
         ]
         ws.append(row)
         
-        # Aplicar bordes a la fila
+        # Apply row borders
         for col_num in range(1, len(headers) + 1):
             cell = ws.cell(row=ws.max_row, column=col_num)
             cell.border = border
     
-    # Ajustar ancho de columnas
+    # Adjust column widths
     column_widths = {
         'A': 8,   # ID
-        'B': 12,  # Fecha
+        'B': 12,  # Date
         'C': 12,  # Tipo
-        'D': 12,  # Monto
-        'E': 10,  # Moneda
-        'F': 15,  # Caja
+        'D': 12,  # Amount
+        'E': 10,  # Currency
+        'F': 15,  # Box
         'G': 12,  # Usuario ID
-        'H': 40,  # Descripción
+        'H': 40,  # Description
     }
     for col, width in column_widths.items():
         ws.column_dimensions[col].width = width
     
-    # Congelar primera fila
+    # Freeze first row
     ws.freeze_panes = 'A2'
     
-    # Guardar archivo
+    # Save file
     wb.save(str(filepath))
-    logger.info(f"Excel generado: {filepath}")
+    logger.info(f"Excel generated: {filepath}")
     return str(filepath)
 
 
 def export_inventario_pdf(productos: List[Dict[str, Any]], filename: Optional[str] = None) -> str:
     """
-    Exporta inventario de productos a un archivo PDF.
+    Export product inventory to a PDF file.
     
     Args:
-        productos: Lista de diccionarios con los productos
-        filename: Nombre del archivo (opcional)
+        productos: List of dictionaries containing products
+        filename: File name (optional)
     
     Returns:
-        Ruta del archivo PDF generado
+        Generated PDF file path
     """
     if not REPORTLAB_AVAILABLE:
-        raise ImportError("reportlab no está instalado. Instala con: pip install reportlab")
+        raise ImportError("reportlab is not installed. Install with: pip install reportlab")
     
     if not filename:
         timestamp = datetime.now().strftime("%Y%m%d_%H%M%S")
@@ -291,21 +291,21 @@ def export_inventario_pdf(productos: List[Dict[str, Any]], filename: Optional[st
         alignment=TA_CENTER
     )
     
-    # Título
-    story.append(Paragraph("REPORTE DE INVENTARIO", title_style))
+    # Title
+    story.append(Paragraph("INVENTORY REPORT", title_style))
     story.append(Spacer(1, 0.2*inch))
     
     fecha_reporte = datetime.now().strftime("%d/%m/%Y %H:%M:%S")
-    info_text = f"<b>Fecha de generación:</b> {fecha_reporte}<br/>"
-    info_text += f"<b>Total de productos:</b> {len(productos)}"
+    info_text = f"<b>Generated on:</b> {fecha_reporte}<br/>"
+    info_text += f"<b>Total products:</b> {len(productos)}"
     story.append(Paragraph(info_text, styles['Normal']))
     story.append(Spacer(1, 0.3*inch))
     
     if not productos:
-        story.append(Paragraph("No hay productos en el inventario.", styles['Normal']))
+        story.append(Paragraph("There are no products in inventory.", styles['Normal']))
     else:
         data = []
-        headers = ['Código', 'Nombre', 'Stock', 'Costo Unit.', 'Moneda', 'Precio Venta']
+        headers = ['Code', 'Name', 'Stock', 'Unit Cost', 'Currency', 'Sale Price']
         data.append(headers)
         
         for prod in productos:
@@ -335,7 +335,7 @@ def export_inventario_pdf(productos: List[Dict[str, Any]], filename: Optional[st
         story.append(table)
     
     doc.build(story)
-    logger.info(f"PDF de inventario generado: {filepath}")
+    logger.info(f"Inventory PDF generated: {filepath}")
     return str(filepath)
 
 
@@ -351,7 +351,7 @@ def export_inventario_excel(productos: List[Dict[str, Any]], filename: Optional[
         Ruta del archivo Excel generado
     """
     if not OPENPYXL_AVAILABLE:
-        raise ImportError("openpyxl no está instalado. Instala con: pip install openpyxl")
+        raise ImportError("openpyxl is not installed. Install with: pip install openpyxl")
     
     if not filename:
         timestamp = datetime.now().strftime("%Y%m%d_%H%M%S")
@@ -373,7 +373,7 @@ def export_inventario_excel(productos: List[Dict[str, Any]], filename: Optional[
         bottom=Side(style='thin')
     )
     
-    headers = ['Código', 'Nombre', 'Stock', 'Costo Unitario', 'Moneda Costo', 'Precio Venta']
+    headers = ['Code', 'Name', 'Stock', 'Unit Cost', 'Cost Currency', 'Sale Price']
     ws.append(headers)
     
     for col_num in range(1, len(headers) + 1):
@@ -419,7 +419,7 @@ def export_deudas_pdf(deudas: Dict[str, List[Dict[str, Any]]], filename: Optiona
         Ruta del archivo PDF generado
     """
     if not REPORTLAB_AVAILABLE:
-        raise ImportError("reportlab no está instalado. Instala con: pip install reportlab")
+        raise ImportError("reportlab is not installed. Install with: pip install reportlab")
     
     if not filename:
         timestamp = datetime.now().strftime("%Y%m%d_%H%M%S")
@@ -445,7 +445,7 @@ def export_deudas_pdf(deudas: Dict[str, List[Dict[str, Any]]], filename: Optiona
     story.append(Spacer(1, 0.2*inch))
     
     fecha_reporte = datetime.now().strftime("%d/%m/%Y %H:%M:%S")
-    story.append(Paragraph(f"<b>Fecha de generación:</b> {fecha_reporte}", styles['Normal']))
+    story.append(Paragraph(f"<b>Generated on:</b> {fecha_reporte}", styles['Normal']))
     story.append(Spacer(1, 0.3*inch))
     
     # Cuentas por pagar
@@ -453,7 +453,7 @@ def export_deudas_pdf(deudas: Dict[str, List[Dict[str, Any]]], filename: Optiona
     story.append(Spacer(1, 0.1*inch))
     
     if deudas.get('por_pagar'):
-        data = [['Proveedor', 'Monto', 'Moneda']]
+        data = [['Supplier', 'Amount', 'Currency']]
         for deuda in deudas['por_pagar']:
             data.append([
                 deuda.get('actor_id', 'N/A'),
@@ -472,7 +472,7 @@ def export_deudas_pdf(deudas: Dict[str, List[Dict[str, Any]]], filename: Optiona
         ]))
         story.append(table)
     else:
-        story.append(Paragraph("<i>No hay deudas por pagar.</i>", styles['Normal']))
+        story.append(Paragraph("<i>No deudas por pagar.</i>", styles['Normal']))
     
     story.append(Spacer(1, 0.3*inch))
     
@@ -481,7 +481,7 @@ def export_deudas_pdf(deudas: Dict[str, List[Dict[str, Any]]], filename: Optiona
     story.append(Spacer(1, 0.1*inch))
     
     if deudas.get('por_cobrar'):
-        data = [['Vendedor', 'Monto', 'Moneda']]
+        data = [['Seller', 'Amount', 'Currency']]
         for deuda in deudas['por_cobrar']:
             data.append([
                 deuda.get('actor_id', 'N/A'),
@@ -500,7 +500,7 @@ def export_deudas_pdf(deudas: Dict[str, List[Dict[str, Any]]], filename: Optiona
         ]))
         story.append(table)
     else:
-        story.append(Paragraph("<i>No hay deudas por cobrar.</i>", styles['Normal']))
+        story.append(Paragraph("<i>No deudas por cobrar.</i>", styles['Normal']))
     
     doc.build(story)
     logger.info(f"PDF de deudas generado: {filepath}")
@@ -519,7 +519,7 @@ def export_deudas_excel(deudas: Dict[str, List[Dict[str, Any]]], filename: Optio
         Ruta del archivo Excel generado
     """
     if not OPENPYXL_AVAILABLE:
-        raise ImportError("openpyxl no está instalado. Instala con: pip install openpyxl")
+        raise ImportError("openpyxl is not installed. Install with: pip install openpyxl")
     
     if not filename:
         timestamp = datetime.now().strftime("%Y%m%d_%H%M%S")
@@ -543,7 +543,7 @@ def export_deudas_excel(deudas: Dict[str, List[Dict[str, Any]]], filename: Optio
         bottom=Side(style='thin')
     )
     
-    headers = ['Proveedor', 'Monto', 'Moneda']
+    headers = ['Supplier', 'Amount', 'Currency']
     ws_pagar.append(headers)
     
     for col_num in range(1, len(headers) + 1):
@@ -602,18 +602,18 @@ def export_deudas_excel(deudas: Dict[str, List[Dict[str, Any]]], filename: Optio
 
 def export_cajas_externas_pdf(transferencias: List[Dict[str, Any]], caja_externa: Dict[str, Any], filename: Optional[str] = None) -> str:
     """
-    Exporta transferencias de una caja externa a PDF.
+    Export transfers from an external cash box to PDF.
     
     Args:
         transferencias: Lista de transferencias
-        caja_externa: Información de la caja externa
+        caja_externa: External cash box information
         filename: Nombre del archivo (opcional)
     
     Returns:
         Ruta del archivo PDF generado
     """
     if not REPORTLAB_AVAILABLE:
-        raise ImportError("reportlab no está instalado. Instala con: pip install reportlab")
+        raise ImportError("reportlab is not installed. Install with: pip install reportlab")
     
     if not filename:
         timestamp = datetime.now().strftime("%Y%m%d_%H%M%S")
@@ -635,18 +635,18 @@ def export_cajas_externas_pdf(transferencias: List[Dict[str, Any]], caja_externa
         alignment=TA_CENTER
     )
     
-    story.append(Paragraph(f"REPORTE DE CAJA EXTERNA: {caja_externa.get('nombre', 'N/A')}", title_style))
+    story.append(Paragraph(f"EXTERNAL CASH BOX REPORT: {caja_externa.get('nombre', 'N/A')}", title_style))
     story.append(Spacer(1, 0.2*inch))
     
-    info_text = f"<b>Ubicación:</b> {caja_externa.get('ubicacion', 'N/A')}<br/>"
-    info_text += f"<b>Porcentaje Envío:</b> {caja_externa.get('porcentaje_envio', 0):.2f}%<br/>"
-    info_text += f"<b>Total Transferencias:</b> {len(transferencias)}<br/>"
-    info_text += f"<b>Fecha de generación:</b> {datetime.now().strftime('%d/%m/%Y %H:%M:%S')}"
+    info_text = f"<b>Location:</b> {caja_externa.get('ubicacion', 'N/A')}<br/>"
+    info_text += f"<b>Shipping Percentage:</b> {caja_externa.get('porcentaje_envio', 0):.2f}%<br/>"
+    info_text += f"<b>Total Transfers:</b> {len(transferencias)}<br/>"
+    info_text += f"<b>Generated on:</b> {datetime.now().strftime('%d/%m/%Y %H:%M:%S')}"
     story.append(Paragraph(info_text, styles['Normal']))
     story.append(Spacer(1, 0.3*inch))
     
     if transferencias:
-        data = [['Fecha', 'Producto', 'Monto', 'Moneda', 'Envío', 'Recibido', 'Caja Origen']]
+        data = [['Date', 'Product', 'Amount', 'Currency', 'Shipping', 'Received', 'Source Box']]
         
         for transf in transferencias:
             fecha = transf.get('fecha', 'N/A')
@@ -679,7 +679,7 @@ def export_cajas_externas_pdf(transferencias: List[Dict[str, Any]], caja_externa
         
         # Resumen por moneda
         story.append(Spacer(1, 0.3*inch))
-        story.append(Paragraph("<b>RESUMEN POR MONEDA</b>", styles['Heading3']))
+        story.append(Paragraph("<b>SUMMARY BY CURRENCY</b>", styles['Heading3']))
         
         totales_por_moneda = {}
         for transf in transferencias:
@@ -690,7 +690,7 @@ def export_cajas_externas_pdf(transferencias: List[Dict[str, Any]], caja_externa
             totales_por_moneda[moneda]['envio'] += transf.get('monto_envio', 0)
             totales_por_moneda[moneda]['recibido'] += transf.get('monto_recibido', 0)
         
-        resumen_data = [['Moneda', 'Total Transferido', 'Total Envío', 'Total Recibido']]
+        resumen_data = [['Currency', 'Total Transferred', 'Total Shipping', 'Total Received']]
         for moneda, totales in totales_por_moneda.items():
             resumen_data.append([
                 moneda.upper(),
@@ -709,27 +709,27 @@ def export_cajas_externas_pdf(transferencias: List[Dict[str, Any]], caja_externa
         ]))
         story.append(resumen_table)
     else:
-        story.append(Paragraph("<i>No hay transferencias registradas.</i>", styles['Normal']))
+        story.append(Paragraph("<i>No transferencias registradas.</i>", styles['Normal']))
     
     doc.build(story)
-    logger.info(f"PDF de caja externa generado: {filepath}")
+    logger.info(f"External cash box PDF generated: {filepath}")
     return str(filepath)
 
 
 def export_cajas_externas_excel(transferencias: List[Dict[str, Any]], caja_externa: Dict[str, Any], filename: Optional[str] = None) -> str:
     """
-    Exporta transferencias de una caja externa a Excel.
+    Export transfers from an external cash box to Excel.
     
     Args:
         transferencias: Lista de transferencias
-        caja_externa: Información de la caja externa
+        caja_externa: External cash box information
         filename: Nombre del archivo (opcional)
     
     Returns:
         Ruta del archivo Excel generado
     """
     if not OPENPYXL_AVAILABLE:
-        raise ImportError("openpyxl no está instalado. Instala con: pip install openpyxl")
+        raise ImportError("openpyxl is not installed. Install with: pip install openpyxl")
     
     if not filename:
         timestamp = datetime.now().strftime("%Y%m%d_%H%M%S")
@@ -751,14 +751,14 @@ def export_cajas_externas_excel(transferencias: List[Dict[str, Any]], caja_exter
         bottom=Side(style='thin')
     )
     
-    # Información de la caja externa
-    ws.append(['Caja Externa:', caja_externa.get('nombre', 'N/A')])
-    ws.append(['Ubicación:', caja_externa.get('ubicacion', 'N/A')])
-    ws.append(['Porcentaje Envío:', f"{caja_externa.get('porcentaje_envio', 0):.2f}%"])
-    ws.append(['Fecha de generación:', datetime.now().strftime('%d/%m/%Y %H:%M:%S')])
+    # External cash box information
+    ws.append(['External Cash Box:', caja_externa.get('nombre', 'N/A')])
+    ws.append(['Location:', caja_externa.get('ubicacion', 'N/A')])
+    ws.append(['Shipping Percentage:', f"{caja_externa.get('porcentaje_envio', 0):.2f}%"])
+    ws.append(['Generated on:', datetime.now().strftime('%d/%m/%Y %H:%M:%S')])
     ws.append([])
     
-    headers = ['Fecha', 'Producto Código', 'Producto Nombre', 'Monto', 'Moneda', 'Envío', 'Recibido', 'Caja Origen']
+    headers = ['Date', 'Product Code', 'Product Name', 'Amount', 'Currency', 'Shipping', 'Received', 'Source Box']
     ws.append(headers)
     
     for col_num in range(1, len(headers) + 1):
@@ -794,6 +794,6 @@ def export_cajas_externas_excel(transferencias: List[Dict[str, Any]], caja_exter
     
     ws.freeze_panes = 'A7'
     wb.save(str(filepath))
-    logger.info(f"Excel de caja externa generado: {filepath}")
+    logger.info(f"External cash box Excel generated: {filepath}")
     return str(filepath)
 

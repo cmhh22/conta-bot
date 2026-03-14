@@ -1,6 +1,6 @@
 """
-Repositorios para acceso a datos.
-Cada repositorio maneja una entidad específica.
+Repositories for data access.
+Each repository manages a specific entity.
 """
 import sqlite3
 import logging
@@ -12,11 +12,11 @@ logger = logging.getLogger(__name__)
 
 
 class CajaRepository:
-    """Repositorio para operaciones con cajas."""
+    """Repository for cash box operations."""
     
     @staticmethod
-    def crear(conn: sqlite3.Connection, nombre: str, descripcion: Optional[str] = None) -> int:
-        """Crea una nueva caja."""
+    def create(conn: sqlite3.Connection, nombre: str, descripcion: Optional[str] = None) -> int:
+        """Create a new cash box."""
         cursor = conn.cursor()
         cursor.execute("""
             INSERT INTO Cajas (nombre, descripcion) VALUES (?, ?)
@@ -25,7 +25,7 @@ class CajaRepository:
     
     @staticmethod
     def obtener_todos(conn: sqlite3.Connection) -> List[sqlite3.Row]:
-        """Obtiene todas las cajas."""
+        """Get all cash boxes."""
         cursor = conn.cursor()
         cursor.execute("""
             SELECT id, nombre, descripcion, fecha_creacion 
@@ -36,7 +36,7 @@ class CajaRepository:
     
     @staticmethod
     def obtener_por_id(conn: sqlite3.Connection, caja_id: int) -> Optional[sqlite3.Row]:
-        """Obtiene una caja por su ID."""
+        """Get a cash box by ID."""
         cursor = conn.cursor()
         cursor.execute("""
             SELECT id, nombre, descripcion, fecha_creacion 
@@ -47,7 +47,7 @@ class CajaRepository:
     
     @staticmethod
     def obtener_por_nombre(conn: sqlite3.Connection, nombre: str) -> Optional[sqlite3.Row]:
-        """Obtiene una caja por su nombre."""
+        """Get a cash box by name."""
         cursor = conn.cursor()
         cursor.execute("""
             SELECT id, nombre, descripcion, fecha_creacion 
@@ -57,9 +57,9 @@ class CajaRepository:
         return cursor.fetchone()
     
     @staticmethod
-    def actualizar(conn: sqlite3.Connection, caja_id: int, nuevo_nombre: str, 
+    def update(conn: sqlite3.Connection, caja_id: int, nuevo_nombre: str, 
                    nueva_descripcion: Optional[str] = None) -> int:
-        """Actualiza una caja."""
+        """Update a cash box."""
         cursor = conn.cursor()
         cursor.execute("""
             UPDATE Cajas 
@@ -69,20 +69,20 @@ class CajaRepository:
         return cursor.rowcount
     
     @staticmethod
-    def eliminar(conn: sqlite3.Connection, caja_id: int) -> int:
-        """Elimina una caja."""
+    def delete(conn: sqlite3.Connection, caja_id: int) -> int:
+        """Delete a cash box."""
         cursor = conn.cursor()
         cursor.execute("DELETE FROM Cajas WHERE id = ?", (caja_id,))
         return cursor.rowcount
 
 
 class CajaExternaRepository:
-    """Repositorio para operaciones con cajas externas."""
+    """Repository for external cash box operations."""
     
     @staticmethod
-    def crear(conn: sqlite3.Connection, nombre: str, ubicacion: str, 
+    def create(conn: sqlite3.Connection, nombre: str, ubicacion: str, 
               descripcion: Optional[str] = None, porcentaje_envio: float = 0) -> int:
-        """Crea una nueva caja externa."""
+        """Create a new external cash box."""
         cursor = conn.cursor()
         cursor.execute("""
             INSERT INTO Cajas_Externas (nombre, ubicacion, descripcion, porcentaje_envio)
@@ -92,7 +92,7 @@ class CajaExternaRepository:
     
     @staticmethod
     def obtener_todos(conn: sqlite3.Connection) -> List[sqlite3.Row]:
-        """Obtiene todas las cajas externas."""
+        """Get all external cash boxes."""
         cursor = conn.cursor()
         cursor.execute("""
             SELECT id, nombre, ubicacion, descripcion, porcentaje_envio, fecha_creacion
@@ -103,7 +103,7 @@ class CajaExternaRepository:
     
     @staticmethod
     def obtener_por_id(conn: sqlite3.Connection, caja_externa_id: int) -> Optional[sqlite3.Row]:
-        """Obtiene una caja externa por su ID."""
+        """Get an external cash box by ID."""
         cursor = conn.cursor()
         cursor.execute("""
             SELECT id, nombre, ubicacion, descripcion, porcentaje_envio, fecha_creacion
@@ -114,7 +114,7 @@ class CajaExternaRepository:
     
     @staticmethod
     def obtener_por_nombre(conn: sqlite3.Connection, nombre: str) -> Optional[sqlite3.Row]:
-        """Obtiene una caja externa por su nombre."""
+        """Get an external cash box by name."""
         cursor = conn.cursor()
         cursor.execute("""
             SELECT id, nombre, ubicacion, descripcion, porcentaje_envio, fecha_creacion
@@ -124,10 +124,10 @@ class CajaExternaRepository:
         return cursor.fetchone()
     
     @staticmethod
-    def actualizar(conn: sqlite3.Connection, caja_externa_id: int, nuevo_nombre: str,
+    def update(conn: sqlite3.Connection, caja_externa_id: int, nuevo_nombre: str,
                    nueva_ubicacion: str, nueva_descripcion: Optional[str] = None,
                    nuevo_porcentaje_envio: Optional[float] = None) -> int:
-        """Actualiza una caja externa."""
+        """Update an external cash box."""
         cursor = conn.cursor()
         if nuevo_porcentaje_envio is not None:
             cursor.execute("""
@@ -147,22 +147,22 @@ class CajaExternaRepository:
         return cursor.rowcount
     
     @staticmethod
-    def eliminar(conn: sqlite3.Connection, caja_externa_id: int) -> int:
-        """Elimina una caja externa."""
+    def delete(conn: sqlite3.Connection, caja_externa_id: int) -> int:
+        """Delete an external cash box."""
         cursor = conn.cursor()
         cursor.execute("DELETE FROM Cajas_Externas WHERE id = ?", (caja_externa_id,))
         return cursor.rowcount
 
 
 class TransferenciaExternaRepository:
-    """Repositorio para operaciones con transferencias externas."""
+    """Repository for external transfer operations."""
     
     @staticmethod
-    def crear(conn: sqlite3.Connection, caja_origen_id: int, caja_externa_id: int,
+    def create(conn: sqlite3.Connection, caja_origen_id: int, caja_externa_id: int,
               producto_codigo: str, monto: float, moneda: str, porcentaje_envio: float,
               monto_envio: float, monto_recibido: float, user_id: int,
               descripcion: Optional[str] = None) -> int:
-        """Crea una nueva transferencia externa."""
+        """Create a new external transfer."""
         cursor = conn.cursor()
         cursor.execute("""
             INSERT INTO Transferencias_Externas 
@@ -175,7 +175,7 @@ class TransferenciaExternaRepository:
     
     @staticmethod
     def obtener_por_caja_externa(conn: sqlite3.Connection, caja_externa_id: int) -> List[sqlite3.Row]:
-        """Obtiene todas las transferencias a una caja externa."""
+        """Get all transfers to an external cash box."""
         cursor = conn.cursor()
         cursor.execute("""
             SELECT te.id, te.fecha, te.caja_origen_id, c.nombre as caja_origen_nombre,
@@ -192,7 +192,7 @@ class TransferenciaExternaRepository:
     
     @staticmethod
     def obtener_por_producto(conn: sqlite3.Connection, producto_codigo: str) -> List[sqlite3.Row]:
-        """Obtiene todas las transferencias de un producto específico."""
+        """Get all transfers for a specific product."""
         cursor = conn.cursor()
         cursor.execute("""
             SELECT te.id, te.fecha, te.caja_origen_id, c.nombre as caja_origen_nombre,
@@ -209,11 +209,11 @@ class TransferenciaExternaRepository:
 
 
 class MovimientoRepository:
-    """Repositorio para operaciones con movimientos."""
+    """Repository for transaction operations."""
     
     @staticmethod
     def get_saldo_caja(conn: sqlite3.Connection, caja_id: int, moneda: str) -> float:
-        """Calcula el saldo actual de una caja en una moneda específica."""
+        """Calculate current box balance in a specific currency."""
         cursor = conn.cursor()
         cursor.execute("""
             SELECT SUM(
@@ -230,9 +230,9 @@ class MovimientoRepository:
         return saldo if saldo is not None else 0.0
     
     @staticmethod
-    def crear(conn: sqlite3.Connection, tipo: str, monto: float, moneda: str, 
+    def create(conn: sqlite3.Connection, tipo: str, monto: float, moneda: str, 
               caja_id: int, user_id: int, descripcion: str) -> int:
-        """Crea un nuevo movimiento."""
+        """Create a new transaction."""
         cursor = conn.cursor()
         cursor.execute("""
             INSERT INTO Movimientos (fecha, tipo, monto, moneda, caja_id, user_id, descripcion)
@@ -242,7 +242,7 @@ class MovimientoRepository:
     
     @staticmethod
     def obtener_por_fecha(conn: sqlite3.Connection, fecha_desde: datetime) -> List[sqlite3.Row]:
-        """Obtiene movimientos desde una fecha."""
+        """Get transactions from a given date."""
         cursor = conn.cursor()
         cursor.execute("""
             SELECT m.fecha, m.tipo, m.monto, m.moneda, c.nombre as caja, m.descripcion
@@ -255,7 +255,7 @@ class MovimientoRepository:
     
     @staticmethod
     def obtener_todos(conn: sqlite3.Connection) -> List[sqlite3.Row]:
-        """Obtiene todos los movimientos."""
+        """Get all transactions."""
         cursor = conn.cursor()
         cursor.execute("""
             SELECT m.*, c.nombre as caja_nombre
@@ -267,7 +267,7 @@ class MovimientoRepository:
     
     @staticmethod
     def obtener_balance_por_caja(conn: sqlite3.Connection) -> List[sqlite3.Row]:
-        """Obtiene el balance agrupado por caja y moneda."""
+        """Get balance grouped by box and currency."""
         cursor = conn.cursor()
         cursor.execute("""
             SELECT c.nombre as caja, m.moneda, 
@@ -283,11 +283,11 @@ class MovimientoRepository:
 
 
 class ProductoRepository:
-    """Repositorio para operaciones con productos."""
+    """Repository for product operations."""
     
     @staticmethod
     def obtener_por_codigo(conn: sqlite3.Connection, codigo: str) -> Optional[sqlite3.Row]:
-        """Obtiene un producto por su código."""
+        """Get a product by its code."""
         cursor = conn.cursor()
         cursor.execute("""
             SELECT id, codigo, nombre, stock, costo_unitario, moneda_costo, precio_venta
@@ -297,9 +297,9 @@ class ProductoRepository:
         return cursor.fetchone()
     
     @staticmethod
-    def crear(conn: sqlite3.Connection, codigo: str, nombre: str, costo_unitario: float,
+    def create(conn: sqlite3.Connection, codigo: str, nombre: str, costo_unitario: float,
               moneda_costo: str, stock: float = 0) -> int:
-        """Crea un nuevo producto."""
+        """Create a new product."""
         cursor = conn.cursor()
         cursor.execute("""
             INSERT INTO Productos (codigo, nombre, costo_unitario, moneda_costo, stock)
@@ -308,17 +308,17 @@ class ProductoRepository:
         return cursor.lastrowid
     
     @staticmethod
-    def actualizar_stock(conn: sqlite3.Connection, codigo: str, nuevo_stock: float) -> None:
-        """Actualiza el stock de un producto."""
+    def update_stock(conn: sqlite3.Connection, codigo: str, nuevo_stock: float) -> None:
+        """Update a product stock."""
         cursor = conn.cursor()
         cursor.execute("""
             UPDATE Productos SET stock = ? WHERE codigo = ?
         """, (nuevo_stock, codigo))
     
     @staticmethod
-    def actualizar_costo(conn: sqlite3.Connection, codigo: str, nuevo_costo: float, 
+    def update_costo(conn: sqlite3.Connection, codigo: str, nuevo_costo: float, 
                         moneda_costo: str) -> None:
-        """Actualiza el costo de un producto."""
+        """Update a product cost."""
         cursor = conn.cursor()
         cursor.execute("""
             UPDATE Productos SET costo_unitario = ?, moneda_costo = ? WHERE codigo = ?
@@ -326,7 +326,7 @@ class ProductoRepository:
     
     @staticmethod
     def obtener_con_stock(conn: sqlite3.Connection) -> List[sqlite3.Row]:
-        """Obtiene todos los productos con stock > 0."""
+        """Get all products with stock > 0."""
         cursor = conn.cursor()
         cursor.execute("""
             SELECT codigo, nombre, stock, costo_unitario, moneda_costo
@@ -338,7 +338,7 @@ class ProductoRepository:
     
     @staticmethod
     def obtener_todos(conn: sqlite3.Connection) -> List[sqlite3.Row]:
-        """Obtiene todos los productos."""
+        """Get all products."""
         cursor = conn.cursor()
         cursor.execute("""
             SELECT codigo, nombre, stock, costo_unitario, moneda_costo, precio_venta
@@ -349,12 +349,12 @@ class ProductoRepository:
 
 
 class DeudaRepository:
-    """Repositorio para operaciones con deudas."""
+    """Repository for debt operations."""
     
     @staticmethod
     def obtener_por_actor(conn: sqlite3.Connection, actor_id: str, moneda: str, 
                          tipo: str) -> Optional[sqlite3.Row]:
-        """Obtiene una deuda específica."""
+        """Get a specific debt."""
         cursor = conn.cursor()
         cursor.execute("""
             SELECT id, actor_id, tipo, monto_pendiente, moneda, fecha
@@ -364,9 +364,9 @@ class DeudaRepository:
         return cursor.fetchone()
     
     @staticmethod
-    def crear(conn: sqlite3.Connection, actor_id: str, monto: float, moneda: str, 
+    def create(conn: sqlite3.Connection, actor_id: str, monto: float, moneda: str, 
               tipo: str) -> int:
-        """Crea una nueva deuda."""
+        """Create a new debt."""
         cursor = conn.cursor()
         cursor.execute("""
             INSERT INTO Deudas (actor_id, monto_pendiente, moneda, tipo, fecha)
@@ -375,9 +375,9 @@ class DeudaRepository:
         return cursor.lastrowid
     
     @staticmethod
-    def actualizar_monto(conn: sqlite3.Connection, actor_id: str, moneda: str, 
+    def update_monto(conn: sqlite3.Connection, actor_id: str, moneda: str, 
                          tipo: str, nuevo_monto: float) -> int:
-        """Actualiza el monto de una deuda."""
+        """Update a debt amount."""
         cursor = conn.cursor()
         cursor.execute("""
             UPDATE Deudas 
@@ -388,7 +388,7 @@ class DeudaRepository:
     
     @staticmethod
     def obtener_pendientes(conn: sqlite3.Connection) -> List[sqlite3.Row]:
-        """Obtiene todas las deudas pendientes (monto > 0)."""
+        """Get all pending debts (amount > 0)."""
         cursor = conn.cursor()
         cursor.execute("""
             SELECT actor_id, tipo, monto_pendiente, moneda
@@ -400,7 +400,7 @@ class DeudaRepository:
     
     @staticmethod
     def obtener_por_id(conn: sqlite3.Connection, deuda_id: int) -> Optional[sqlite3.Row]:
-        """Obtiene una deuda por su ID."""
+        """Get a debt by ID."""
         cursor = conn.cursor()
         cursor.execute("""
             SELECT id, actor_id, tipo, monto_pendiente, moneda, fecha
@@ -411,12 +411,12 @@ class DeudaRepository:
 
 
 class DeudaProductoRepository:
-    """Repositorio para operaciones con deudas-productos."""
+    """Repository for debt-product operations."""
     
     @staticmethod
-    def crear(conn: sqlite3.Connection, deuda_id: int, producto_codigo: str,
+    def create(conn: sqlite3.Connection, deuda_id: int, producto_codigo: str,
               cantidad: float, costo_unitario: float, monto_total: float) -> int:
-        """Crea un registro de producto asociado a una deuda."""
+        """Create a product record associated with a debt."""
         cursor = conn.cursor()
         cursor.execute("""
             INSERT INTO Deudas_Productos (deuda_id, producto_codigo, cantidad, costo_unitario, monto_total, fecha)
@@ -426,7 +426,7 @@ class DeudaProductoRepository:
     
     @staticmethod
     def obtener_por_deuda(conn: sqlite3.Connection, deuda_id: int) -> List[sqlite3.Row]:
-        """Obtiene todos los productos asociados a una deuda."""
+        """Get all products associated with a debt."""
         cursor = conn.cursor()
         cursor.execute("""
             SELECT dp.id, dp.producto_codigo, p.nombre as producto_nombre,
@@ -440,7 +440,7 @@ class DeudaProductoRepository:
     
     @staticmethod
     def obtener_por_proveedor(conn: sqlite3.Connection, actor_id: str, moneda: str) -> List[sqlite3.Row]:
-        """Obtiene todos los productos de deudas de un proveedor específico."""
+        """Get all debt products for a specific supplier."""
         cursor = conn.cursor()
         cursor.execute("""
             SELECT dp.id, dp.producto_codigo, p.nombre as producto_nombre,
@@ -456,12 +456,12 @@ class DeudaProductoRepository:
 
 
 class ConsignacionRepository:
-    """Repositorio para operaciones con consignaciones."""
+    """Repository for consignment operations."""
     
     @staticmethod
     def obtener_por_vendedor_codigo(conn: sqlite3.Connection, vendedor: str, 
                                     codigo: str) -> Optional[sqlite3.Row]:
-        """Obtiene una consignación específica."""
+        """Get a specific consignment."""
         cursor = conn.cursor()
         cursor.execute("""
             SELECT id, codigo, vendedor, stock, precio_unitario, moneda, fecha_consignacion
@@ -471,9 +471,9 @@ class ConsignacionRepository:
         return cursor.fetchone()
     
     @staticmethod
-    def crear(conn: sqlite3.Connection, codigo: str, vendedor: str, stock: float,
+    def create(conn: sqlite3.Connection, codigo: str, vendedor: str, stock: float,
               precio_unitario: float, moneda: str) -> int:
-        """Crea una nueva consignación."""
+        """Create a new consignment."""
         cursor = conn.cursor()
         cursor.execute("""
             INSERT INTO Consignaciones (codigo, vendedor, stock, precio_unitario, moneda, fecha_consignacion)
@@ -482,9 +482,9 @@ class ConsignacionRepository:
         return cursor.lastrowid
     
     @staticmethod
-    def actualizar_stock(conn: sqlite3.Connection, codigo: str, vendedor: str, 
+    def update_stock(conn: sqlite3.Connection, codigo: str, vendedor: str, 
                         nuevo_stock: float) -> None:
-        """Actualiza el stock consignado."""
+        """Update consigned stock."""
         cursor = conn.cursor()
         cursor.execute("""
             UPDATE Consignaciones 
@@ -494,7 +494,7 @@ class ConsignacionRepository:
     
     @staticmethod
     def obtener_por_vendedor(conn: sqlite3.Connection, vendedor: str) -> List[sqlite3.Row]:
-        """Obtiene todas las consignaciones de un vendedor con stock > 0."""
+        """Get all consignments for a seller with stock > 0."""
         cursor = conn.cursor()
         cursor.execute("""
             SELECT codigo, stock
@@ -505,11 +505,11 @@ class ConsignacionRepository:
 
 
 class ProveedorRepository:
-    """Repositorio para operaciones con proveedores."""
+    """Repository for supplier operations."""
     
     @staticmethod
-    def crear(conn: sqlite3.Connection, name: str) -> int:
-        """Crea un nuevo proveedor."""
+    def create(conn: sqlite3.Connection, name: str) -> int:
+        """Create a new supplier."""
         cursor = conn.cursor()
         cursor.execute("""
             INSERT INTO Proveedores (name) VALUES (?)
@@ -518,7 +518,7 @@ class ProveedorRepository:
     
     @staticmethod
     def obtener_todos(conn: sqlite3.Connection) -> List[sqlite3.Row]:
-        """Obtiene todos los proveedores."""
+        """Get all suppliers."""
         cursor = conn.cursor()
         cursor.execute("""
             SELECT id, name, fecha_creacion 
@@ -529,7 +529,7 @@ class ProveedorRepository:
     
     @staticmethod
     def obtener_por_id(conn: sqlite3.Connection, proveedor_id: int) -> Optional[sqlite3.Row]:
-        """Obtiene un proveedor por su ID."""
+        """Get a supplier by ID."""
         cursor = conn.cursor()
         cursor.execute("""
             SELECT id, name, fecha_creacion 
@@ -540,7 +540,7 @@ class ProveedorRepository:
     
     @staticmethod
     def obtener_por_nombre(conn: sqlite3.Connection, name: str) -> Optional[sqlite3.Row]:
-        """Obtiene un proveedor por su nombre."""
+        """Get a supplier by name."""
         cursor = conn.cursor()
         cursor.execute("""
             SELECT id, name, fecha_creacion 
@@ -550,8 +550,8 @@ class ProveedorRepository:
         return cursor.fetchone()
     
     @staticmethod
-    def actualizar(conn: sqlite3.Connection, proveedor_id: int, nuevo_name: str) -> int:
-        """Actualiza el nombre de un proveedor."""
+    def update(conn: sqlite3.Connection, proveedor_id: int, nuevo_name: str) -> int:
+        """Update a supplier name."""
         cursor = conn.cursor()
         cursor.execute("""
             UPDATE Proveedores SET name = ? WHERE id = ?
@@ -559,19 +559,19 @@ class ProveedorRepository:
         return cursor.rowcount
     
     @staticmethod
-    def eliminar(conn: sqlite3.Connection, proveedor_id: int) -> int:
-        """Elimina un proveedor."""
+    def delete(conn: sqlite3.Connection, proveedor_id: int) -> int:
+        """Delete a supplier."""
         cursor = conn.cursor()
         cursor.execute("DELETE FROM Proveedores WHERE id = ?", (proveedor_id,))
         return cursor.rowcount
 
 
 class VendedorRepository:
-    """Repositorio para operaciones con vendedores."""
+    """Repository for seller operations."""
     
     @staticmethod
-    def crear(conn: sqlite3.Connection, name: str) -> int:
-        """Crea un nuevo vendedor."""
+    def create(conn: sqlite3.Connection, name: str) -> int:
+        """Create a new seller."""
         cursor = conn.cursor()
         cursor.execute("""
             INSERT INTO Vendedores (name) VALUES (?)
@@ -580,7 +580,7 @@ class VendedorRepository:
     
     @staticmethod
     def obtener_todos(conn: sqlite3.Connection) -> List[sqlite3.Row]:
-        """Obtiene todos los vendedores."""
+        """Get all sellers."""
         cursor = conn.cursor()
         cursor.execute("""
             SELECT id, name, fecha_creacion 
@@ -591,7 +591,7 @@ class VendedorRepository:
     
     @staticmethod
     def obtener_por_id(conn: sqlite3.Connection, vendedor_id: int) -> Optional[sqlite3.Row]:
-        """Obtiene un vendedor por su ID."""
+        """Get a seller by ID."""
         cursor = conn.cursor()
         cursor.execute("""
             SELECT id, name, fecha_creacion 
@@ -602,7 +602,7 @@ class VendedorRepository:
     
     @staticmethod
     def obtener_por_nombre(conn: sqlite3.Connection, name: str) -> Optional[sqlite3.Row]:
-        """Obtiene un vendedor por su nombre."""
+        """Get a seller by name."""
         cursor = conn.cursor()
         cursor.execute("""
             SELECT id, name, fecha_creacion 
@@ -612,8 +612,8 @@ class VendedorRepository:
         return cursor.fetchone()
     
     @staticmethod
-    def actualizar(conn: sqlite3.Connection, vendedor_id: int, nuevo_name: str) -> int:
-        """Actualiza el nombre de un vendedor."""
+    def update(conn: sqlite3.Connection, vendedor_id: int, nuevo_name: str) -> int:
+        """Update a seller name."""
         cursor = conn.cursor()
         cursor.execute("""
             UPDATE Vendedores SET name = ? WHERE id = ?
@@ -621,19 +621,19 @@ class VendedorRepository:
         return cursor.rowcount
     
     @staticmethod
-    def eliminar(conn: sqlite3.Connection, vendedor_id: int) -> int:
-        """Elimina un vendedor."""
+    def delete(conn: sqlite3.Connection, vendedor_id: int) -> int:
+        """Delete a seller."""
         cursor = conn.cursor()
         cursor.execute("DELETE FROM Vendedores WHERE id = ?", (vendedor_id,))
         return cursor.rowcount
 
 
 class ContenedorRepository:
-    """Repositorio para operaciones con contenedores."""
+    """Repository for container operations."""
     
     @staticmethod
-    def crear(conn: sqlite3.Connection, nombre: str, numero_contenedor: Optional[str] = None, proveedor_id: Optional[int] = None) -> int:
-        """Crea un nuevo contenedor."""
+    def create(conn: sqlite3.Connection, nombre: str, numero_contenedor: Optional[str] = None, proveedor_id: Optional[int] = None) -> int:
+        """Create a new container."""
         cursor = conn.cursor()
         cursor.execute("""
             INSERT INTO Contenedores (nombre, numero_contenedor, proveedor_id) 
@@ -643,7 +643,7 @@ class ContenedorRepository:
     
     @staticmethod
     def obtener_todos(conn: sqlite3.Connection) -> List[sqlite3.Row]:
-        """Obtiene todos los contenedores con información del proveedor."""
+        """Get all containers with supplier information."""
         cursor = conn.cursor()
         cursor.execute("""
             SELECT 
@@ -661,7 +661,7 @@ class ContenedorRepository:
     
     @staticmethod
     def obtener_por_id(conn: sqlite3.Connection, cont_id: int) -> Optional[sqlite3.Row]:
-        """Obtiene un contenedor por su ID con información del proveedor."""
+        """Get a container by ID with supplier information."""
         cursor = conn.cursor()
         cursor.execute("""
             SELECT 
@@ -678,17 +678,17 @@ class ContenedorRepository:
         return cursor.fetchone()
     
     @staticmethod
-    def actualizar(conn: sqlite3.Connection, cont_id: int, nuevo_nombre: Optional[str] = None, 
+    def update(conn: sqlite3.Connection, cont_id: int, nuevo_nombre: Optional[str] = None, 
                    numero_contenedor: Optional[str] = None, proveedor_id: Optional[int] = None,
                    quitar_proveedor: bool = False) -> int:
-        """Actualiza un contenedor.
+        """Update a container.
         
         Args:
-            quitar_proveedor: Si es True, establece proveedor_id a NULL (ignora proveedor_id si está presente)
+            quitar_proveedor: If True, set proveedor_id to NULL (ignore proveedor_id if present)
         """
         cursor = conn.cursor()
         
-        # Construir la query dinámicamente según los campos a actualizar
+        # Build the query dynamically based on fields to update
         updates = []
         params = []
         
@@ -700,8 +700,8 @@ class ContenedorRepository:
             updates.append("numero_contenedor = ?")
             params.append(numero_contenedor.strip() if numero_contenedor else None)
         
-        # Manejar proveedor_id: si quitar_proveedor es True, establecer a NULL
-        # Si quitar_proveedor es False y proveedor_id no es None, actualizar con el valor
+        # Handle proveedor_id: if quitar_proveedor is True, set to NULL
+        # If quitar_proveedor is False and proveedor_id is not None, update with value
         if quitar_proveedor:
             updates.append("proveedor_id = NULL")
         elif proveedor_id is not None:
@@ -717,15 +717,15 @@ class ContenedorRepository:
         return cursor.rowcount
     
     @staticmethod
-    def eliminar(conn: sqlite3.Connection, cont_id: int) -> int:
-        """Elimina un contenedor."""
+    def delete(conn: sqlite3.Connection, cont_id: int) -> int:
+        """Delete a container."""
         cursor = conn.cursor()
         cursor.execute("DELETE FROM Contenedores WHERE id = ?", (cont_id,))
         return cursor.rowcount
     
     @staticmethod
     def obtener_por_proveedor(conn: sqlite3.Connection, proveedor_id: int) -> List[sqlite3.Row]:
-        """Obtiene todos los contenedores asociados a un proveedor (relación muchos a uno)."""
+        """Get all containers associated with a supplier (many-to-one relation)."""
         cursor = conn.cursor()
         cursor.execute("""
             SELECT 
@@ -744,11 +744,11 @@ class ContenedorRepository:
 
 
 class AlmacenRepository:
-    """Repositorio para operaciones con almacenes."""
+    """Repository for warehouse operations."""
     
     @staticmethod
-    def crear(conn: sqlite3.Connection, nombre: str, ubicacion: Optional[str] = None) -> int:
-        """Crea un nuevo almacén."""
+    def create(conn: sqlite3.Connection, nombre: str, ubicacion: Optional[str] = None) -> int:
+        """Create a new warehouse."""
         cursor = conn.cursor()
         cursor.execute("""
             INSERT INTO Almacenes (nombre, ubicacion)
@@ -758,7 +758,7 @@ class AlmacenRepository:
     
     @staticmethod
     def obtener_todos(conn: sqlite3.Connection) -> List[sqlite3.Row]:
-        """Obtiene todos los almacenes."""
+        """Get all warehouses."""
         cursor = conn.cursor()
         cursor.execute("""
             SELECT id, nombre, ubicacion, fecha_creacion
@@ -769,7 +769,7 @@ class AlmacenRepository:
     
     @staticmethod
     def obtener_por_id(conn: sqlite3.Connection, almacen_id: int) -> Optional[sqlite3.Row]:
-        """Obtiene un almacén por su ID."""
+        """Get a warehouse by ID."""
         cursor = conn.cursor()
         cursor.execute("""
             SELECT id, nombre, ubicacion, fecha_creacion
@@ -780,7 +780,7 @@ class AlmacenRepository:
     
     @staticmethod
     def obtener_por_nombre(conn: sqlite3.Connection, nombre: str) -> Optional[sqlite3.Row]:
-        """Obtiene un almacén por su nombre."""
+        """Get a warehouse by name."""
         cursor = conn.cursor()
         cursor.execute("""
             SELECT id, nombre, ubicacion, fecha_creacion
@@ -790,9 +790,9 @@ class AlmacenRepository:
         return cursor.fetchone()
     
     @staticmethod
-    def actualizar(conn: sqlite3.Connection, almacen_id: int, nuevo_nombre: Optional[str] = None,
+    def update(conn: sqlite3.Connection, almacen_id: int, nuevo_nombre: Optional[str] = None,
                    nueva_ubicacion: Optional[str] = None) -> int:
-        """Actualiza un almacén."""
+        """Update a warehouse."""
         cursor = conn.cursor()
         updates = []
         params = []
@@ -814,20 +814,20 @@ class AlmacenRepository:
         return cursor.rowcount
     
     @staticmethod
-    def eliminar(conn: sqlite3.Connection, almacen_id: int) -> int:
-        """Elimina un almacén."""
+    def delete(conn: sqlite3.Connection, almacen_id: int) -> int:
+        """Delete a warehouse."""
         cursor = conn.cursor()
         cursor.execute("DELETE FROM Almacenes WHERE id = ?", (almacen_id,))
         return cursor.rowcount
 
 
 class ContenedorProductoRepository:
-    """Repositorio para operaciones con productos en contenedores."""
+    """Repository for products-in-container operations."""
     
     @staticmethod
     def agregar_producto(conn: sqlite3.Connection, contenedor_id: int, producto_codigo: str,
                          cantidad: float) -> int:
-        """Agrega o actualiza un producto en un contenedor."""
+        """Add or update a product in a container."""
         cursor = conn.cursor()
         cursor.execute("""
             INSERT INTO Contenedor_Productos (contenedor_id, producto_codigo, cantidad)
@@ -839,7 +839,7 @@ class ContenedorProductoRepository:
     
     @staticmethod
     def obtener_productos_por_contenedor(conn: sqlite3.Connection, contenedor_id: int) -> List[sqlite3.Row]:
-        """Obtiene todos los productos de un contenedor."""
+        """Get all products in a container."""
         cursor = conn.cursor()
         cursor.execute("""
             SELECT 
@@ -859,7 +859,7 @@ class ContenedorProductoRepository:
     @staticmethod
     def obtener_producto_en_contenedor(conn: sqlite3.Connection, contenedor_id: int,
                                       producto_codigo: str) -> Optional[sqlite3.Row]:
-        """Obtiene un producto específico en un contenedor."""
+        """Get a specific product in a container."""
         cursor = conn.cursor()
         cursor.execute("""
             SELECT id, contenedor_id, producto_codigo, cantidad, fecha_ingreso
@@ -869,9 +869,9 @@ class ContenedorProductoRepository:
         return cursor.fetchone()
     
     @staticmethod
-    def actualizar_cantidad(conn: sqlite3.Connection, contenedor_id: int, producto_codigo: str,
+    def update_cantidad(conn: sqlite3.Connection, contenedor_id: int, producto_codigo: str,
                            nueva_cantidad: float) -> int:
-        """Actualiza la cantidad de un producto en un contenedor."""
+        """Update product quantity in a container."""
         cursor = conn.cursor()
         cursor.execute("""
             UPDATE Contenedor_Productos
@@ -883,7 +883,7 @@ class ContenedorProductoRepository:
     @staticmethod
     def reducir_cantidad(conn: sqlite3.Connection, contenedor_id: int, producto_codigo: str,
                         cantidad: float) -> int:
-        """Reduce la cantidad de un producto en un contenedor."""
+        """Reduce product quantity in a container."""
         cursor = conn.cursor()
         cursor.execute("""
             UPDATE Contenedor_Productos
@@ -894,8 +894,8 @@ class ContenedorProductoRepository:
         return cursor.rowcount
     
     @staticmethod
-    def eliminar_producto(conn: sqlite3.Connection, contenedor_id: int, producto_codigo: str) -> int:
-        """Elimina un producto de un contenedor."""
+    def delete_producto(conn: sqlite3.Connection, contenedor_id: int, producto_codigo: str) -> int:
+        """Delete a product from a container."""
         cursor = conn.cursor()
         cursor.execute("""
             DELETE FROM Contenedor_Productos
@@ -905,12 +905,12 @@ class ContenedorProductoRepository:
 
 
 class InventarioAlmacenRepository:
-    """Repositorio para operaciones con inventario de almacenes."""
+    """Repository for warehouse inventory operations."""
     
     @staticmethod
     def agregar_producto(conn: sqlite3.Connection, almacen_id: int, producto_codigo: str,
                          cantidad: float) -> int:
-        """Agrega o actualiza un producto en el inventario de un almacén."""
+        """Add or update a product in warehouse inventory."""
         cursor = conn.cursor()
         cursor.execute("""
             INSERT INTO Inventario_Almacen (almacen_id, producto_codigo, cantidad)
@@ -922,7 +922,7 @@ class InventarioAlmacenRepository:
     
     @staticmethod
     def obtener_inventario_por_almacen(conn: sqlite3.Connection, almacen_id: int) -> List[sqlite3.Row]:
-        """Obtiene todo el inventario de un almacén."""
+        """Get full warehouse inventory."""
         cursor = conn.cursor()
         cursor.execute("""
             SELECT 
@@ -942,7 +942,7 @@ class InventarioAlmacenRepository:
     @staticmethod
     def obtener_producto_en_almacen(conn: sqlite3.Connection, almacen_id: int,
                                     producto_codigo: str) -> Optional[sqlite3.Row]:
-        """Obtiene un producto específico en el inventario de un almacén."""
+        """Get a specific product in warehouse inventory."""
         cursor = conn.cursor()
         cursor.execute("""
             SELECT id, almacen_id, producto_codigo, cantidad, fecha_actualizacion
@@ -952,9 +952,9 @@ class InventarioAlmacenRepository:
         return cursor.fetchone()
     
     @staticmethod
-    def actualizar_cantidad(conn: sqlite3.Connection, almacen_id: int, producto_codigo: str,
+    def update_cantidad(conn: sqlite3.Connection, almacen_id: int, producto_codigo: str,
                            nueva_cantidad: float) -> int:
-        """Actualiza la cantidad de un producto en el inventario de un almacén."""
+        """Update product quantity in warehouse inventory."""
         cursor = conn.cursor()
         cursor.execute("""
             UPDATE Inventario_Almacen
@@ -966,7 +966,7 @@ class InventarioAlmacenRepository:
     @staticmethod
     def reducir_cantidad(conn: sqlite3.Connection, almacen_id: int, producto_codigo: str,
                         cantidad: float) -> int:
-        """Reduce la cantidad de un producto en el inventario de un almacén."""
+        """Reduce product quantity in warehouse inventory."""
         cursor = conn.cursor()
         cursor.execute("""
             UPDATE Inventario_Almacen
@@ -977,8 +977,8 @@ class InventarioAlmacenRepository:
         return cursor.rowcount
     
     @staticmethod
-    def eliminar_producto(conn: sqlite3.Connection, almacen_id: int, producto_codigo: str) -> int:
-        """Elimina un producto del inventario de un almacén."""
+    def delete_producto(conn: sqlite3.Connection, almacen_id: int, producto_codigo: str) -> int:
+        """Delete a product from warehouse inventory."""
         cursor = conn.cursor()
         cursor.execute("""
             DELETE FROM Inventario_Almacen
@@ -988,14 +988,14 @@ class InventarioAlmacenRepository:
 
 
 class MovimientoInventarioRepository:
-    """Repositorio para operaciones con movimientos de inventario."""
+    """Repository for inventory movement operations."""
     
     @staticmethod
-    def crear(conn: sqlite3.Connection, tipo: str, origen_tipo: str, origen_id: int,
+    def create(conn: sqlite3.Connection, tipo: str, origen_tipo: str, origen_id: int,
               producto_codigo: str, cantidad: float, user_id: int,
               destino_tipo: Optional[str] = None, destino_id: Optional[int] = None,
               descripcion: Optional[str] = None) -> int:
-        """Crea un nuevo movimiento de inventario."""
+        """Create a new inventory movement."""
         cursor = conn.cursor()
         cursor.execute("""
             INSERT INTO Movimientos_Inventario 
@@ -1006,7 +1006,7 @@ class MovimientoInventarioRepository:
     
     @staticmethod
     def obtener_por_almacen(conn: sqlite3.Connection, almacen_id: int, limite: int = 50) -> List[sqlite3.Row]:
-        """Obtiene los movimientos relacionados con un almacén."""
+        """Get movements related to a warehouse."""
         cursor = conn.cursor()
         cursor.execute("""
             SELECT 
@@ -1033,7 +1033,7 @@ class MovimientoInventarioRepository:
     
     @staticmethod
     def obtener_por_contenedor(conn: sqlite3.Connection, contenedor_id: int, limite: int = 50) -> List[sqlite3.Row]:
-        """Obtiene los movimientos relacionados con un contenedor."""
+        """Get movements related to a container."""
         cursor = conn.cursor()
         cursor.execute("""
             SELECT 

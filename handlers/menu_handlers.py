@@ -1,5 +1,5 @@
 """
-Handlers para el menú principal y navegación.
+Handlers para el menu principal y navegacion.
 """
 import logging
 from telegram import Update
@@ -22,7 +22,7 @@ logger = logging.getLogger(__name__)
 
 
 async def start_command(update: Update, context: ContextTypes.DEFAULT_TYPE) -> None:
-    """Comando /start - Muestra el menú principal."""
+    """Comando /start - Muestra el menu principal."""
     # Verificar permisos pero no bloquear, solo mostrar mensaje diferente
     user_id = update.effective_user.id
     from core.config import ADMIN_USER_IDS
@@ -37,23 +37,23 @@ async def start_command(update: Update, context: ContextTypes.DEFAULT_TYPE) -> N
         return
     
     msg = (
-        "👋 <b>Bienvenido al Sistema de Gestión Financiera</b>\n\n"
-        "Selecciona una opción del menú para comenzar:"
+        "👋 <b>Bienvenido al Sistema de Management Financiera</b>\n\n"
+        "Select una opcion del menu para comenzar:"
     )
     await update.message.reply_html(msg, reply_markup=create_main_menu_keyboard())
 
 
 @admin_only
 async def menu_callback(update: Update, context: ContextTypes.DEFAULT_TYPE) -> None:
-    """Maneja los callbacks del menú principal."""
+    """Maneja los callbacks del menu principal."""
     query = update.callback_query
     await query.answer()
     data = query.data or ""
     
     if data == "menu:main":
         msg = (
-            "👋 <b>Menú Principal</b>\n\n"
-            "Selecciona una opción:"
+            "👋 <b>Menu Principal</b>\n\n"
+            "Select una opcion:"
         )
         await query.edit_message_text(msg, parse_mode="HTML", reply_markup=create_main_menu_keyboard())
     
@@ -74,7 +74,7 @@ async def menu_callback(update: Update, context: ContextTypes.DEFAULT_TYPE) -> N
     elif data == "menu:reportes":
         msg = (
             "📊 <b>Reportes</b>\n\n"
-            "Consulta reportes y estadísticas:"
+            "Consulta reportes y estadisticas:"
         )
         await query.edit_message_text(msg, parse_mode="HTML", reply_markup=create_reportes_menu_keyboard())
     
@@ -84,14 +84,14 @@ async def menu_callback(update: Update, context: ContextTypes.DEFAULT_TYPE) -> N
     
     elif data == "menu:contenedores":
         # Este callback es manejado por el ConversationHandler de contenedores
-        # que se registra antes de este handler, así que no debería llegar aquí
+        # que se registra antes de este handler, ayes que no deberia llegar aqui
         # pero por si acaso, respondemos al callback
         pass
     
     elif data == "menu:config":
         msg = (
-            "⚙️ <b>Configuración</b>\n\n"
-            "Opciones de configuración:\n\n"
+            "⚙️ <b>Configuration</b>\n\n"
+            "Opciones de configuration:\n\n"
             "• <code>/set_tasa 1 [tasa]</code> - Establecer tasa USD-CUP\n"
             "• <code>/balance</code> - Ver balance\n"
             "• <code>/historial [dias]</code> - Ver historial"
@@ -99,7 +99,7 @@ async def menu_callback(update: Update, context: ContextTypes.DEFAULT_TYPE) -> N
         kb = create_main_menu_keyboard()
         await query.edit_message_text(msg, parse_mode="HTML", reply_markup=kb)
     
-    # Redirecciones desde submenús
+    # Redirecciones desde submenus
     elif data == "cont:ingreso":
         from handlers.form_handlers import ingreso_form_entry
         await ingreso_form_entry(update, context)

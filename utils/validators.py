@@ -1,5 +1,5 @@
 """
-Validadores centralizados para el sistema.
+Centralized validators for the system.
 """
 from typing import Optional
 from core.config import VALID_MONEDAS
@@ -7,63 +7,63 @@ from services.cajas_service import CajaService
 
 
 class ValidationError(Exception):
-    """Excepción personalizada para errores de validación."""
+    """Custom exception for validation errors."""
     pass
 
 
 def validate_moneda(moneda: str) -> str:
-    """Valida que la moneda sea válida."""
+    """Validate that the currency is valid."""
     moneda_lower = moneda.lower()
     if moneda_lower not in VALID_MONEDAS:
-        raise ValidationError(f"Moneda '{moneda}' no válida. Usa: {', '.join(VALID_MONEDAS)}")
+        raise ValidationError(f"Invalid currency '{moneda}'. Use: {', '.join(VALID_MONEDAS)}")
     return moneda_lower
 
 
 def validate_caja(caja: str) -> int:
-    """Valida que la caja sea válida y retorna su ID."""
+    """Validate that the cash box is valid and return its ID."""
     caja_lower = caja.lower().strip()
     caja_obj = CajaService.obtener_por_nombre(caja_lower)
     if not caja_obj:
-        # Obtener lista de cajas disponibles para el mensaje de error
+        # Get available cash box list for the error message
         cajas = CajaService.listar()
         nombres_cajas = [c['nombre'] for c in cajas]
         raise ValidationError(
-            f"Caja '{caja}' no válida. Cajas disponibles: {', '.join(nombres_cajas) if nombres_cajas else 'Ninguna'}"
+            f"Invalid cash box '{caja}'. Available boxes: {', '.join(nombres_cajas) if nombres_cajas else 'None'}"
         )
     return caja_obj['id']
 
 
 def validate_monto(monto_str: str) -> float:
-    """Valida y convierte un monto a float."""
+    """Validate and convert an amount to float."""
     try:
         monto = float(monto_str)
         if monto <= 0:
-            raise ValidationError("El monto debe ser un número positivo.")
+            raise ValidationError("Amount must be a positive number.")
         return monto
     except ValueError:
-        raise ValidationError(f"'{monto_str}' no es un número válido.")
+        raise ValidationError(f"'{monto_str}' is not a valid number.")
 
 
 def validate_cantidad(cantidad_str: str) -> float:
-    """Valida y convierte una cantidad a float."""
+    """Validate and convert a quantity to float."""
     try:
         cantidad = float(cantidad_str)
         if cantidad <= 0:
-            raise ValidationError("La cantidad debe ser un número positivo.")
+            raise ValidationError("Quantity must be a positive number.")
         return cantidad
     except ValueError:
-        raise ValidationError(f"'{cantidad_str}' no es un número válido.")
+        raise ValidationError(f"'{cantidad_str}' is not a valid number.")
 
 
 def validate_dias(dias_str: Optional[str], default: int = 7) -> int:
-    """Valida y convierte días a entero."""
+    """Validate and convert days to integer."""
     if dias_str is None:
         return default
     try:
         dias = int(dias_str)
         if dias <= 0:
-            raise ValidationError("El número de días debe ser un entero positivo.")
+            raise ValidationError("Number of days must be a positive integer.")
         return dias
     except ValueError:
-        raise ValidationError(f"'{dias_str}' no es un número válido de días.")
+        raise ValidationError(f"'{dias_str}' is not a valid number of days.")
 

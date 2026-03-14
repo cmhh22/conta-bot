@@ -15,11 +15,11 @@ logger = logging.getLogger(__name__)
 
 
 class FinancialAdvisor:
-    """Motor de análisis financiero inteligente."""
+    """Motor de analisis financiero inteligente."""
 
     @classmethod
     def generar_analisis(cls, tipo: str = "general") -> Dict[str, Any]:
-        """Genera un análisis financiero completo."""
+        """Genera un analisis financiero completo."""
         dispatch = {
             "general": cls._analisis_general,
             "gastos": cls._analisis_gastos,
@@ -45,7 +45,7 @@ class FinancialAdvisor:
             for moneda, monto in monedas.items():
                 total_usd += convert_to_usd(monto, moneda)
 
-        # Métricas de actividad
+        # Metricas de actividad
         ingresos_7d = sum(
             m["monto"] for m in historial_7d
             if m["tipo"] == "ingreso" and m["moneda"] == "usd"
@@ -83,7 +83,7 @@ class FinancialAdvisor:
         except Exception:
             ganancias = {"margen_bruto_usd": 0, "ingresos_total_usd": 0, "costos_total_usd": 0}
 
-        mensaje = "📊 <b>ANÁLISIS FINANCIERO INTELIGENTE</b>\n"
+        mensaje = "📊 <b>ANALISIS FINANCIERO INTELIGENTE</b>\n"
         mensaje += "━" * 30 + "\n\n"
 
         # Resumen ejecutivo
@@ -91,10 +91,10 @@ class FinancialAdvisor:
         mensaje += f"  Capital total: <b>{total_usd:,.2f} USD</b>\n"
         mensaje += f"  Ganancia acumulada: <b>{ganancias['margen_bruto_usd']:,.2f} USD</b>\n\n"
 
-        # Flujo de caja (7 días)
+        # Flujo de caja (7 dias)
         flujo_neto = ingresos_7d - gastos_7d
         emoji_flujo = "📈" if flujo_neto >= 0 else "📉"
-        mensaje += f"💰 <b>Flujo de Caja (7 días)</b>\n"
+        mensaje += f"💰 <b>Flujo de Caja (7 dias)</b>\n"
         mensaje += f"  🟢 Ingresos: +{ingresos_7d:,.2f} USD\n"
         mensaje += f"  🔴 Gastos: -{gastos_7d:,.2f} USD\n"
         mensaje += f"  {emoji_flujo} Neto: <b>{flujo_neto:+,.2f} USD</b>\n\n"
@@ -102,18 +102,18 @@ class FinancialAdvisor:
         # Flujo mensual
         flujo_mensual = ingresos_30d - gastos_30d
         emoji_mes = "📈" if flujo_mensual >= 0 else "📉"
-        mensaje += f"📅 <b>Flujo Mensual (30 días)</b>\n"
+        mensaje += f"📅 <b>Flujo Mensual (30 dias)</b>\n"
         mensaje += f"  {emoji_mes} Ingresos: {ingresos_30d:,.2f} USD\n"
         mensaje += f"  {emoji_mes} Gastos: {gastos_30d:,.2f} USD\n"
         mensaje += f"  {emoji_mes} Neto: <b>{flujo_mensual:+,.2f} USD</b>\n\n"
 
         # Deudas
-        mensaje += "📋 <b>Posición de Deudas</b>\n"
+        mensaje += "📋 <b>Posicion de Deudas</b>\n"
         mensaje += f"  ❌ Por pagar: {total_por_pagar:,.2f} USD\n"
         mensaje += f"  ✅ Por cobrar: {total_por_cobrar:,.2f} USD\n"
         posicion_neta = total_por_cobrar - total_por_pagar
         emoji_deuda = "✅" if posicion_neta >= 0 else "⚠️"
-        mensaje += f"  {emoji_deuda} Posición neta: <b>{posicion_neta:+,.2f} USD</b>\n\n"
+        mensaje += f"  {emoji_deuda} Posicion neta: <b>{posicion_neta:+,.2f} USD</b>\n\n"
 
         # Alertas
         if alertas:
@@ -145,20 +145,20 @@ class FinancialAdvisor:
 
     @classmethod
     def _analisis_gastos(cls) -> Dict[str, Any]:
-        """Análisis detallado de gastos."""
+        """Analisis detallado de gastos."""
         historial = ContabilidadService.obtener_historial(30)
         gastos = [m for m in historial if m["tipo"] == "gasto"]
 
         if not gastos:
             return {
                 "success": True,
-                "message": "📊 No hay gastos registrados en los últimos 30 días.",
+                "message": "📊 No gastos registrados en los ultimos 30 dias.",
             }
 
         total_usd = sum(convert_to_usd(g["monto"], g["moneda"]) for g in gastos)
         promedio_diario = total_usd / 30
 
-        # Agrupar por descripción (categorías)
+        # Agrupar por description (categorias)
         categorias: Dict[str, float] = {}
         for g in gastos:
             desc = g["descripcion"].split()[0] if g["descripcion"] else "Otros"
@@ -182,7 +182,7 @@ class FinancialAdvisor:
             if hace_14 <= _parse_fecha(g["fecha"]) < hace_7
         )
 
-        mensaje = "💸 <b>ANÁLISIS DE GASTOS (30 días)</b>\n"
+        mensaje = "💸 <b>ANALISIS DE GASTOS (30 dias)</b>\n"
         mensaje += "━" * 30 + "\n\n"
         mensaje += f"💰 Total gastado: <b>{total_usd:,.2f} USD</b>\n"
         mensaje += f"📊 Promedio diario: {promedio_diario:,.2f} USD\n"
@@ -197,9 +197,9 @@ class FinancialAdvisor:
             mensaje += f"  Semana anterior: {gastos_semana_anterior:,.2f} USD\n"
             mensaje += f"  {emoji} Cambio: {cambio:+.1f}%\n\n"
 
-        # Top categorías
+        # Top categorias
         if top_categorias:
-            mensaje += "📋 <b>Principales Categorías</b>\n"
+            mensaje += "📋 <b>Principales Categorias</b>\n"
             for i, (cat, monto) in enumerate(top_categorias, 1):
                 pct = (monto / total_usd * 100) if total_usd > 0 else 0
                 barra = "█" * int(pct / 5) + "░" * (20 - int(pct / 5))
@@ -210,21 +210,21 @@ class FinancialAdvisor:
 
     @classmethod
     def _analisis_ingresos(cls) -> Dict[str, Any]:
-        """Análisis detallado de ingresos."""
+        """Analisis detallado de ingresos."""
         historial = ContabilidadService.obtener_historial(30)
         ingresos = [m for m in historial if m["tipo"] in ("ingreso", "venta")]
 
         if not ingresos:
             return {
                 "success": True,
-                "message": "📊 No hay ingresos registrados en los últimos 30 días.",
+                "message": "📊 No ingresos registrados en los ultimos 30 dias.",
             }
 
         total_usd = sum(convert_to_usd(i["monto"], i["moneda"]) for i in ingresos)
         ventas = [i for i in ingresos if i["tipo"] == "venta"]
         otros = [i for i in ingresos if i["tipo"] == "ingreso"]
 
-        mensaje = "💰 <b>ANÁLISIS DE INGRESOS (30 días)</b>\n"
+        mensaje = "💰 <b>ANALISIS DE INGRESOS (30 dias)</b>\n"
         mensaje += "━" * 30 + "\n\n"
         mensaje += f"💵 Total ingresos: <b>{total_usd:,.2f} USD</b>\n"
         mensaje += f"🛒 Por ventas: {sum(convert_to_usd(v['monto'], v['moneda']) for v in ventas):,.2f} USD\n"
@@ -234,17 +234,17 @@ class FinancialAdvisor:
         # Promedio
         promedio_diario = total_usd / 30
         mensaje += f"📊 Promedio diario: {promedio_diario:,.2f} USD\n"
-        mensaje += f"📊 Promedio por operación: {total_usd / len(ingresos):,.2f} USD\n"
+        mensaje += f"📊 Promedio por operation: {total_usd / len(ingresos):,.2f} USD\n"
 
         return {"success": True, "message": mensaje}
 
     @classmethod
     def _analisis_inventario(cls) -> Dict[str, Any]:
-        """Análisis del estado del inventario."""
+        """Analisis del estado del inventario."""
         productos = InventarioService.obtener_stock()
 
         if not productos:
-            return {"success": True, "message": "📦 El inventario está vacío."}
+            return {"success": True, "message": "📦 El inventario esta empty."}
 
         total_valor = sum(
             p["stock"] * p["costo_unitario"] for p in productos
@@ -254,14 +254,14 @@ class FinancialAdvisor:
         # Productos con bajo stock (menos de 5 unidades)
         bajo_stock = [p for p in productos if p["stock"] < 5]
 
-        # Productos más valiosos
+        # Productos mas valiosos
         productos_valor = sorted(
             productos,
             key=lambda p: p["stock"] * p["costo_unitario"],
             reverse=True,
         )[:5]
 
-        mensaje = "📦 <b>ANÁLISIS DE INVENTARIO</b>\n"
+        mensaje = "📦 <b>ANALISIS DE INVENTARIO</b>\n"
         mensaje += "━" * 30 + "\n\n"
         mensaje += f"📊 Productos distintos: {len(productos)}\n"
         mensaje += f"📦 Total unidades: {total_items:,.0f}\n"
@@ -275,7 +275,7 @@ class FinancialAdvisor:
             mensaje += "\n"
 
         if productos_valor:
-            mensaje += "💎 <b>Productos Más Valiosos</b>\n"
+            mensaje += "💎 <b>Productos Mas Valiosos</b>\n"
             for p in productos_valor:
                 valor = p["stock"] * p["costo_unitario"]
                 mensaje += f"  • {p['codigo']}: {valor:,.2f} USD ({p['stock']:.0f} u. × {p['costo_unitario']:.2f})\n"
@@ -284,19 +284,19 @@ class FinancialAdvisor:
 
     @classmethod
     def _analisis_deudas(cls) -> Dict[str, Any]:
-        """Análisis detallado de deudas."""
+        """Analisis detallado de deudas."""
         deudas = DeudaService.obtener_deudas_pendientes()
 
         por_pagar = deudas.get("por_pagar", [])
         por_cobrar = deudas.get("por_cobrar", [])
 
         if not por_pagar and not por_cobrar:
-            return {"success": True, "message": "✅ No hay deudas pendientes. ¡Excelente!"}
+            return {"success": True, "message": "✅ No deudas pendientes. Excelente!"}
 
         total_pagar = sum(convert_to_usd(d["monto"], d["moneda"]) for d in por_pagar)
         total_cobrar = sum(convert_to_usd(d["monto"], d["moneda"]) for d in por_cobrar)
 
-        mensaje = "📋 <b>ANÁLISIS DE DEUDAS</b>\n"
+        mensaje = "📋 <b>ANALISIS DE DEUDAS</b>\n"
         mensaje += "━" * 30 + "\n\n"
 
         if por_pagar:
@@ -325,17 +325,17 @@ class FinancialAdvisor:
 
         posicion = total_cobrar - total_pagar
         emoji = "✅" if posicion >= 0 else "⚠️"
-        mensaje += f"{emoji} <b>Posición neta: {posicion:+,.2f} USD</b>\n"
+        mensaje += f"{emoji} <b>Posicion neta: {posicion:+,.2f} USD</b>\n"
 
         return {"success": True, "message": mensaje}
 
     @classmethod
     def _analisis_tendencias(cls) -> Dict[str, Any]:
-        """Análisis de tendencias con comparación temporal."""
+        """Analisis de tendencias con comparacion temporal."""
         historial = ContabilidadService.obtener_historial(30)
 
         if not historial:
-            return {"success": True, "message": "📊 No hay datos suficientes para analizar tendencias."}
+            return {"success": True, "message": "📊 No datos suficientes para analizar tendencias."}
 
         ahora = datetime.now()
 
@@ -352,7 +352,7 @@ class FinancialAdvisor:
             elif m["tipo"] == "gasto":
                 semanas[semana]["gastos"] += monto_usd
 
-        mensaje = "📈 <b>ANÁLISIS DE TENDENCIAS</b>\n"
+        mensaje = "📈 <b>ANALISIS DE TENDENCIAS</b>\n"
         mensaje += "━" * 30 + "\n\n"
 
         for semana in sorted(semanas.keys()):
@@ -373,9 +373,9 @@ class FinancialAdvisor:
             neto_ant = semana_ant["ingresos"] - semana_ant["gastos"]
 
             if neto_actual > neto_ant:
-                mensaje += "📈 <b>Tendencia: MEJORANDO</b> - El flujo neto mejoró respecto a la semana anterior.\n"
+                mensaje += "📈 <b>Tendencia: MEJORANDO</b> - El flujo neto mejoro respecto a la semana anterior.\n"
             elif neto_actual < neto_ant:
-                mensaje += "📉 <b>Tendencia: EN DESCENSO</b> - El flujo neto empeoró respecto a la semana anterior.\n"
+                mensaje += "📉 <b>Tendencia: EN DESCENSO</b> - El flujo neto empeoro respecto a la semana anterior.\n"
             else:
                 mensaje += "➡️ <b>Tendencia: ESTABLE</b> - El flujo se mantiene similar.\n"
 
@@ -406,7 +406,7 @@ class FinancialAdvisor:
         # Alerta: muchos gastos en poco tiempo
         gastos_recientes = [m for m in historial if m["tipo"] == "gasto"]
         if len(gastos_recientes) > 10:
-            alertas.append(f"📊 Alto volumen de gastos: {len(gastos_recientes)} en 7 días")
+            alertas.append(f"📊 Alto volumen de gastos: {len(gastos_recientes)} en 7 dias")
 
         # Alerta: productos con stock bajo
         try:
@@ -414,7 +414,7 @@ class FinancialAdvisor:
             bajo = [p for p in productos if p["stock"] <= 2]
             if bajo:
                 codigos = ", ".join(p["codigo"] for p in bajo[:3])
-                alertas.append(f"📦 Stock crítico: {codigos}")
+                alertas.append(f"📦 Stock critico: {codigos}")
         except Exception:
             pass
 
@@ -437,19 +437,19 @@ class FinancialAdvisor:
             recs.append("💡 Flujo negativo esta semana. Revisa los gastos no esenciales.")
 
         if por_pagar > total_usd * 0.5:
-            recs.append("💡 Las deudas representan más del 50% del capital. Prioriza pagos.")
+            recs.append("💡 Las deudas representan mas del 50% del capital. Prioriza pagos.")
 
         if por_cobrar > 0 and por_cobrar > por_pagar:
-            recs.append("💡 Tienes más por cobrar que por pagar. Gestiona los cobros pendientes.")
+            recs.append("💡 Tienes mas por cobrar que por pagar. Gestiona los cobros pendientes.")
 
         if ingresos_30d > 0 and gastos_30d / ingresos_30d > 0.8:
-            recs.append("💡 Los gastos son más del 80% de los ingresos. Optimiza costos.")
+            recs.append("💡 Los gastos son mas del 80% de los ingresos. Optimiza costos.")
 
         if total_usd > 1000 and flujo_neto > 0:
             recs.append("💡 Buen momento para invertir en inventario o expandir operaciones.")
 
         if not recs:
-            recs.append("✅ El negocio muestra indicadores saludables. ¡Sigue así!")
+            recs.append("✅ El negocio muestra indicadores saludables. Sigue ayes!")
 
         return recs
 

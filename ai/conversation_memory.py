@@ -25,7 +25,7 @@ class Message:
 
 
 class ConversationMemory:
-    """Memoria de conversación por usuario con ventana deslizante."""
+    """Memoria de conversacion por usuario con ventana deslizante."""
 
     _conversations: Dict[int, List[Message]] = defaultdict(list)
     _last_activity: Dict[int, float] = {}
@@ -57,7 +57,7 @@ class ConversationMemory:
 
     @classmethod
     def get_last_intent(cls, user_id: int) -> Optional[str]:
-        """Retorna la última intención detectada para contexto."""
+        """Retorna la ultima intencion detectada para contexto."""
         messages = cls._conversations.get(user_id, [])
         for msg in reversed(messages):
             if msg.intent:
@@ -80,8 +80,8 @@ class ConversationMemory:
             parts.append(f"Intenciones recientes del usuario: {', '.join(recent_intents)}")
         if failed:
             parts.append(
-                f"El usuario tuvo {len(failed)} operación(es) fallida(s) recientemente, "
-                "podría necesitar ayuda adicional."
+                f"El usuario tuvo {len(failed)} operation(es) fallida(s) recientemente, "
+                "podria necesitar ayuda adicional."
             )
         return "\n".join(parts)
 

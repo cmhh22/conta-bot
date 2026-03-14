@@ -1,5 +1,5 @@
 """
-Servicio de contabilidad - Lógica de negocio para movimientos financieros.
+Accounting service - Business logic for financial transactions.
 """
 import logging
 from typing import Dict, Any, List
@@ -14,14 +14,14 @@ logger = logging.getLogger(__name__)
 
 
 class ContabilidadService:
-    """Servicio para operaciones contables."""
+    """Service for accounting operations."""
     
     @staticmethod
     def registrar_ingreso(monto: float, moneda: str, caja_id: int, user_id: int, 
                          descripcion: str = "Ingreso") -> Dict[str, Any]:
-        """Registra un ingreso."""
+        """Record an income transaction."""
         with get_db_connection() as conn:
-            movimiento_id = MovimientoRepository.crear(
+            movimiento_id = MovimientoRepository.create(
                 conn, 'ingreso', monto, moneda, caja_id, user_id, descripcion
             )
         return {"movimiento_id": movimiento_id, "monto": monto, "moneda": moneda, "caja_id": caja_id}
@@ -29,22 +29,22 @@ class ContabilidadService:
     @staticmethod
     def registrar_gasto(monto: float, moneda: str, caja_id: int, user_id: int, 
                        descripcion: str) -> Dict[str, Any]:
-        """Registra un gasto, validando saldo suficiente."""
+        """Record an expense, validating sufficient balance."""
         with get_db_connection() as conn:
             saldo_actual = MovimientoRepository.get_saldo_caja(conn, caja_id, moneda)
             
-            # Obtener nombre de la caja para el mensaje de error
+            # Get box name for error message
             from services.cajas_service import CajaService
             caja = CajaService.obtener_por_id(caja_id)
             caja_nombre = caja['nombre'] if caja else str(caja_id)
             
             if saldo_actual < monto:
                 raise ValueError(
-                    f"Saldo insuficiente en caja {caja_nombre.upper()} ({moneda.upper()}). "
-                    f"Disponible: {saldo_actual:.2f} {moneda.upper()}."
+                    f"Insufficient balance in box {caja_nombre.upper()} ({moneda.upper()}). "
+                    f"Available: {saldo_actual:.2f} {moneda.upper()}."
                 )
             
-            movimiento_id = MovimientoRepository.crear(
+            movimiento_id = MovimientoRepository.create(
                 conn, 'gasto', monto, moneda, caja_id, user_id, descripcion
             )
         
@@ -52,7 +52,7 @@ class ContabilidadService:
     
     @staticmethod
     def obtener_balance() -> Dict[str, Dict[str, float]]:
-        """Obtiene el balance agrupado por caja y moneda."""
+        """Get balance grouped by box and currency."""
         with get_db_connection() as conn:
             resultados = MovimientoRepository.obtener_balance_por_caja(conn)
         
@@ -70,7 +70,7 @@ class ContabilidadService:
     
     @staticmethod
     def obtener_saldo_caja(caja_id: int, moneda: str) -> float:
-        """Obtiene el saldo actual de una caja."""
+        """Get current balance for a box."""
         with get_db_connection() as conn:
             return MovimientoRepository.get_saldo_caja(conn, caja_id, moneda)
     
@@ -78,45 +78,45 @@ class ContabilidadService:
     def registrar_traspaso(monto: float, moneda_origen: str, caja_origen_id: int,
                           moneda_destino: str, caja_destino_id: int, user_id: int,
                           motivo: str) -> Dict[str, Any]:
-        """Registra un traspaso entre cajas con conversión de moneda."""
+        """Record a transfer between boxes with currency conversion."""
         if caja_origen_id == caja_destino_id and moneda_origen == moneda_destino:
-            raise ValueError("Las cajas y monedas de origen y destino no pueden ser iguales.")
+            raise ValueError("Source and destination boxes/currencies cannot be the same.")
         
         with get_db_connection() as conn:
-            # Validar saldo suficiente
+            # Validate sufficient balance
             saldo_actual = MovimientoRepository.get_saldo_caja(conn, caja_origen_id, moneda_origen)
             if saldo_actual < monto:
                 from services.cajas_service import CajaService
                 caja_origen = CajaService.obtener_por_id(caja_origen_id)
                 caja_nombre = caja_origen['nombre'] if caja_origen else str(caja_origen_id)
                 raise ValueError(
-                    f"Saldo insuficiente en caja de origen {caja_nombre.upper()} "
-                    f"({moneda_origen.upper()}). Disponible: {saldo_actual:.2f} {moneda_origen.upper()}."
+                    f"Insufficient balance in source box {caja_nombre.upper()} "
+                    f"({moneda_origen.upper()}). Available: {saldo_actual:.2f} {moneda_origen.upper()}."
                 )
             
-            # Calcular monto destino
+            # Calculate destination amount
             if moneda_origen == moneda_destino:
                 monto_destino = monto
             else:
                 monto_destino = convert_currency(monto, moneda_origen, moneda_destino)
             
-            # Obtener nombres de cajas para descripción
+            # Get box names for description
             from services.cajas_service import CajaService
             caja_origen_obj = CajaService.obtener_por_id(caja_origen_id)
             caja_destino_obj = CajaService.obtener_por_id(caja_destino_id)
             caja_origen_nombre = caja_origen_obj['nombre'] if caja_origen_obj else str(caja_origen_id)
             caja_destino_nombre = caja_destino_obj['nombre'] if caja_destino_obj else str(caja_destino_id)
             
-            # Registrar egreso en caja origen (tipo 'traspaso' se resta)
-            MovimientoRepository.crear(
+            # Record outgoing movement in source box (type 'traspaso' is subtracted)
+            MovimientoRepository.create(
                 conn, 'traspaso', monto, moneda_origen, caja_origen_id, user_id,
-                f"TRASPASO (Egreso): A {caja_destino_nombre.upper()}/{moneda_destino.upper()} - Motivo: {motivo}"
+                f"TRANSFER (Outgoing): To {caja_destino_nombre.upper()}/{moneda_destino.upper()} - Reason: {motivo}"
             )
             
-            # Registrar ingreso en caja destino (tipo 'ingreso' se suma)
-            MovimientoRepository.crear(
+            # Record income in destination box (type 'ingreso' is added)
+            MovimientoRepository.create(
                 conn, 'ingreso', monto_destino, moneda_destino, caja_destino_id, user_id,
-                f"TRASPASO (Ingreso): Desde {caja_origen_nombre.upper()}/{moneda_origen.upper()} - Motivo: {motivo}"
+                f"TRANSFER (Incoming): From {caja_origen_nombre.upper()}/{moneda_origen.upper()} - Reason: {motivo}"
             )
         
         return {
@@ -130,7 +130,7 @@ class ContabilidadService:
     
     @staticmethod
     def obtener_historial(dias: int = 7) -> List[Dict[str, Any]]:
-        """Obtiene el historial de movimientos de los últimos N días."""
+        """Get transaction history from the last N days."""
         fecha_desde = datetime.now() - timedelta(days=dias)
         
         with get_db_connection() as conn:
@@ -150,7 +150,7 @@ class ContabilidadService:
     
     @staticmethod
     def exportar_movimientos() -> List[Dict[str, Any]]:
-        """Exporta todos los movimientos."""
+        """Export all transactions."""
         with get_db_connection() as conn:
             movimientos = MovimientoRepository.obtener_todos(conn)
         
@@ -158,12 +158,12 @@ class ContabilidadService:
 
 
 class DeudaService:
-    """Servicio para gestión de deudas."""
+    """Service for debt management."""
     
     @staticmethod
-    def actualizar_deuda(actor_id: str, monto: float, moneda: str, tipo: str,
+    def update_deuda(actor_id: str, monto: float, moneda: str, tipo: str,
                         es_incremento: bool = True) -> float:
-        """Actualiza o crea una deuda."""
+        """Update or create a debt."""
         with get_db_connection() as conn:
             deuda = DeudaRepository.obtener_por_actor(conn, actor_id, moneda, tipo)
             
@@ -174,37 +174,37 @@ class DeudaService:
                 else:
                     nuevo_monto = max(0, monto_actual - monto)
                 
-                DeudaRepository.actualizar_monto(conn, actor_id, moneda, tipo, nuevo_monto)
+                DeudaRepository.update_monto(conn, actor_id, moneda, tipo, nuevo_monto)
                 return nuevo_monto
             else:
                 if not es_incremento:
-                    raise ValueError(f"No existe deuda {tipo} para {actor_id} en {moneda}")
+                    raise ValueError(f"Debt {tipo} for {actor_id} in {moneda} does not exist")
                 
-                DeudaRepository.crear(conn, actor_id, monto, moneda, tipo)
+                DeudaRepository.create(conn, actor_id, monto, moneda, tipo)
                 return monto
     
     @staticmethod
     def liquidar_deuda_vendedor(actor_id: str, monto_pagado: float, 
                                moneda_pago: str) -> float:
-        """Liquida una deuda POR_COBRAR con un pago."""
-        # Convertir pago a USD (moneda base de deudas)
+        """Settle a POR_COBRAR debt with a payment."""
+        # Convert payment to USD (debt base currency)
         monto_liquidado_usd = convert_to_usd(monto_pagado, moneda_pago)
         
         with get_db_connection() as conn:
             deuda = DeudaRepository.obtener_por_actor(conn, actor_id, 'usd', 'POR_COBRAR')
             
             if not deuda:
-                logger.warning(f"No se encontró deuda POR_COBRAR para {actor_id}")
+                logger.warning(f"No POR_COBRAR debt found for {actor_id}")
                 return 0.0
             
             nuevo_monto = max(0, deuda['monto_pendiente'] - monto_liquidado_usd)
-            DeudaRepository.actualizar_monto(conn, actor_id, 'usd', 'POR_COBRAR', nuevo_monto)
+            DeudaRepository.update_monto(conn, actor_id, 'usd', 'POR_COBRAR', nuevo_monto)
         
         return monto_liquidado_usd
     
     @staticmethod
     def obtener_deudas_pendientes() -> Dict[str, List[Dict[str, Any]]]:
-        """Obtiene todas las deudas pendientes agrupadas por tipo."""
+        """Get all pending debts grouped by type."""
         with get_db_connection() as conn:
             deudas = DeudaRepository.obtener_pendientes(conn)
         

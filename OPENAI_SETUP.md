@@ -1,107 +1,107 @@
-# Configuración de OpenAI
+# OpenAI Setup
 
-Este documento explica cómo configurar OpenAI para mejorar la comprensión del lenguaje natural del chatbot.
+This document explains how to configure OpenAI to improve the chatbot's natural language understanding.
 
-## 🔑 Cómo Obtener un Token de OpenAI
+## 🔑 How to Get an OpenAI Token
 
-### Paso 1: Crear una Cuenta en OpenAI
+### Step 1: Create an OpenAI Account
 
-1. Ve a [https://platform.openai.com/](https://platform.openai.com/)
-2. Haz clic en **"Sign up"** (Registrarse)
-3. Completa el registro con tu email o cuenta de Google/Microsoft
+1. Go to [https://platform.openai.com/](https://platform.openai.com/)
+2. Click **"Sign up"**
+3. Complete registration with your email or Google/Microsoft account
 
-### Paso 2: Agregar Método de Pago
+### Step 2: Add a Payment Method
 
-1. Una vez registrado, ve a **"Settings"** → **"Billing"**
-2. Agrega un método de pago (tarjeta de crédito)
-3. OpenAI requiere método de pago para usar la API (aunque hay créditos gratuitos iniciales)
+1. Once registered, go to **"Settings"** → **"Billing"**
+2. Add a payment method (credit card)
+3. OpenAI requires a payment method to use the API (even though there are initial free credits)
 
-### Paso 3: Generar API Key
+### Step 3: Generate an API Key
 
-1. Ve a [https://platform.openai.com/api-keys](https://platform.openai.com/api-keys)
-2. Haz clic en **"Create new secret key"**
-3. Dale un nombre descriptivo (ej: "ContaBot")
-4. **IMPORTANTE**: Copia la clave inmediatamente, solo se muestra una vez
-5. Guarda la clave de forma segura
+1. Go to [https://platform.openai.com/api-keys](https://platform.openai.com/api-keys)
+2. Click **"Create new secret key"**
+3. Give it a descriptive name (e.g., "ContaBot")
+4. **IMPORTANT**: Copy the key immediately; it is shown only once
+5. Save the key securely
 
-### Paso 4: Configurar en el Bot
+### Step 4: Configure It in the Bot
 
-Tienes dos opciones:
+You have two options:
 
-#### Opción A: Variable de Entorno (Recomendado)
+#### Option A: Environment Variable (Recommended)
 
 ```bash
 # Windows PowerShell
-$env:OPENAI_API_KEY="tu-api-key-aqui"
+$env:OPENAI_API_KEY="your-api-key-here"
 
 # Windows CMD
-set OPENAI_API_KEY=tu-api-key-aqui
+set OPENAI_API_KEY=your-api-key-here
 
 # Linux/Mac
-export OPENAI_API_KEY="tu-api-key-aqui"
+export OPENAI_API_KEY="your-api-key-here"
 ```
 
-#### Opción B: Archivo config_secret.py
+#### Option B: config_secret.py File
 
-Agrega la clave a tu archivo `config_secret.py`:
+Add the key to your `config_secret.py` file:
 
 ```python
-TOKEN = "tu_token_telegram"
+TOKEN = "your_telegram_token"
 ADMIN_USER_IDS = [123456789]
 
 # OpenAI Configuration
-OPENAI_API_KEY = "sk-proj-..."  # Tu API key aquí
+OPENAI_API_KEY = "sk-proj-..."  # Your API key here
 ```
 
-Y actualiza `core/config.py` para leerla:
+And update `core/config.py` to read it:
 
 ```python
-# En config_secret.py ya está, solo necesitas agregarlo allí
+# It is already in config_secret.py; you only need to add it there
 ```
 
-## 💰 Costos de OpenAI
+## 💰 OpenAI Costs
 
-- **Modelo usado**: `gpt-4o-mini` (el más económico)
-- **Costo aproximado**: ~$0.15 por 1M tokens de entrada, ~$0.60 por 1M tokens de salida
-- **Uso típico**: Cada mensaje del usuario consume ~200-500 tokens
-- **Estimación**: ~2000-5000 mensajes por $1 USD
+- **Model used**: `gpt-4o-mini` (the most economical)
+- **Approximate cost**: ~$0.15 per 1M input tokens, ~$0.60 per 1M output tokens
+- **Typical usage**: Each user message consumes ~200-500 tokens
+- **Estimate**: ~2000-5000 messages per $1 USD
 
-### Créditos Gratuitos
+### Free Credits
 
-OpenAI suele ofrecer créditos gratuitos iniciales ($5-18 USD) para nuevos usuarios, suficientes para probar el sistema.
+OpenAI usually offers initial free credits ($5-18 USD) for new users, enough to test the system.
 
-## ✅ Verificar que Funciona
+## ✅ Verify It Works
 
-1. Inicia el bot: `python bot.py`
-2. Deberías ver en los logs: `"🤖 OpenAI activado - Usando IA avanzada..."`
-3. Prueba escribiendo: "Hola, ¿cuánto dinero hay en las cajas?"
-4. El bot debería responder correctamente
+1. Start the bot: `python bot.py`
+2. You should see in logs: `"🤖 OpenAI enabled - Using advanced AI..."`
+3. Test by writing: "Hello, how much money is in the cash boxes?"
+4. The bot should respond correctly
 
-## 🔄 Fallback Automático
+## 🔄 Automatic Fallback
 
-Si OpenAI no está configurado o falla, el sistema automáticamente usa el **parser de reglas básico** que también funciona bien para la mayoría de casos.
+If OpenAI is not configured or fails, the system automatically uses the **basic rule-based parser**, which also works well for most cases.
 
-## 🛡️ Seguridad
+## 🛡️ Security
 
-- **NUNCA** compartas tu API key
-- **NUNCA** la subas a repositorios públicos
-- Usa variables de entorno o archivos `.gitignore`
-- Si comprometes una key, revócala inmediatamente en OpenAI
+- **NEVER** share your API key
+- **NEVER** upload it to public repositories
+- Use environment variables or `.gitignore`-protected files
+- If a key is compromised, revoke it immediately in OpenAI
 
-## 📊 Monitoreo de Uso
+## 📊 Usage Monitoring
 
-Puedes monitorear tu uso en:
+You can monitor usage at:
 - [https://platform.openai.com/usage](https://platform.openai.com/usage)
 
-Aquí verás cuántos tokens has usado y cuánto has gastado.
+There you can see how many tokens you have used and how much you have spent.
 
-## 🚨 Límites y Rate Limits
+## 🚨 Limits and Rate Limits
 
-OpenAI tiene límites de rate (velocidad de peticiones). Si el bot recibe muchos mensajes simultáneos, puede haber delays. El sistema maneja esto automáticamente con el fallback a reglas.
+OpenAI has rate limits (request speed). If the bot receives many simultaneous messages, delays may occur. The system handles this automatically with the rules fallback.
 
-## 💡 Consejos
+## 💡 Tips
 
-- El modelo `gpt-4o-mini` es rápido y económico, perfecto para este uso
-- Si necesitas más precisión, puedes cambiar a `gpt-4o` en `ai/openai_service.py`
-- Los costos son muy bajos para uso normal (centavos por día)
+- The `gpt-4o-mini` model is fast and cost-effective, perfect for this use case
+- If you need higher accuracy, you can switch to `gpt-4o` in `ai/openai_service.py`
+- Costs are very low for normal usage (cents per day)
 

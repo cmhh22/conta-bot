@@ -1,5 +1,5 @@
 """
-Servicio para operaciones con cajas externas.
+Service for external cash box operations.
 """
 import logging
 from typing import List, Dict, Any, Optional
@@ -10,14 +10,14 @@ logger = logging.getLogger(__name__)
 
 
 class CajaExternaService:
-    """Servicio para operaciones con cajas externas."""
+    """Service for external cash box operations."""
     
     @staticmethod
-    def crear(nombre: str, ubicacion: str, descripcion: Optional[str] = None,
+    def create(nombre: str, ubicacion: str, descripcion: Optional[str] = None,
               porcentaje_envio: float = 0) -> Dict[str, Any]:
-        """Crea una nueva caja externa."""
+        """Create a new external cash box."""
         with get_db_connection() as conn:
-            caja_id = CajaExternaRepository.crear(conn, nombre, ubicacion, descripcion, porcentaje_envio)
+            caja_id = CajaExternaRepository.create(conn, nombre, ubicacion, descripcion, porcentaje_envio)
             caja = CajaExternaRepository.obtener_por_id(conn, caja_id)
         
         return {
@@ -31,7 +31,7 @@ class CajaExternaService:
     
     @staticmethod
     def listar() -> List[Dict[str, Any]]:
-        """Obtiene todas las cajas externas."""
+        """Get all external cash boxes."""
         with get_db_connection() as conn:
             cajas = CajaExternaRepository.obtener_todos(conn)
         
@@ -49,7 +49,7 @@ class CajaExternaService:
     
     @staticmethod
     def obtener_por_id(caja_externa_id: int) -> Optional[Dict[str, Any]]:
-        """Obtiene una caja externa por su ID."""
+        """Get an external cash box by ID."""
         with get_db_connection() as conn:
             caja = CajaExternaRepository.obtener_por_id(conn, caja_externa_id)
         
@@ -67,7 +67,7 @@ class CajaExternaService:
     
     @staticmethod
     def obtener_por_nombre(nombre: str) -> Optional[Dict[str, Any]]:
-        """Obtiene una caja externa por su nombre."""
+        """Get an external cash box by name."""
         with get_db_connection() as conn:
             caja = CajaExternaRepository.obtener_por_nombre(conn, nombre)
         
@@ -84,19 +84,19 @@ class CajaExternaService:
         }
     
     @staticmethod
-    def actualizar(caja_externa_id: int, nuevo_nombre: str, nueva_ubicacion: str,
+    def update(caja_externa_id: int, nuevo_nombre: str, nueva_ubicacion: str,
                    nueva_descripcion: Optional[str] = None,
                    nuevo_porcentaje_envio: Optional[float] = None) -> int:
-        """Actualiza una caja externa."""
+        """Update an external cash box."""
         with get_db_connection() as conn:
-            return CajaExternaRepository.actualizar(
+            return CajaExternaRepository.update(
                 conn, caja_externa_id, nuevo_nombre, nueva_ubicacion,
                 nueva_descripcion, nuevo_porcentaje_envio
             )
     
     @staticmethod
-    def eliminar(caja_externa_id: int) -> int:
-        """Elimina una caja externa."""
+    def delete(caja_externa_id: int) -> int:
+        """Delete an external cash box."""
         with get_db_connection() as conn:
-            return CajaExternaRepository.eliminar(conn, caja_externa_id)
+            return CajaExternaRepository.delete(conn, caja_externa_id)
 

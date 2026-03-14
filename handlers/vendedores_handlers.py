@@ -1,5 +1,5 @@
 """
-Handlers para gestión de vendedores (CRUD completo).
+Handlers for seller management (full CRUD).
 """
 import logging
 from typing import List
@@ -17,15 +17,15 @@ from services.vendedores_service import VendedorService
 
 logger = logging.getLogger(__name__)
 
-# Estados de la conversación
+# Conversation states
 MENU, CREAR_NOMBRE, EDIT_NOMBRE, CONFIRM_DELETE = range(4)
 
 
 def _main_menu_kb() -> InlineKeyboardMarkup:
-    """Genera el teclado del menú principal."""
+    """Build the main menu keyboard."""
     keyboard = [
         [
-            InlineKeyboardButton("➕ Crear", callback_data="vend:create"),
+            InlineKeyboardButton("➕ Create", callback_data="vend:create"),
             InlineKeyboardButton("📋 Listar", callback_data="vend:list"),
         ],
         [InlineKeyboardButton("❌ Cerrar", callback_data="vend:close")],
@@ -34,21 +34,21 @@ def _main_menu_kb() -> InlineKeyboardMarkup:
 
 
 async def _render_list(update: Update, context: ContextTypes.DEFAULT_TYPE) -> None:
-    """Renderiza la lista de vendedores."""
+    """Render the sellers list."""
     from utils.telegram_helpers import reply_html
     
     vendedores = VendedorService.listar()
     
     if not vendedores:
-        text = "👤 <b>Vendedores</b>\n\nAún no hay vendedores registrados."
+        text = "👤 <b>Sellers</b>\n\nNo sellers are registered yet."
         kb = InlineKeyboardMarkup([
-            [InlineKeyboardButton("➕ Crear", callback_data="vend:create")],
-            [InlineKeyboardButton("⬅️ Volver", callback_data="vend:back")]
+            [InlineKeyboardButton("➕ Create", callback_data="vend:create")],
+            [InlineKeyboardButton("⬅️ Back", callback_data="vend:back")]
         ])
         await reply_html(update, text, reply_markup=kb)
         return
     
-    text = "👤 <b>Vendedores</b>\n\nSelecciona una acción para cada ítem:"
+    text = "👤 <b>Sellers</b>\n\nSelect an action for each item:"
     keyboard: List[List[InlineKeyboardButton]] = []
     for vend in vendedores:
         vend_id = vend["id"]
@@ -57,7 +57,7 @@ async def _render_list(update: Update, context: ContextTypes.DEFAULT_TYPE) -> No
             InlineKeyboardButton(f"✏️ {nombre}", callback_data=f"vend:edit:{vend_id}"),
             InlineKeyboardButton("🗑️", callback_data=f"vend:del:{vend_id}"),
         ])
-    keyboard.append([InlineKeyboardButton("⬅️ Volver", callback_data="vend:back")])
+    keyboard.append([InlineKeyboardButton("⬅️ Back", callback_data="vend:back")])
     kb = InlineKeyboardMarkup(keyboard)
     
     await reply_html(update, text, reply_markup=kb)
@@ -65,10 +65,10 @@ async def _render_list(update: Update, context: ContextTypes.DEFAULT_TYPE) -> No
 
 @admin_only
 async def vendedores_entry(update: Update, context: ContextTypes.DEFAULT_TYPE) -> int:
-    """Punto de entrada para la gestión de vendedores."""
+    """Entry point for seller management."""
     from utils.telegram_helpers import reply_html
     
-    # Limpiar cualquier dato residual de conversaciones anteriores
+    # Clear any residual data from previous conversations
     keys_to_remove = [
         "vend_nombre", "vend_edit_id", "vend_del_id"
     ]
@@ -76,8 +76,8 @@ async def vendedores_entry(update: Update, context: ContextTypes.DEFAULT_TYPE) -
         context.user_data.pop(key, None)
     
     msg = (
-        "👤 <b>Gestión de Vendedores</b>\n\n"
-        "Administra tus vendedores. Usa el menú de abajo."
+        "👤 <b>Seller Management</b>\n\n"
+        "Manage your sellers. Use the menu below."
     )
     await reply_html(update, msg, reply_markup=_main_menu_kb())
     return MENU
@@ -85,7 +85,7 @@ async def vendedores_entry(update: Update, context: ContextTypes.DEFAULT_TYPE) -
 
 @admin_only
 async def menu_callback(update: Update, context: ContextTypes.DEFAULT_TYPE) -> int:
-    """Maneja los callbacks del menú."""
+    """Handle menu callbacks."""
     from utils.telegram_helpers import reply_html, reply_text
     
     q = update.callback_query
@@ -96,7 +96,7 @@ async def menu_callback(update: Update, context: ContextTypes.DEFAULT_TYPE) -> i
     if data == "vend:create":
         await reply_html(
             update,
-            "🆕 <b>Nuevo Vendedor</b>\n\nEnvía el <b>nombre</b> del vendedor:"
+            "🆕 <b>New Seller</b>\n\nSend the seller <b>name</b>:"
         )
         return CREAR_NOMBRE
     
@@ -108,16 +108,16 @@ async def menu_callback(update: Update, context: ContextTypes.DEFAULT_TYPE) -> i
         return await vendedores_entry(update, context)
     
     if data == "vend:close":
-        # Limpiar todos los datos de la conversación
+        # Clear all conversation data
         keys_to_remove = [
             "vend_nombre", "vend_edit_id", "vend_del_id"
         ]
         for key in keys_to_remove:
             context.user_data.pop(key, None)
-        await reply_text(update, "✅ Cerrado.")
+        await reply_text(update, "✅ Closed.")
         return ConversationHandler.END
     
-    # Acciones por ítem
+    # Per-item actions
     if data.startswith("vend:edit:"):
         from utils.telegram_helpers import reply_html, reply_text
         
@@ -125,13 +125,13 @@ async def menu_callback(update: Update, context: ContextTypes.DEFAULT_TYPE) -> i
         context.user_data["vend_edit_id"] = vend_id
         vendedor = VendedorService.obtener_por_id(vend_id)
         if not vendedor:
-            await reply_text(update, "❌ Vendedor no encontrado.")
+            await reply_text(update, "❌ Seller not found.")
             return MENU
         await reply_html(
             update,
-            f"✏️ <b>Renombrar Vendedor</b>\n\n"
-            f"Actual: <code>{vendedor['name']}</code>\n"
-            f"Envía el <b>nuevo nombre</b>:"
+            f"✏️ <b>Rename Seller</b>\n\n"
+            f"Current: <code>{vendedor['name']}</code>\n"
+            f"Send the <b>new name</b>:"
         )
         return EDIT_NOMBRE
     
@@ -142,17 +142,17 @@ async def menu_callback(update: Update, context: ContextTypes.DEFAULT_TYPE) -> i
         context.user_data["vend_del_id"] = vend_id
         vendedor = VendedorService.obtener_por_id(vend_id)
         if not vendedor:
-            await reply_text(update, "❌ Vendedor no encontrado.")
+            await reply_text(update, "❌ Seller not found.")
             return MENU
         kb = InlineKeyboardMarkup([
-            [InlineKeyboardButton("✅ Sí, borrar", callback_data="vend:delok"),
-             InlineKeyboardButton("↩️ Cancelar", callback_data="vend:cancel")]
+            [InlineKeyboardButton("✅ Yes, delete", callback_data="vend:delok"),
+             InlineKeyboardButton("↩️ Cancel", callback_data="vend:cancel")]
         ])
         await reply_html(
             update,
-            f"⚠️ <b>Confirmar eliminación</b>\n\n"
-            f"Vas a borrar: <code>{vendedor['name']}</code>\n"
-            f"Esta acción no se puede deshacer.",
+            f"⚠️ <b>Confirm deletion</b>\n\n"
+            f"You are about to delete: <code>{vendedor['name']}</code>\n"
+            f"This action cannot be undone.",
             reply_markup=kb
         )
         return CONFIRM_DELETE
@@ -162,22 +162,22 @@ async def menu_callback(update: Update, context: ContextTypes.DEFAULT_TYPE) -> i
         
         vend_id = context.user_data.get("vend_del_id")
         if vend_id is None:
-            await reply_text(update, "❌ No hay elemento para eliminar.")
+            await reply_text(update, "❌ No item selected for deletion.")
             await _render_list(update, context)
             return MENU
         try:
-            VendedorService.eliminar(int(vend_id))
-            # Limpiar el ID de eliminación
+            VendedorService.delete(int(vend_id))
+            # Clear delete ID
             context.user_data.pop("vend_del_id", None)
-            # Mostrar mensaje y luego la lista actualizada
-            await reply_text(update, "🗑️ Vendedor eliminado correctamente.")
+            # Show message, then updated list
+            await reply_text(update, "🗑️ Seller deleted successfully.")
             await _render_list(update, context)
         except ValueError as e:
             await reply_text(update, f"❌ {e}")
             await _render_list(update, context)
         except Exception as e:
-            logger.error(f"Error eliminando vendedor: {e}", exc_info=True)
-            await reply_text(update, "❌ No se pudo eliminar. Intenta de nuevo.")
+            logger.error(f"Error deleting seller: {e}", exc_info=True)
+            await reply_text(update, "❌ Could not delete. Try again.")
             await _render_list(update, context)
         return MENU
     
@@ -189,8 +189,8 @@ async def menu_callback(update: Update, context: ContextTypes.DEFAULT_TYPE) -> i
 
 
 @admin_only
-async def crear_nombre_receive(update: Update, context: ContextTypes.DEFAULT_TYPE) -> int:
-    """Recibe el nombre para crear un vendedor."""
+async def create_nombre_receive(update: Update, context: ContextTypes.DEFAULT_TYPE) -> int:
+    """Receive the name for creating a seller."""
     from utils.telegram_helpers import reply_html, reply_text
     
     if not update.message:
@@ -198,35 +198,35 @@ async def crear_nombre_receive(update: Update, context: ContextTypes.DEFAULT_TYP
     
     nombre = (update.message.text or "").strip()
     if not nombre:
-        await reply_text(update, "❌ El nombre no puede estar vacío. Envía un nombre válido.")
+        await reply_text(update, "❌ Name cannot be empty. Send a valid name.")
         return CREAR_NOMBRE
     
     try:
-        resultado = VendedorService.crear(nombre)
+        resultado = VendedorService.create(nombre)
         await reply_html(
             update,
-            f"✅ <b>Creado</b>\n\nVendedor: <code>{nombre}</code>"
+            f"✅ <b>Created</b>\n\nSeller: <code>{nombre}</code>"
         )
         await reply_html(
             update,
-            "¿Qué deseas hacer ahora?", reply_markup=_main_menu_kb()
+            "What would you like to do now?", reply_markup=_main_menu_kb()
         )
         return MENU
     except ValueError as e:
         if "UNIQUE" in str(e) or "ya existe" in str(e).lower():
-            await reply_text(update, "⚠️ Ya existe un vendedor con ese nombre. Usa otro nombre.")
+            await reply_text(update, "⚠️ A seller with that name already exists. Use another name.")
         else:
             await reply_text(update, f"❌ {e}")
         return CREAR_NOMBRE
     except Exception as e:
-        logger.error(f"Error creando vendedor: {e}", exc_info=True)
-        await reply_text(update, "❌ Ocurrió un error al crear. Intenta nuevamente.")
+        logger.error(f"Error creating seller: {e}", exc_info=True)
+        await reply_text(update, "❌ An error occurred while creating. Please try again.")
         return CREAR_NOMBRE
 
 
 @admin_only
 async def edit_nombre_receive(update: Update, context: ContextTypes.DEFAULT_TYPE) -> int:
-    """Recibe el nuevo nombre para editar un vendedor."""
+    """Receive the new name to edit a seller."""
     from utils.telegram_helpers import reply_html, reply_text
     
     if not update.message:
@@ -234,51 +234,51 @@ async def edit_nombre_receive(update: Update, context: ContextTypes.DEFAULT_TYPE
     
     vend_id = context.user_data.get("vend_edit_id")
     if vend_id is None:
-        await reply_text(update, "❌ No hay vendedor en edición.")
+        await reply_text(update, "❌ No seller is currently being edited.")
         return MENU
     
     nuevo_nombre = (update.message.text or "").strip()
     if not nuevo_nombre:
-        await reply_text(update, "❌ El nombre no puede estar vacío. Envía un nombre válido.")
+        await reply_text(update, "❌ Name cannot be empty. Send a valid name.")
         return EDIT_NOMBRE
     
     try:
-        VendedorService.actualizar(int(vend_id), nuevo_nombre)
+        VendedorService.update(int(vend_id), nuevo_nombre)
         await reply_html(
             update,
-            f"✅ <b>Actualizado</b>\n\nNuevo nombre: <code>{nuevo_nombre}</code>"
+            f"✅ <b>Updated</b>\n\nNew name: <code>{nuevo_nombre}</code>"
         )
         context.user_data.pop("vend_edit_id", None)
         await _render_list(update, context)
         return MENU
     except ValueError as e:
         if "UNIQUE" in str(e) or "ya existe" in str(e).lower():
-            await reply_text(update, "⚠️ Ya existe un vendedor con ese nombre. Usa otro nombre.")
+            await reply_text(update, "⚠️ A seller with that name already exists. Use another name.")
         else:
             await reply_text(update, f"❌ {e}")
         return EDIT_NOMBRE
     except Exception as e:
-        logger.error(f"Error actualizando vendedor: {e}", exc_info=True)
-        await reply_text(update, "❌ Ocurrió un error al actualizar. Intenta nuevamente.")
+        logger.error(f"Error updating seller: {e}", exc_info=True)
+        await reply_text(update, "❌ An error occurred while updating. Please try again.")
         return EDIT_NOMBRE
 
 
 async def cancel_command(update: Update, context: ContextTypes.DEFAULT_TYPE) -> int:
-    """Cancela la operación actual."""
+    """Cancel the current operation."""
     from utils.telegram_helpers import reply_text
     
-    # Limpiar todos los datos de la conversación
+    # Clear all conversation data
     keys_to_remove = [
         "vend_nombre", "vend_edit_id", "vend_del_id"
     ]
     for key in keys_to_remove:
         context.user_data.pop(key, None)
     
-    await reply_text(update, "✅ Operación cancelada.")
+    await reply_text(update, "✅ Operation canceled.")
     return ConversationHandler.END
 
 
-# ConversationHandler exportable
+# Exportable ConversationHandler
 vendedores_conv_handler = ConversationHandler(
     entry_points=[
         CommandHandler("vendedores", vendedores_entry),
@@ -288,7 +288,7 @@ vendedores_conv_handler = ConversationHandler(
             CallbackQueryHandler(menu_callback, pattern=r"^vend:.*"),
         ],
         CREAR_NOMBRE: [
-            MessageHandler(filters.TEXT & ~filters.COMMAND, crear_nombre_receive),
+            MessageHandler(filters.TEXT & ~filters.COMMAND, create_nombre_receive),
             CallbackQueryHandler(menu_callback, pattern=r"^vend:.*"),
         ],
         EDIT_NOMBRE: [

@@ -1,6 +1,6 @@
 """
 Handlers refactorizados para comandos de contabilidad.
-Solo manejan la interacción con Telegram y delegan la lógica a los servicios.
+Solo manejan la interaction con Telegram y delegan la logica a los servicios.
 """
 import csv
 import os
@@ -31,7 +31,7 @@ async def set_tasa_command(update: Update, context: ContextTypes.DEFAULT_TYPE) -
         
         nueva_tasa = validate_monto(context.args[1])
         
-        # Actualizar tasa global (temporal hasta implementar persistencia)
+        # Update tasa global (temporal hasta implementar persistencia)
         import core.config as config
         config.TASA_USD_CUP = nueva_tasa
         
@@ -40,7 +40,7 @@ async def set_tasa_command(update: Update, context: ContextTypes.DEFAULT_TYPE) -
             f"✅ <b>Tasa de Cambio Actualizada</b>\n\n"
             f"Nueva Tasa: <b>1 USD = {nueva_tasa:.2f} CUP</b>"
         )
-        logger.info(f"Tasa actualizada a 1 USD = {nueva_tasa} CUP")
+        logger.info(f"Tasa updated a 1 USD = {nueva_tasa} CUP")
         
     except (ValueError, ValidationError) as e:
         await reply_html(
@@ -50,15 +50,15 @@ async def set_tasa_command(update: Update, context: ContextTypes.DEFAULT_TYPE) -
         )
     except Exception as e:
         logger.error(f"Error inesperado en /set_tasa: {e}", exc_info=True)
-        await reply_text(update, "Ocurrió un error inesperado.")
+        await reply_text(update, "An error occurred inesperado.")
 
 
 @admin_only
 async def ingreso_command(update: Update, context: ContextTypes.DEFAULT_TYPE) -> None:
     """Registra un ingreso. Si no tiene argumentos, inicia el formulario interactivo."""
-    # Si no hay argumentos, el ConversationHandler se encargará de iniciar el formulario
+    # Si no hay argumentos, el ConversationHandler se encargara de iniciar el formulario
     if not context.args or len(context.args) == 0:
-        # El ConversationHandler manejará esto
+        # El ConversationHandler manejara esto
         return
     
     try:
@@ -70,7 +70,7 @@ async def ingreso_command(update: Update, context: ContextTypes.DEFAULT_TYPE) ->
         caja_nombre = context.args[2].lower().strip()
         caja = CajaService.obtener_por_nombre(caja_nombre)
         if not caja:
-            raise ValueError(f"Caja '{caja_nombre}' no encontrada. Usa /cajas para ver las cajas disponibles.")
+            raise ValueError(f"Caja '{caja_nombre}' not found. Usa /cajas para ver las cajas disponibles.")
         caja_id = caja['id']
         user_id = update.effective_user.id
         
@@ -80,7 +80,7 @@ async def ingreso_command(update: Update, context: ContextTypes.DEFAULT_TYPE) ->
         
         await reply_html(
             update,
-            f"✅ <b>¡Ingreso registrado!</b>\n\n"
+            f"✅ <b>Ingreso registrado!</b>\n\n"
             f"<b>Monto:</b> {monto:.2f} {moneda.upper()}\n"
             f"<b>Caja:</b> {caja['nombre'].upper()}"
         )
@@ -96,7 +96,7 @@ async def ingreso_command(update: Update, context: ContextTypes.DEFAULT_TYPE) ->
         )
     except Exception as e:
         logger.error(f"Error inesperado en /ingreso: {e}", exc_info=True)
-        await reply_text(update, "Ocurrió un error inesperado.")
+        await reply_text(update, "An error occurred inesperado.")
 
 
 @admin_only
@@ -111,7 +111,7 @@ async def gasto_command(update: Update, context: ContextTypes.DEFAULT_TYPE) -> N
         caja_nombre = context.args[2].lower().strip()
         caja = CajaService.obtener_por_nombre(caja_nombre)
         if not caja:
-            raise ValueError(f"Caja '{caja_nombre}' no encontrada. Usa /cajas para ver las cajas disponibles.")
+            raise ValueError(f"Caja '{caja_nombre}' not found. Usa /cajas para ver las cajas disponibles.")
         caja_id = caja['id']
         descripcion = " ".join(context.args[3:])
         user_id = update.effective_user.id
@@ -124,7 +124,7 @@ async def gasto_command(update: Update, context: ContextTypes.DEFAULT_TYPE) -> N
             update,
             f"💸 <b>Gasto Registrado!</b>\n\n"
             f"<b>Monto:</b> -{monto:.2f} {moneda.upper()} de {caja['nombre'].upper()}\n"
-            f"<b>Descripción:</b> {descripcion}"
+            f"<b>Description:</b> {descripcion}"
         )
         logger.info(f"Gasto de {monto} {moneda} en {caja['nombre']} registrado por {user_id}")
         
@@ -136,7 +136,7 @@ async def gasto_command(update: Update, context: ContextTypes.DEFAULT_TYPE) -> N
         )
     except (ValidationError, Exception) as e:
         logger.error(f"Error inesperado en /gasto: {e}", exc_info=True)
-        await reply_text(update, "Ocurrió un error inesperado al registrar el gasto.")
+        await reply_text(update, "An error occurred inesperado al registrar el gasto.")
 
 
 @admin_only
@@ -146,7 +146,7 @@ async def balance_command(update: Update, context: ContextTypes.DEFAULT_TYPE) ->
         balances = ContabilidadService.obtener_balance()
         
         if not balances:
-            await reply_text(update, "No hay ningún movimiento registrado todavía.")
+            await reply_text(update, "No ningun movimiento registrado todavia.")
             return
         
         respuesta = "--- 📊 Balance General ---\n\n"
@@ -161,7 +161,7 @@ async def balance_command(update: Update, context: ContextTypes.DEFAULT_TYPE) ->
         
     except Exception as e:
         logger.error(f"Error inesperado en /balance: {e}", exc_info=True)
-        await reply_text(update, "Ocurrió un error inesperado al calcular el balance.")
+        await reply_text(update, "An error occurred inesperado al calcular el balance.")
 
 
 @admin_only
@@ -179,14 +179,14 @@ async def cambio_command(update: Update, context: ContextTypes.DEFAULT_TYPE) -> 
         caja_origen_nombre = context.args[2].lower().strip()
         caja_origen_obj = CajaService.obtener_por_nombre(caja_origen_nombre)
         if not caja_origen_obj:
-            raise ValueError(f"Caja origen '{caja_origen_nombre}' no encontrada.")
+            raise ValueError(f"Caja origen '{caja_origen_nombre}' not found.")
         caja_origen_id = caja_origen_obj['id']
         
         moneda_destino = validate_moneda(context.args[3])
         caja_destino_nombre = context.args[4].lower().strip()
         caja_destino_obj = CajaService.obtener_por_nombre(caja_destino_nombre)
         if not caja_destino_obj:
-            raise ValueError(f"Caja destino '{caja_destino_nombre}' no encontrada.")
+            raise ValueError(f"Caja destino '{caja_destino_nombre}' not found.")
         caja_destino_id = caja_destino_obj['id']
         
         motivo = " ".join(context.args[5:])
@@ -216,7 +216,7 @@ async def cambio_command(update: Update, context: ContextTypes.DEFAULT_TYPE) -> 
         )
     except (ValidationError, Exception) as e:
         logger.error(f"Error inesperado en /cambio: {e}", exc_info=True)
-        await reply_text(update, "Ocurrió un error inesperado al registrar el traspaso.")
+        await reply_text(update, "An error occurred inesperado al registrar el traspaso.")
 
 
 @admin_only
@@ -232,7 +232,7 @@ async def pago_vendedor_command(update: Update, context: ContextTypes.DEFAULT_TY
         caja_nombre = context.args[3].lower().strip()
         caja = CajaService.obtener_por_nombre(caja_nombre)
         if not caja:
-            raise ValueError(f"Caja '{caja_nombre}' no encontrada. Usa /cajas para ver las cajas disponibles.")
+            raise ValueError(f"Caja '{caja_nombre}' not found. Usa /cajas para ver las cajas disponibles.")
         caja_id = caja['id']
         nota = " ".join(context.args[4:]) if len(context.args) > 4 else ""
         user_id = update.effective_user.id
@@ -243,7 +243,7 @@ async def pago_vendedor_command(update: Update, context: ContextTypes.DEFAULT_TY
         # Registrar ingreso
         ContabilidadService.registrar_ingreso(
             monto, moneda, caja_id, user_id,
-            f"PAGO VENDEDOR: {vendedor}. Liquidó deuda por {monto_liquidado_usd:.2f} USD. Nota: {nota}"
+            f"PAGO VENDEDOR: {vendedor}. Liquido deuda por {monto_liquidado_usd:.2f} USD. Nota: {nota}"
         )
         
         await reply_html(
@@ -263,7 +263,7 @@ async def pago_vendedor_command(update: Update, context: ContextTypes.DEFAULT_TY
         )
     except Exception as e:
         logger.error(f"Error inesperado en /pago_vendedor: {e}", exc_info=True)
-        await reply_text(update, "Ocurrió un error inesperado al registrar el pago.")
+        await reply_text(update, "An error occurred inesperado al registrar el pago.")
 
 
 @admin_only
@@ -279,7 +279,7 @@ async def pago_proveedor_command(update: Update, context: ContextTypes.DEFAULT_T
         caja_nombre = context.args[3].lower().strip()
         caja = CajaService.obtener_por_nombre(caja_nombre)
         if not caja:
-            raise ValueError(f"Caja '{caja_nombre}' no encontrada. Usa /cajas para ver las cajas disponibles.")
+            raise ValueError(f"Caja '{caja_nombre}' not found. Usa /cajas para ver las cajas disponibles.")
         caja_id = caja['id']
         motivo = " ".join(context.args[4:])
         user_id = update.effective_user.id
@@ -289,12 +289,12 @@ async def pago_proveedor_command(update: Update, context: ContextTypes.DEFAULT_T
             monto, moneda, caja_id, user_id, f"PAGO a Proveedor: {proveedor} - Motivo: {motivo}"
         )
         
-        # Actualizar deuda
+        # Update deuda
         try:
-            DeudaService.actualizar_deuda(proveedor, monto, moneda, 'POR_PAGAR', es_incremento=False)
+            DeudaService.update_deuda(proveedor, monto, moneda, 'POR_PAGAR', es_incremento=False)
             mensaje_deuda = f"<b>Deuda Actualizada:</b> Monto {monto:.2f} {moneda.upper()} restado de POR PAGAR."
         except ValueError:
-            mensaje_deuda = "<b>Aviso:</b> No se encontró deuda 'POR PAGAR' para este proveedor."
+            mensaje_deuda = "<b>Aviso:</b> No se encontro deuda 'POR PAGAR' para este proveedor."
         
         await reply_html(
             update,
@@ -314,7 +314,7 @@ async def pago_proveedor_command(update: Update, context: ContextTypes.DEFAULT_T
         )
     except Exception as e:
         logger.error(f"Error inesperado en /pago_proveedor: {e}", exc_info=True)
-        await reply_text(update, "Ocurrió un error inesperado al registrar el pago.")
+        await reply_text(update, "An error occurred inesperado al registrar el pago.")
 
 
 @admin_only
@@ -324,7 +324,7 @@ async def deudas_command(update: Update, context: ContextTypes.DEFAULT_TYPE) -> 
         deudas = DeudaService.obtener_deudas_pendientes()
         
         if not deudas['por_pagar'] and not deudas['por_cobrar']:
-            await reply_text(update, "✅ No hay deudas pendientes (por pagar o por cobrar).")
+            await reply_text(update, "✅ No deudas pendientes (por pagar o por cobrar).")
             return
         
         respuesta = "📊 <b>ESTADO DE DEUDAS PENDIENTES</b> 📊\n\n"
@@ -345,7 +345,7 @@ async def deudas_command(update: Update, context: ContextTypes.DEFAULT_TYPE) -> 
                     respuesta += f"\n  🏢 <b>{actor_id}</b>: -{monto_total:,.2f} {moneda.upper()}\n"
                     
                     if productos:
-                        respuesta += "    📦 <b>Mercancía:</b>\n"
+                        respuesta += "    📦 <b>Mercancia:</b>\n"
                         for prod in productos:
                             codigo = prod['producto_codigo']
                             nombre = prod['producto_nombre']
@@ -363,7 +363,7 @@ async def deudas_command(update: Update, context: ContextTypes.DEFAULT_TYPE) -> 
             for moneda, total in totales_por_pagar.items():
                 respuesta += f"  Total {moneda.upper()}: -{total:,.2f} {moneda.upper()}\n"
         else:
-            respuesta += "  <i>No hay deudas con proveedores pendientes.</i>\n"
+            respuesta += "  <i>No deudas con proveedores pendientes.</i>\n"
         
         respuesta += "\n"
         
@@ -378,13 +378,13 @@ async def deudas_command(update: Update, context: ContextTypes.DEFAULT_TYPE) -> 
             for moneda, total in totales_por_cobrar.items():
                 respuesta += f"  Total {moneda.upper()}: +{total:,.2f} {moneda.upper()}\n"
         else:
-            respuesta += "  <i>No hay deudas de vendedores pendientes.</i>\n"
+            respuesta += "  <i>No deudas de vendedores pendientes.</i>\n"
         
         await reply_html(update, respuesta)
         
     except Exception as e:
         logger.error(f"Error inesperado en /deudas: {e}", exc_info=True)
-        await reply_text(update, "Ocurrió un error inesperado al generar el reporte de deudas.")
+        await reply_text(update, "An error occurred inesperado al generar el reporte de deudas.")
 
 
 @admin_only
@@ -395,10 +395,10 @@ async def historial_command(update: Update, context: ContextTypes.DEFAULT_TYPE) 
         movimientos = ContabilidadService.obtener_historial(dias)
         
         if not movimientos:
-            await reply_text(update, f"✅ No se encontraron movimientos registrados en los últimos {dias} días.")
+            await reply_text(update, f"✅ No se encontraron movimientos registrados en los ultimos {dias} dias.")
             return
         
-        reporte = f"⏳ <b>HISTORIAL DE MOVIMIENTOS ({dias} días)</b> 📜\n\n"
+        reporte = f"⏳ <b>HISTORIAL DE MOVIMIENTOS ({dias} dias)</b> 📜\n\n"
         
         for mov in movimientos:
             tipo = mov['tipo']
@@ -418,22 +418,22 @@ async def historial_command(update: Update, context: ContextTypes.DEFAULT_TYPE) 
             )
         
         await reply_html(update, reporte)
-        logger.info(f"Reporte histórico de {dias} días generado")
+        logger.info(f"Reporte historico de {dias} dias generado")
         
     except (ValueError, ValidationError) as e:
         await reply_text(update, f"Error: {e}")
     except Exception as e:
         logger.error(f"Error inesperado en /historial: {e}", exc_info=True)
-        await reply_text(update, "Ocurrió un error inesperado al generar el historial.")
+        await reply_text(update, "An error occurred inesperado al generar el historial.")
 
 
 @admin_only
 async def exportar_command(update: Update, context: ContextTypes.DEFAULT_TYPE) -> None:
-    """Muestra menú de opciones de exportación."""
+    """Muestra menu de opciones de exportacion."""
     from telegram import InlineKeyboardButton, InlineKeyboardMarkup
     
     text = "💾 <b>Exportar Datos</b>\n\n"
-    text += "Selecciona el formato y tipo de datos a exportar:"
+    text += "Select el formato y tipo de datos a exportar:"
     
     keyboard = [
         [
@@ -452,7 +452,7 @@ async def exportar_command(update: Update, context: ContextTypes.DEFAULT_TYPE) -
             InlineKeyboardButton("📄 CSV - Movimientos", callback_data="export:movimientos:csv"),
         ],
         [
-            InlineKeyboardButton("↩️ Volver", callback_data="menu:main"),
+            InlineKeyboardButton("↩️ Back", callback_data="menu:main"),
         ],
     ]
     
@@ -461,7 +461,7 @@ async def exportar_command(update: Update, context: ContextTypes.DEFAULT_TYPE) -
 
 @admin_only
 async def export_callback(update: Update, context: ContextTypes.DEFAULT_TYPE) -> None:
-    """Maneja los callbacks de exportación."""
+    """Maneja los callbacks de exportacion."""
     from telegram import InlineKeyboardButton, InlineKeyboardMarkup
     from utils.exporters import (
         export_movimientos_pdf, export_movimientos_excel,
@@ -488,17 +488,17 @@ async def export_callback(update: Update, context: ContextTypes.DEFAULT_TYPE) ->
         if tipo == "movimientos":
             movimientos = ContabilidadService.exportar_movimientos()
             if not movimientos:
-                await reply_text(update, "❌ No hay movimientos para exportar.")
+                await reply_text(update, "❌ No movimientos para exportar.")
                 return
             
             if formato == "pdf":
                 filepath = export_movimientos_pdf(movimientos)
-                caption = "✅ <b>Exportación PDF:</b> Movimientos Contables"
+                caption = "✅ <b>Exportacion PDF:</b> Movimientos Contables"
             elif formato == "excel":
                 filepath = export_movimientos_excel(movimientos)
-                caption = "✅ <b>Exportación Excel:</b> Movimientos Contables"
+                caption = "✅ <b>Exportacion Excel:</b> Movimientos Contables"
             elif formato == "csv":
-                # Exportación CSV (mantener compatibilidad)
+                # Exportacion CSV (mantener compatibilidad)
                 csv_file_path = 'movimientos_export.csv'
                 column_names = list(movimientos[0].keys())
                 with open(csv_file_path, 'w', newline='', encoding='utf-8') as csvfile:
@@ -507,9 +507,9 @@ async def export_callback(update: Update, context: ContextTypes.DEFAULT_TYPE) ->
                     for mov in movimientos:
                         csv_writer.writerow([mov.get(col, '') for col in column_names])
                 filepath = csv_file_path
-                caption = "✅ <b>Exportación CSV:</b> Movimientos Contables"
+                caption = "✅ <b>Exportacion CSV:</b> Movimientos Contables"
             else:
-                await reply_text(update, "❌ Formato no válido.")
+                await reply_text(update, "❌ Formato no valid.")
                 return
         
         elif tipo == "inventario":
@@ -518,38 +518,38 @@ async def export_callback(update: Update, context: ContextTypes.DEFAULT_TYPE) ->
             productos_dict = [dict(prod) for prod in productos]
             
             if not productos_dict:
-                await reply_text(update, "❌ No hay productos en el inventario.")
+                await reply_text(update, "❌ No productos en el inventario.")
                 return
             
             if formato == "pdf":
                 filepath = export_inventario_pdf(productos_dict)
-                caption = "✅ <b>Exportación PDF:</b> Inventario de Productos"
+                caption = "✅ <b>Exportacion PDF:</b> Inventario de Productos"
             elif formato == "excel":
                 filepath = export_inventario_excel(productos_dict)
-                caption = "✅ <b>Exportación Excel:</b> Inventario de Productos"
+                caption = "✅ <b>Exportacion Excel:</b> Inventario de Productos"
             else:
-                await reply_text(update, "❌ Formato no válido.")
+                await reply_text(update, "❌ Formato no valid.")
                 return
         
         elif tipo == "deudas":
             deudas = DeudaService.obtener_deudas_pendientes()
             
             if not deudas.get('por_pagar') and not deudas.get('por_cobrar'):
-                await reply_text(update, "❌ No hay deudas para exportar.")
+                await reply_text(update, "❌ No deudas para exportar.")
                 return
             
             if formato == "pdf":
                 filepath = export_deudas_pdf(deudas)
-                caption = "✅ <b>Exportación PDF:</b> Estado de Deudas"
+                caption = "✅ <b>Exportacion PDF:</b> Estado de Deudas"
             elif formato == "excel":
                 filepath = export_deudas_excel(deudas)
-                caption = "✅ <b>Exportación Excel:</b> Estado de Deudas"
+                caption = "✅ <b>Exportacion Excel:</b> Estado de Deudas"
             else:
-                await reply_text(update, "❌ Formato no válido.")
+                await reply_text(update, "❌ Formato no valid.")
                 return
         
         else:
-            await reply_text(update, "❌ Tipo de exportación no válido.")
+            await reply_text(update, "❌ Tipo de exportacion no valid.")
             return
         
         # Enviar archivo
@@ -569,7 +569,7 @@ async def export_callback(update: Update, context: ContextTypes.DEFAULT_TYPE) ->
                     parse_mode='HTML'
                 )
         
-        logger.info(f"Exportación {formato.upper()} de {tipo} completada")
+        logger.info(f"Exportacion {formato.upper()} de {tipo} completada")
         
     except ImportError as e:
         error_msg = str(e)
@@ -586,8 +586,8 @@ async def export_callback(update: Update, context: ContextTypes.DEFAULT_TYPE) ->
                 "<code>pip install openpyxl</code>"
             )
         else:
-            await reply_text(update, f"❌ Error de importación: {e}")
+            await reply_text(update, f"❌ Error: importacion: {e}")
     except Exception as e:
-        logger.error(f"Error inesperado en exportación: {e}", exc_info=True)
-        await reply_text(update, f"❌ Ocurrió un error al exportar: {e}")
+        logger.error(f"Error inesperado en exportacion: {e}", exc_info=True)
+        await reply_text(update, f"❌ An error occurred al exportar: {e}")
 

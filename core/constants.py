@@ -3,11 +3,11 @@ Constantes del sistema.
 """
 from typing import List, Literal
 
-# Tipos de moneda válidos
+# Tipos de moneda valids
 Moneda = Literal['usd', 'cup', 'cup-t', 'eur']
 VALID_MONEDAS: List[str] = ['usd', 'cup', 'cup-t', 'eur']
 
-# Tipos de caja válidos
+# Tipos de caja valids
 Caja = Literal['cfg', 'sc', 'trd']
 VALID_CAJAS: List[str] = ['cfg', 'sc', 'trd']
 

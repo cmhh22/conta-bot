@@ -1,6 +1,6 @@
 """
-Handler del chatbot - Procesa mensajes de texto libre y los convierte en acciones.
-Soporta diálogos multi-turno con memoria conversacional y enriquecimiento IA.
+Handler del chatbot - Procesa mensajes de texto libre y los convierte en actions.
+Soporta dialogos multi-turno con memoria conversacional y enriquecimiento IA.
 """
 import logging
 from telegram import Update
@@ -17,7 +17,7 @@ logger = logging.getLogger(__name__)
 
 @admin_only
 async def chatbot_message_handler(update: Update, context: ContextTypes.DEFAULT_TYPE) -> None:
-    """Procesa mensajes de texto libre con IA, memoria conversacional y diálogos multi-turno."""
+    """Procesa mensajes de texto libre con IA, memoria conversacional y dialogos multi-turno."""
     if not update.message or not update.message.text:
         return
 
@@ -63,9 +63,9 @@ async def chatbot_message_handler(update: Update, context: ContextTypes.DEFAULT_
             intent, params = IntentParser.parse_intent(text)
             logger.info(f"Parser reglas: intent={intent.value}, params={params}")
 
-        # Manejar clarificación (multi-turno)
+        # Manejar clarificacion (multi-turno)
         if intent == IntentType.CLARIFICATION:
-            pregunta = params.get("pregunta", ai_message or "¿Podrías darme más detalles?")
+            pregunta = params.get("pregunta", ai_message or "Podrias darme mas detalles?")
             await processing_msg.delete()
             await update.message.reply_html(f"🤔 {pregunta}")
             ConversationMemory.add_assistant_message(user_id, pregunta, intent="clarification")
@@ -78,14 +78,14 @@ async def chatbot_message_handler(update: Update, context: ContextTypes.DEFAULT_
             ConversationMemory.add_assistant_message(user_id, ai_message, intent="greeting", success=True)
             return
 
-        # Ejecutar acción
+        # Ejecutar action
         result = await ActionExecutor.execute_intent(intent, params, user_id)
 
         await processing_msg.delete()
 
         response_text = result["message"]
 
-        # Enriquecer respuestas de análisis con IA si está disponible
+        # Enriquecer respuestas de analisis con IA si esta disponible
         if (
             intent == IntentType.ANALISIS_FINANCIERO
             and result.get("success")
@@ -113,7 +113,7 @@ async def chatbot_message_handler(update: Update, context: ContextTypes.DEFAULT_
         except Exception:
             pass
         await update.message.reply_text(
-            "❌ Ocurrió un error al procesar tu mensaje. "
+            "❌ An error occurred al procesar tu mensaje. "
             "Intenta reformular tu solicitud o usa los comandos disponibles."
         )
 
